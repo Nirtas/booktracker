@@ -1,4 +1,4 @@
-package ru.jerael.booktracker.android.ui.theme
+package ru.jerael.booktracker.android.presentation.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
