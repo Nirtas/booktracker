@@ -14,8 +14,18 @@ class BookRepositoryImpl @Inject constructor(
 ) : BookRepository {
     override fun getBooks(): Flow<List<Book>> {
         val books = listOf(
-            Book(id = "1", title = "Название 1", author = "Автор 1", coverUrl = null),
-            Book(id = "2", title = "Название 2", author = "Автор 2", coverUrl = null),
+            Book(
+                id = "1",
+                title = "Название 1",
+                author = "Автор 1",
+                coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg"
+            ),
+            Book(
+                id = "2",
+                title = "Название 2",
+                author = "Автор 2",
+                coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg"
+            ),
             Book(id = "3", title = "Название 3", author = "Автор 3", coverUrl = null),
             Book(id = "4", title = "Название 4", author = "Автор 4", coverUrl = null)
         )

@@ -26,11 +26,12 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
+                        modifier = Modifier.padding(innerPadding),
                         navController = navController,
                         startDestination = Screen.BookList.route
                     ) {
                         composable(route = Screen.BookList.route) {
-                            BookListScreen(modifier = Modifier.padding(innerPadding))
+                            BookListScreen()
                         }
                     }
                 }

@@ -8,6 +8,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -32,6 +34,11 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+val MaterialTheme.dimensions: Dimensions
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalDimensions.current
+
 @Composable
 fun BookTrackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -49,9 +56,11 @@ fun BookTrackerTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalDimensions provides Dimensions()) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

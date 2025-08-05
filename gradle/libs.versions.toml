@@ -12,6 +12,7 @@ hilt = "2.57"
 hiltNavigation = "1.2.0"
 ksp = "2.2.0-2.0.2"
 room = "2.7.2"
+coil = "3.3.0"
 
 # BACKEND
 ktor = "3.2.3"
@@ -43,6 +44,8 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 # BACKEND
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
