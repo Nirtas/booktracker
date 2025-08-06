@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -15,14 +19,29 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.jerael.booktracker.android.domain.model.Book
+import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookCard
+import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookListScreen() {
+fun BookListScreen(appViewModel: AppViewModel) {
     val viewModel: BookListViewModel = hiltViewModel()
     val uiState: BookListUiState by viewModel.uiState.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+    LaunchedEffect(null) {
+        appViewModel.updateTopBar(
+            newState = TopBarState(
+                title = "Книжная полка",
+                isVisible = true,
+                scrollBehavior = scrollBehavior
+            )
+        )
+    }
+
     BookListScreenContent(books = uiState.books)
 }
 

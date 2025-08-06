@@ -54,3 +54,12 @@ val Typography.bookCardAuthor: TextStyle
         letterSpacing = 0.5.sp
     )
 
+val Typography.topBarTitle: TextStyle
+    @Composable
+    get() = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    )

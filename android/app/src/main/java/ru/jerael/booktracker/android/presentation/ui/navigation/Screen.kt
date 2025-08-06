@@ -1,4 +1,4 @@
-package ru.jerael.booktracker.android.presentation.navigation
+package ru.jerael.booktracker.android.presentation.ui.navigation
 
 const val BOOK_LIST_SCREEN_ROUTE = "book_list_screen"
 
