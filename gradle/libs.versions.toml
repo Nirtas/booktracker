@@ -19,6 +19,8 @@ ktor = "3.2.3"
 logback = "1.5.18"
 dotenv = "6.5.1"
 koin-ktor = "4.1.0"
+exposed = "1.0.0-beta-5"
+postgresql = "42.7.3"
 
 # SHARED
 kotlin = "2.0.0"
@@ -60,6 +62,9 @@ dotenv-kotlin = { group = "io.github.cdimascio", name = "dotenv-kotlin", version
 koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin-ktor" }
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
 
 # SHARED
 

@@ -1,5 +1,7 @@
 package ru.jerael.booktracker.backend.data.mappers
 
+import org.jetbrains.exposed.v1.core.ResultRow
+import ru.jerael.booktracker.backend.data.db.tables.Books
 import ru.jerael.booktracker.backend.data.dto.BookDto
 import ru.jerael.booktracker.backend.domain.model.Book
 
@@ -9,5 +11,14 @@ fun Book.toBookDto(imageBaseUrl: String): BookDto {
         title = this.title,
         author = this.author,
         coverUrl = this.coverPath?.let { "$imageBaseUrl$it" }
+    )
+}
+
+fun ResultRow.toBook(): Book {
+    return Book(
+        id = this[Books.id],
+        title = this[Books.title],
+        author = this[Books.author],
+        coverPath = this[Books.coverPath]
     )
 }
