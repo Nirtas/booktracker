@@ -50,4 +50,8 @@ class BookListViewModel @Inject constructor(
             }
         }
     }
+
+    fun userMessageShown() {
+        _userMessage.value = null
+    }
 }

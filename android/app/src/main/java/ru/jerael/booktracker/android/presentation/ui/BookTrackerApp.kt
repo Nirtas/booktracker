@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,7 +23,8 @@ fun BookTrackerApp(appViewModel: AppViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val topBarState by appViewModel.topBarState.collectAsState()
     AppScaffold(
-        topBarState = topBarState
+        topBarState = topBarState,
+        snackbarHostState = appViewModel.snackbarHostState
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
@@ -39,7 +41,11 @@ private fun BookTrackerAppPreview() {
     @Composable
     fun BookTrackerAppPreviewContent() {
         val topBarState = TopBarState(title = "Книжная полка")
-        AppScaffold(topBarState = topBarState) { innerPadding ->
+        val snackbarHostState = SnackbarHostState()
+        AppScaffold(
+            topBarState = topBarState,
+            snackbarHostState = snackbarHostState
+        ) { innerPadding ->
             Box(
                 modifier = Modifier
                     .padding(innerPadding)

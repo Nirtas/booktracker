@@ -42,6 +42,13 @@ fun BookListScreen(appViewModel: AppViewModel) {
         )
     }
 
+    LaunchedEffect(uiState.userMessage) {
+        uiState.userMessage?.let { message ->
+            appViewModel.showSnackbar(message)
+            viewModel.userMessageShown()
+        }
+    }
+
     BookListScreenContent(books = uiState.books)
 }
 
