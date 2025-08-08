@@ -12,6 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,39 +55,45 @@ fun BookListScreen(appViewModel: AppViewModel) {
         }
     }
 
-    BookListScreenContent(uiState = uiState)
+    BookListScreenContent(uiState = uiState, onRefresh = { viewModel.onRefresh() })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookListScreenContent(uiState: BookListUiState) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+fun BookListScreenContent(uiState: BookListUiState, onRefresh: () -> Unit) {
+    val pullRefreshState = rememberPullToRefreshState()
+    PullToRefreshBox(
+        state = pullRefreshState,
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh
     ) {
-        if (uiState.books.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier.padding(MaterialTheme.dimensions.screenPadding),
-                verticalArrangement = Arrangement.spacedBy(BookListScreenDefaults.ItemsSpacing)
-            ) {
-                items(uiState.books) { book ->
-                    BookCard(book)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            if (uiState.isInitialLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-            }
-        }
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        if (!uiState.isLoading && uiState.books.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Список книг пуст")
+            } else if (uiState.books.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.padding(MaterialTheme.dimensions.screenPadding),
+                    verticalArrangement = Arrangement.spacedBy(BookListScreenDefaults.ItemsSpacing)
+                ) {
+                    items(uiState.books) { book ->
+                        BookCard(book)
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Список книг пуст")
+                }
             }
         }
     }
@@ -116,10 +124,8 @@ fun BookListScreenContentPreview() {
     )
     BookTrackerTheme {
         BookListScreenContent(
-            uiState = BookListUiState(
-                books = books,
-                isLoading = true
-            )
+            uiState = BookListUiState(books = books),
+            onRefresh = {}
         )
     }
 }

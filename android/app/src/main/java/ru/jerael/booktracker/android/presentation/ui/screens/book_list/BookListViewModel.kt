@@ -24,14 +24,21 @@ class BookListViewModel @Inject constructor(
 
     private val _books: Flow<List<Book>> = getBooksUseCase()
     private val _userMessage: MutableStateFlow<String?> = MutableStateFlow(null)
-    private val _isLoading: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val _isInitialLoading: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val _isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     val uiState: StateFlow<BookListUiState> = combine(
         _books,
         _userMessage,
-        _isLoading
-    ) { books, userMessage, isLoading ->
-        BookListUiState(books = books, userMessage = userMessage, isLoading = isLoading)
+        _isInitialLoading,
+        _isRefreshing
+    ) { books, userMessage, isInitialLoading, isRefreshing ->
+        BookListUiState(
+            books = books,
+            userMessage = userMessage,
+            isInitialLoading = isInitialLoading,
+            isRefreshing = isRefreshing
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
@@ -39,19 +46,28 @@ class BookListViewModel @Inject constructor(
     )
 
     init {
-        refreshBooks()
+        refreshBooks(isPullToRefresh = false)
     }
 
-    private fun refreshBooks() {
+    fun onRefresh() {
+        refreshBooks(isPullToRefresh = true)
+    }
+
+    private fun refreshBooks(isPullToRefresh: Boolean) {
         viewModelScope.launch {
-            _isLoading.value = true
+            if (isPullToRefresh) {
+                _isRefreshing.value = true
+            } else {
+                _isInitialLoading.value = true
+            }
             val result = refreshBooksUseCase()
             if (result.isFailure) {
                 val exception = result.exceptionOrNull()
                 _userMessage.value = "Ошибка при обновлении списка книг"
                 Log.e("BookListViewModel", "Ошибка при обновлении списка книг", exception)
             }
-            _isLoading.value = false
+            _isRefreshing.value = false
+            _isInitialLoading.value = false
         }
     }
 

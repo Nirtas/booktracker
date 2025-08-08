@@ -5,5 +5,6 @@ import ru.jerael.booktracker.android.domain.model.Book
 data class BookListUiState(
     val books: List<Book> = emptyList(),
     val userMessage: String? = null,
-    val isLoading: Boolean = false
+    val isInitialLoading: Boolean = false,
+    val isRefreshing: Boolean = false
 )
