@@ -2,3 +2,4 @@
 *.aab
 *.jks
 *.keystore
+debug/
