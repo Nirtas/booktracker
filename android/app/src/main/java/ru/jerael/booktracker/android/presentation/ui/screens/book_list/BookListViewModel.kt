@@ -24,12 +24,14 @@ class BookListViewModel @Inject constructor(
 
     private val _books: Flow<List<Book>> = getBooksUseCase()
     private val _userMessage: MutableStateFlow<String?> = MutableStateFlow(null)
+    private val _isLoading: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     val uiState: StateFlow<BookListUiState> = combine(
         _books,
-        _userMessage
-    ) { books, userMessage ->
-        BookListUiState(books = books, userMessage = userMessage)
+        _userMessage,
+        _isLoading
+    ) { books, userMessage, isLoading ->
+        BookListUiState(books = books, userMessage = userMessage, isLoading = isLoading)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
@@ -42,12 +44,14 @@ class BookListViewModel @Inject constructor(
 
     private fun refreshBooks() {
         viewModelScope.launch {
+            _isLoading.value = true
             val result = refreshBooksUseCase()
             if (result.isFailure) {
                 val exception = result.exceptionOrNull()
                 _userMessage.value = "Ошибка при обновлении списка книг"
                 Log.e("BookListViewModel", "Ошибка при обновлении списка книг", exception)
             }
+            _isLoading.value = false
         }
     }
 
