@@ -14,3 +14,9 @@ plugins {
 
 group = "ru.jerael.booktracker"
 version = property("booktracker.version.name")!!
+
+buildscript {
+    dependencies {
+        classpath(libs.secrets.gradle.plugin)
+    }
+}

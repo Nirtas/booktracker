@@ -5,4 +5,6 @@ import ru.jerael.booktracker.android.domain.model.Book
 
 interface BookRepository {
     fun getBooks(): Flow<List<Book>>
+
+    suspend fun refreshBooks(): Result<Unit>
 }

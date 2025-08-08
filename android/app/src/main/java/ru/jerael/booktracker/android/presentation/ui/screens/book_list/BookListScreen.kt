@@ -1,19 +1,25 @@
 package ru.jerael.booktracker.android.presentation.ui.screens.book_list
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -42,18 +48,52 @@ fun BookListScreen(appViewModel: AppViewModel) {
         )
     }
 
-    BookListScreenContent(books = uiState.books)
+    LaunchedEffect(uiState.userMessage) {
+        uiState.userMessage?.let { message ->
+            appViewModel.showSnackbar(message)
+            viewModel.userMessageShown()
+        }
+    }
+
+    BookListScreenContent(uiState = uiState, onRefresh = { viewModel.onRefresh() })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookListScreenContent(books: List<Book>) {
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        LazyColumn(
-            modifier = Modifier.padding(MaterialTheme.dimensions.screenPadding),
-            verticalArrangement = Arrangement.spacedBy(BookListScreenDefaults.ItemsSpacing)
+fun BookListScreenContent(uiState: BookListUiState, onRefresh: () -> Unit) {
+    val pullRefreshState = rememberPullToRefreshState()
+    PullToRefreshBox(
+        state = pullRefreshState,
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-            items(books) { book ->
-                BookCard(book)
+            if (uiState.isInitialLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.books.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.padding(MaterialTheme.dimensions.screenPadding),
+                    verticalArrangement = Arrangement.spacedBy(BookListScreenDefaults.ItemsSpacing)
+                ) {
+                    items(uiState.books) { book ->
+                        BookCard(book)
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Список книг пуст")
+                }
             }
         }
     }
@@ -83,6 +123,9 @@ fun BookListScreenContentPreview() {
         Book(id = "4", title = "Название 4", author = "Автор 4", coverUrl = null)
     )
     BookTrackerTheme {
-        BookListScreenContent(books)
+        BookListScreenContent(
+            uiState = BookListUiState(books = books),
+            onRefresh = {}
+        )
     }
 }
