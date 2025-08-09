@@ -1,0 +1,30 @@
+package ru.jerael.booktracker.android.data.repository
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import ru.jerael.booktracker.android.data.local.dao.BookDao
+import ru.jerael.booktracker.android.data.mappers.toBook
+import ru.jerael.booktracker.android.data.mappers.toBookEntity
+import ru.jerael.booktracker.android.data.remote.api.BookApiService
+import ru.jerael.booktracker.android.domain.model.Book
+import ru.jerael.booktracker.android.domain.repository.BookRepository
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class BookRepositoryImpl @Inject constructor(
+    private val dao: BookDao,
+    private val api: BookApiService
+) : BookRepository {
+    override fun getBooks(): Flow<List<Book>> {
+        return dao.getAll().map { entities -> entities.map { it.toBook() } }
+    }
+
+    override suspend fun refreshBooks(): Result<Unit> {
+        return runCatching {
+            val booksDto = api.getBooks()
+            val bookEntities = booksDto.map { it.toBookEntity() }
+            dao.clearAndInsert(bookEntities)
+        }
+    }
+}

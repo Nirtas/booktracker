@@ -2,3 +2,5 @@
 *.aab
 *.jks
 *.keystore
+debug/
+release/
