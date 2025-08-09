@@ -19,3 +19,18 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keepnames class kotlinx.serialization.internal.*Serializer
+-keepclassmembers class * {
+    @kotlinx.serialization.Serializable <methods>;
+}
+-keepnames class * {
+    @kotlinx.serialization.Serializable <fields>;
+}
+
+-keep class coil.** { *; }
+
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable <methods>;
+}
+-keep class androidx.compose.runtime.internal.ComposableLambda { *; }
