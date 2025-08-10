@@ -14,6 +14,7 @@ ksp = "2.0.0-1.0.24"
 room = "2.7.2"
 coil = "3.0.0"
 sgp = "2.0.1"
+material-icons = "1.7.8"
 
 # BACKEND
 ktor = "3.2.3"
@@ -56,6 +57,7 @@ ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
 secrets-gradle-plugin = { group = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", name = "secrets-gradle-plugin", version.ref = "sgp" }
+material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "material-icons" }
 
 # BACKEND
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }

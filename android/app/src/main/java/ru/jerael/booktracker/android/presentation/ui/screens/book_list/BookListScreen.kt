@@ -36,7 +36,10 @@ import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookListScreen(appViewModel: AppViewModel) {
+fun BookListScreen(
+    appViewModel: AppViewModel,
+    onNavigateToAddBook: () -> Unit
+) {
     val viewModel: BookListViewModel = hiltViewModel()
     val uiState: BookListUiState by viewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -53,9 +56,7 @@ fun BookListScreen(appViewModel: AppViewModel) {
             newState = FabState(
                 icon = Icons.Default.Add,
                 contentDescription = null,
-                onClick = {
-                    // TODO: Navigate to AddBookScreen
-                }
+                onClick = onNavigateToAddBook
             )
         )
     }
