@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ru.jerael.booktracker.android.domain.model.Book
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookCard
+import ru.jerael.booktracker.android.presentation.ui.model.FabState
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
@@ -44,6 +47,15 @@ fun BookListScreen(appViewModel: AppViewModel) {
                 title = "Книжная полка",
                 isVisible = true,
                 scrollBehavior = scrollBehavior
+            )
+        )
+        appViewModel.updateFab(
+            newState = FabState(
+                icon = Icons.Default.Add,
+                contentDescription = null,
+                onClick = {
+                    // TODO: Navigate to AddBookScreen
+                }
             )
         )
     }
