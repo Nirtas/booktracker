@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
+import ru.jerael.booktracker.android.presentation.ui.screens.add_book.AddBookScreen
 import ru.jerael.booktracker.android.presentation.ui.screens.book_list.BookListScreen
 
 @Composable
@@ -20,7 +21,20 @@ fun AppNavHost(
         startDestination = Screen.BookList.route
     ) {
         composable(route = Screen.BookList.route) {
-            BookListScreen(appViewModel = appViewModel)
+            BookListScreen(
+                appViewModel = appViewModel,
+                onNavigateToAddBook = {
+                    navController.navigate(route = Screen.AddBook.route)
+                }
+            )
+        }
+        composable(route = Screen.AddBook.route) {
+            AddBookScreen(
+                appViewModel = appViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
