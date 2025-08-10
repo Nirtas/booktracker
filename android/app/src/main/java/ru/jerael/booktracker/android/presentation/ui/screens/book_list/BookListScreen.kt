@@ -1,7 +1,6 @@
 package ru.jerael.booktracker.android.presentation.ui.screens.book_list
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,7 +10,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -80,32 +78,34 @@ fun BookListScreenContent(uiState: BookListUiState, onRefresh: () -> Unit) {
         isRefreshing = uiState.isRefreshing,
         onRefresh = onRefresh
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(MaterialTheme.dimensions.screenPadding),
+            verticalArrangement = if (uiState.books.isNotEmpty()) {
+                Arrangement.spacedBy(BookListScreenDefaults.ItemsSpacing)
+            } else {
+                Arrangement.Center
+            },
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (uiState.isInitialLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            when {
+                uiState.isInitialLoading -> {
+                    item {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else if (uiState.books.isNotEmpty()) {
-                LazyColumn(
-                    modifier = Modifier.padding(MaterialTheme.dimensions.screenPadding),
-                    verticalArrangement = Arrangement.spacedBy(BookListScreenDefaults.ItemsSpacing)
-                ) {
+
+                uiState.books.isNotEmpty() -> {
                     items(uiState.books) { book ->
                         BookCard(book)
                     }
                 }
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "Список книг пуст")
+
+                else -> {
+                    item {
+                        Text(text = "Список книг пуст")
+                    }
                 }
             }
         }
