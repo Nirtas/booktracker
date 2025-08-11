@@ -3,4 +3,12 @@ ktor:
     modules:
       - ru.jerael.booktracker.backend.ApplicationKt.module
   deployment:
-    port: 33333
+    port: 8080
+  db:
+    url: $DB_URL
+    driver: "org.postgresql.Driver"
+    user: $DB_USER
+    password: $DB_PASSWORD
+  storage:
+    persistentPath: "$PERSISTENT_STORAGE_PATH:./storage"
+    baseUrl: $STORAGE_BASE_URL

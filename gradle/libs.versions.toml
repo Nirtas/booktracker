@@ -19,7 +19,6 @@ material-icons = "1.7.8"
 # BACKEND
 ktor = "3.2.3"
 logback = "1.5.18"
-dotenv = "6.5.1"
 koin-ktor = "4.1.0"
 exposed = "1.0.0-beta-5"
 postgresql = "42.7.3"
@@ -66,7 +65,6 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-dotenv-kotlin = { group = "io.github.cdimascio", name = "dotenv-kotlin", version.ref = "dotenv" }
 koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin-ktor" }
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }

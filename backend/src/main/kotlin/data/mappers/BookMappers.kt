@@ -10,7 +10,7 @@ fun Book.toBookDto(imageBaseUrl: String): BookDto {
         id = this.id.toString(),
         title = this.title,
         author = this.author,
-        coverUrl = this.coverPath?.let { "$imageBaseUrl$it" }
+        coverUrl = this.coverPath?.let { "$imageBaseUrl/$it" }
     )
 }
 
