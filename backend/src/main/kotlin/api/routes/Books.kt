@@ -16,11 +16,12 @@ import ru.jerael.booktracker.backend.domain.usecases.GetBooksUseCase
 import java.io.File
 import java.util.*
 
+private const val COVERS_PATH_PREFIX = "covers"
+
 fun Route.books(
     getBooksUseCase: GetBooksUseCase,
     addBookUseCase: AddBookUseCase,
-    imageBaseUrl: String,
-    coversPathPrefix: String
+    imageBaseUrl: String
 ) {
     route("/books") {
         get {
@@ -31,6 +32,10 @@ fun Route.books(
         post {
             var bookCreationDto: BookCreationDto? = null
             var coverPath: String? = null
+            val persistentStoragePath =
+                call.application.environment.config.property("ktor.storage.persistentPath").getString()
+            val coversDir = File(persistentStoragePath, COVERS_PATH_PREFIX)
+            coversDir.mkdirs()
             val multipartData = call.receiveMultipart()
             multipartData.forEachPart { part ->
                 when (part) {
@@ -42,11 +47,9 @@ fun Route.books(
 
                     is PartData.FileItem -> {
                         if (part.name == "cover" && part.originalFileName?.isNotBlank() == true) {
-                            val coversDir = File(coversPathPrefix)
-                            coversDir.mkdirs()
                             val fileExtension = File(part.originalFileName as String).extension
                             val coverFilename = "${UUID.randomUUID()}.$fileExtension"
-                            coverPath = "$coversPathPrefix$coverFilename"
+                            coverPath = "$COVERS_PATH_PREFIX/$coverFilename"
                             val file = File(coversDir, coverFilename)
                             part.provider().copyAndClose(file.writeChannel())
                         }
