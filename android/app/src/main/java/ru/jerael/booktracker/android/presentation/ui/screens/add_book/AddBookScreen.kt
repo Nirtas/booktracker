@@ -79,6 +79,12 @@ fun AddBookScreen(appViewModel: AppViewModel, onNavigateBack: () -> Unit) {
         }
     }
 
+    LaunchedEffect(uiState.bookAddedSuccessfully) {
+        if (uiState.bookAddedSuccessfully) {
+            // TODO: Navigate to BookDetailsScreen
+        }
+    }
+
     AddBookScreenContent(
         uiState = uiState,
         onTitleChange = viewModel::onTitleChanged,

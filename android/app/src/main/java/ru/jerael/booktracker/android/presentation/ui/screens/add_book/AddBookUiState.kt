@@ -10,5 +10,6 @@ data class AddBookUiState(
     val isAuthorValid: Boolean = true,
     val isSaving: Boolean = false,
     val userMessage: String? = null,
-    val isSaveButtonEnabled: Boolean = false
+    val isSaveButtonEnabled: Boolean = false,
+    val bookAddedSuccessfully: Boolean = false
 )

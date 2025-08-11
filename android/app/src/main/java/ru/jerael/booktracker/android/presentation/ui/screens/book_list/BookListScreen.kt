@@ -124,7 +124,7 @@ fun BookListScreenContentPreview() {
             id = "1",
             title = "Название 1",
             author = "Автор 1",
-            coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg"
+            coverUrl = "http://localhost:4001/storage/covers/7e224477-0673-4cb5-8ac8-9ae99eadf7bd.jpg"
         ),
         Book(
             id = "2",
