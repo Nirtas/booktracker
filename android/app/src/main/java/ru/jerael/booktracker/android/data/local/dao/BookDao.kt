@@ -23,4 +23,7 @@ interface BookDao {
 
     @Query("DELETE FROM books")
     suspend fun clearAll()
+
+    @Upsert
+    suspend fun upsert(book: BookEntity)
 }
