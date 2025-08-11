@@ -66,8 +66,9 @@ fun Route.books(
                 author = bookCreationDto!!.author,
                 coverPath = coverPath
             )
-            val bookUUID = addBookUseCase(bookCreationPayload)
-            call.respondText(bookUUID.toString())
+            val newBook = addBookUseCase(bookCreationPayload)
+            val newBookDto = newBook.toBookDto(imageBaseUrl)
+            call.respond(newBookDto)
         }
     }
 }

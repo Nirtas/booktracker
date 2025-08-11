@@ -10,7 +10,6 @@ import ru.jerael.booktracker.backend.data.mappers.toBook
 import ru.jerael.booktracker.backend.domain.model.Book
 import ru.jerael.booktracker.backend.domain.model.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import java.util.*
 
 class BookRepositoryImpl : BookRepository {
     override suspend fun getBooks(): List<Book> {
@@ -21,7 +20,7 @@ class BookRepositoryImpl : BookRepository {
         }
     }
 
-    override suspend fun addBook(bookCreationPayload: BookCreationPayload): UUID {
+    override suspend fun addBook(bookCreationPayload: BookCreationPayload): Book {
         return withContext(Dispatchers.IO) {
             transaction {
                 val result = Books.insert {
@@ -29,7 +28,12 @@ class BookRepositoryImpl : BookRepository {
                     it[author] = bookCreationPayload.author
                     it[coverPath] = bookCreationPayload.coverPath
                 }
-                result[Books.id]
+                Book(
+                    id = result[Books.id],
+                    title = bookCreationPayload.title,
+                    author = bookCreationPayload.author,
+                    coverPath = bookCreationPayload.coverPath
+                )
             }
         }
     }
