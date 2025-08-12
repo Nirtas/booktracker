@@ -4,10 +4,12 @@ import org.koin.dsl.module
 import ru.jerael.booktracker.backend.data.repository.BookRepositoryImpl
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.usecases.AddBookUseCase
+import ru.jerael.booktracker.backend.domain.usecases.GetBookByIdUseCase
 import ru.jerael.booktracker.backend.domain.usecases.GetBooksUseCase
 
 val appModule = module {
     single<BookRepository> { BookRepositoryImpl() }
     single { GetBooksUseCase(get()) }
     single { AddBookUseCase(get()) }
+    single { GetBookByIdUseCase(get()) }
 }

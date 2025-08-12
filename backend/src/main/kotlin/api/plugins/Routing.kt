@@ -5,11 +5,13 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import ru.jerael.booktracker.backend.api.routes.books
 import ru.jerael.booktracker.backend.domain.usecases.AddBookUseCase
+import ru.jerael.booktracker.backend.domain.usecases.GetBookByIdUseCase
 import ru.jerael.booktracker.backend.domain.usecases.GetBooksUseCase
 
 fun Application.configureRouting() {
     val getBooksUseCase: GetBooksUseCase by inject()
     val addBookUseCase: AddBookUseCase by inject()
+    val getBookByIdUseCase: GetBookByIdUseCase by inject()
     val imageBaseUrl: String = environment.config.property("ktor.storage.baseUrl").getString()
 
     routing {
@@ -17,6 +19,7 @@ fun Application.configureRouting() {
             books(
                 getBooksUseCase = getBooksUseCase,
                 addBookUseCase = addBookUseCase,
+                getBookByIdUseCase = getBookByIdUseCase,
                 imageBaseUrl = imageBaseUrl
             )
         }
