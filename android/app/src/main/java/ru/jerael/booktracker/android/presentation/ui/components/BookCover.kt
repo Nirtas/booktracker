@@ -1,6 +1,7 @@
 package ru.jerael.booktracker.android.presentation.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -25,6 +26,7 @@ fun BookCover(
             )
         } else {
             AsyncImage(
+                modifier = Modifier.fillMaxSize(),
                 model = imageUrl,
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Crop

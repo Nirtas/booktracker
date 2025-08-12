@@ -19,7 +19,7 @@ fun CoverContainer(
     Box(
         modifier = modifier
             .clip(shape = RoundedCornerShape(12.dp))
-            .background(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+            .background(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         contentAlignment = Alignment.Center,
         content = content
     )

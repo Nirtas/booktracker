@@ -23,7 +23,7 @@ fun TitleTextField(
         modifier = modifier.fillMaxWidth(),
         text = title,
         label = "Название книги",
-        placeholder = "Введите название книги",
+        placeholder = "",
         onTextChanged = onTextChanged,
         isInvalid = isInvalid,
         isEnabled = isEnabled,
