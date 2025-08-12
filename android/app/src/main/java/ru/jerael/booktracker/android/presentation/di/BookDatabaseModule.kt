@@ -23,7 +23,7 @@ object BookDatabaseModule {
         return Room.databaseBuilder(
             context,
             BookDatabase::class.java,
-            "book_tracker"
+            BookDatabase.DATABASE_NAME
         ).build()
     }
 
