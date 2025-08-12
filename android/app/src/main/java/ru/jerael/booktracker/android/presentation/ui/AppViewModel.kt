@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.jerael.booktracker.android.presentation.ui.model.FabState
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 import javax.inject.Inject
 
@@ -30,5 +31,12 @@ class AppViewModel @Inject constructor() : ViewModel() {
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(message = message)
         }
+    }
+
+    private val _fabState = MutableStateFlow<FabState?>(null)
+    val fabState: StateFlow<FabState?> = _fabState.asStateFlow()
+
+    fun updateFab(newState: FabState?) {
+        _fabState.update { newState }
     }
 }

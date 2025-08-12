@@ -1,0 +1,101 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: ${CONTAINER_NAME_PREFIX}_db
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - app-network
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  pgadmin:
+    container_name: ${CONTAINER_NAME_PREFIX}_pgadmin
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - app-network
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+
+  backend-dev:
+    container_name: ${CONTAINER_NAME_PREFIX}_backend_dev
+    profiles:
+      - dev
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PERSISTENT_STORAGE_PATH: /persistent_data
+      STORAGE_BASE_URL: ${STORAGE_BASE_URL}
+    volumes:
+      - storage_data:/persistent_data
+    networks:
+      - app-network
+    ports:
+      - "${BACKEND_PORT:-4000}:8080"
+
+  backend-prod:
+    container_name: ${CONTAINER_NAME_PREFIX}_backend_prod
+    profiles:
+      - prod
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PERSISTENT_STORAGE_PATH: /persistent_data
+      STORAGE_BASE_URL: ${STORAGE_BASE_URL}
+    volumes:
+      - storage_data:/persistent_data
+    networks:
+      - app-network
+    ports:
+      - "${BACKEND_PORT:-4000}:8080"
+
+  file-storage:
+    container_name: ${CONTAINER_NAME_PREFIX}_file_storage
+    image: nginx:latest
+    restart: unless-stopped
+    volumes:
+      - storage_data:/usr/share/nginx/html/storage:ro
+    networks:
+      - app-network
+    ports:
+      - "${FILE_STORAGE_PORT:-4001}:80"
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  storage_data:
+
+networks:
+  app-network:
+    driver: bridge
+    name: ${CONTAINER_NAME_PREFIX}_network
