@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -136,7 +137,7 @@ fun AddBookScreenContent(
 }
 
 private object AddBookScreenDefaults {
-    val ImageToFromSpacing = 48.dp
+    val ImageToFromSpacing = 36.dp
 }
 
 @Composable
@@ -150,21 +151,21 @@ private fun LandscapeLayout(
 ) {
     Row(
         modifier = Modifier.fillMaxSize(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         CoverPicker(
             imageUri = uiState.coverUri,
             contentDescription = null,
             onClick = onCoverSelectClick,
             modifier = Modifier
-                .fillMaxHeight()
-                .weight(0.8f)
+                .weight(1.5f)
+                .aspectRatio(0.75f)
         )
         Spacer(modifier = Modifier.width(AddBookScreenDefaults.ImageToFromSpacing))
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .weight(1f)
+                .weight(2f)
                 .verticalScroll(rememberScrollState())
         ) {
             BookDetailsForm(
@@ -202,38 +203,39 @@ private fun PortraitLayout(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CoverPicker(
-            imageUri = uiState.coverUri,
-            contentDescription = null,
-            onClick = onCoverSelectClick,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1.3f)
-        )
-        Spacer(modifier = Modifier.height(AddBookScreenDefaults.ImageToFromSpacing))
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
+                .height(IntrinsicSize.Min)
         ) {
-            BookDetailsForm(
-                title = uiState.title,
-                onTitleChange = onTitleChange,
-                isTitleValid = uiState.isTitleValid,
-                author = uiState.author,
-                onAuthorChange = onAuthorChange,
-                isAuthorValid = uiState.isAuthorValid,
-                areFieldsEnabled = !uiState.isSaving
+            CoverPicker(
+                imageUri = uiState.coverUri,
+                contentDescription = null,
+                onClick = onCoverSelectClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(0.75f)
             )
-            Spacer(modifier = Modifier.weight(1f))
-            FormActionButtons(
-                onSaveClick = onSaveClick,
-                isSaveButtonEnabled = uiState.isSaveButtonEnabled,
-                onCancelClick = onCancelClick,
-                isCancelButtonEnabled = !uiState.isSaving
-            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1.6f)) {
+                BookDetailsForm(
+                    title = uiState.title,
+                    onTitleChange = onTitleChange,
+                    isTitleValid = uiState.isTitleValid,
+                    author = uiState.author,
+                    onAuthorChange = onAuthorChange,
+                    isAuthorValid = uiState.isAuthorValid,
+                    areFieldsEnabled = !uiState.isSaving
+                )
+            }
         }
+        Spacer(modifier = Modifier.weight(1f))
+        FormActionButtons(
+            onSaveClick = onSaveClick,
+            isSaveButtonEnabled = uiState.isSaveButtonEnabled,
+            onCancelClick = onCancelClick,
+            isCancelButtonEnabled = !uiState.isSaving
+        )
     }
 }
 

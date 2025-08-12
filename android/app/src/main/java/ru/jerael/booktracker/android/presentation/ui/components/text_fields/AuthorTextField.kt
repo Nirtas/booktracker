@@ -23,7 +23,7 @@ fun AuthorTextField(
         modifier = modifier.fillMaxWidth(),
         text = author,
         label = "Автор",
-        placeholder = "Введите имя автора",
+        placeholder = "",
         onTextChanged = onTextChanged,
         isInvalid = isInvalid,
         isEnabled = isEnabled,

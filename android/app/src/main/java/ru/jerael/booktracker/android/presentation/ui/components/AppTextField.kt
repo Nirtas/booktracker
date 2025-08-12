@@ -38,7 +38,7 @@ fun AppTextField(
         supportingText = {
             if (isInvalid) {
                 Text(
-                    text = "Введите корректное содержимое",
+                    text = "Некорректное содержимое",
                     color = MaterialTheme.colorScheme.error
                 )
             }
