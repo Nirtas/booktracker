@@ -11,10 +11,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,26 +26,27 @@ import ru.jerael.booktracker.android.domain.model.Book
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookCard
 import ru.jerael.booktracker.android.presentation.ui.model.FabState
+import ru.jerael.booktracker.android.presentation.ui.model.TopBarScrollBehavior
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
+import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookListScreen(
     appViewModel: AppViewModel,
-    onNavigateToAddBook: () -> Unit
+    onNavigateToAddBook: () -> Unit,
+    onNavigateToBookDetails: (String) -> Unit
 ) {
     val viewModel: BookListViewModel = hiltViewModel()
     val uiState: BookListUiState by viewModel.uiState.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(null) {
         appViewModel.updateTopBar(
             newState = TopBarState(
                 title = "Книжная полка",
-                isVisible = true,
-                scrollBehavior = scrollBehavior
+                type = TopBarType.SMALL,
+                scrollBehavior = TopBarScrollBehavior.ENTER_ALWAYS
             )
         )
         appViewModel.updateFab(
@@ -66,12 +65,20 @@ fun BookListScreen(
         }
     }
 
-    BookListScreenContent(uiState = uiState, onRefresh = { viewModel.onRefresh() })
+    BookListScreenContent(
+        uiState = uiState,
+        onRefresh = { viewModel.onRefresh() },
+        onBookClick = { onNavigateToBookDetails(it) }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookListScreenContent(uiState: BookListUiState, onRefresh: () -> Unit) {
+fun BookListScreenContent(
+    uiState: BookListUiState,
+    onRefresh: () -> Unit,
+    onBookClick: (String) -> Unit
+) {
     val pullRefreshState = rememberPullToRefreshState()
     PullToRefreshBox(
         state = pullRefreshState,
@@ -98,7 +105,7 @@ fun BookListScreenContent(uiState: BookListUiState, onRefresh: () -> Unit) {
 
                 uiState.books.isNotEmpty() -> {
                     items(uiState.books) { book ->
-                        BookCard(book)
+                        BookCard(book, onBookClick)
                     }
                 }
 
@@ -138,7 +145,8 @@ fun BookListScreenContentPreview() {
     BookTrackerTheme {
         BookListScreenContent(
             uiState = BookListUiState(books = books),
-            onRefresh = {}
+            onRefresh = {},
+            onBookClick = {}
         )
     }
 }

@@ -7,31 +7,52 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import ru.jerael.booktracker.android.presentation.ui.model.FabState
+import ru.jerael.booktracker.android.presentation.ui.model.TopBarScrollBehavior
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppScaffold(
-    topBarState: TopBarState,
+    topBarState: TopBarState?,
     snackbarHostState: SnackbarHostState,
     fabState: FabState?,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val scrollBehavior: TopAppBarScrollBehavior? = topBarState.scrollBehavior
+    val scrollBehavior = topBarState?.let {
+        when (it.scrollBehavior) {
+            TopBarScrollBehavior.PINNED -> {
+                TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+            }
+
+            TopBarScrollBehavior.ENTER_ALWAYS -> {
+                TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+            }
+
+            TopBarScrollBehavior.EXIT_UNTIL_COLLAPSED -> {
+                TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+            }
+        }
+    }
     Scaffold(
-        modifier = if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier,
+        modifier = if (scrollBehavior != null) {
+            Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+        } else {
+            Modifier
+        },
         topBar = {
-            if (topBarState.isVisible) {
+            topBarState?.let { state ->
                 AppTopBar(
-                    title = topBarState.title,
-                    navigationAction = topBarState.navigationAction,
-                    actions = topBarState.actions,
-                    scrollBehavior = scrollBehavior
+                    title = state.title,
+                    type = state.type,
+                    scrollBehavior = scrollBehavior,
+                    navigationAction = state.navigationAction,
+                    actions = state.actions
                 )
             }
         },
@@ -39,9 +60,9 @@ fun AppScaffold(
             SnackbarHost(hostState = snackbarHostState)
         },
         floatingActionButton = {
-            fabState?.let {
-                FloatingActionButton(onClick = it.onClick) {
-                    Icon(imageVector = it.icon, contentDescription = it.contentDescription)
+            fabState?.let { state ->
+                FloatingActionButton(onClick = state.onClick) {
+                    Icon(imageVector = state.icon, contentDescription = state.contentDescription)
                 }
             }
         }

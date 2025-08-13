@@ -9,5 +9,9 @@ interface BookRepository {
 
     suspend fun refreshBooks(): Result<Unit>
 
-    suspend fun addBook(bookCreationPayload: BookCreationPayload): Result<Unit>
+    suspend fun addBook(bookCreationPayload: BookCreationPayload): Result<String>
+
+    fun getBookById(id: String): Flow<Book?>
+
+    suspend fun refreshBookById(id: String): Result<Unit>
 }

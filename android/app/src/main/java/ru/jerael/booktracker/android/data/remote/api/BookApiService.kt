@@ -8,4 +8,6 @@ interface BookApiService {
     suspend fun getBooks(): List<BookDto>
 
     suspend fun addBook(bookCreationDto: BookCreationDto, coverFile: File?): BookDto
+
+    suspend fun getBookById(id: String): BookDto
 }

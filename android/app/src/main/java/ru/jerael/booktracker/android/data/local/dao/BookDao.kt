@@ -25,5 +25,8 @@ interface BookDao {
     suspend fun clearAll()
 
     @Upsert
-    suspend fun upsert(book: BookEntity)
+    suspend fun upsert(bookEntity: BookEntity)
+
+    @Query("SELECT * FROM books WHERE id = :id")
+    fun getBookById(id: String): Flow<BookEntity?>
 }

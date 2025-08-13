@@ -30,7 +30,7 @@ class BookRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addBook(bookCreationPayload: BookCreationPayload): Result<Unit> {
+    override suspend fun addBook(bookCreationPayload: BookCreationPayload): Result<String> {
         return runCatching {
             val bookCreationDto = BookCreationDto(
                 title = bookCreationPayload.title,
@@ -38,6 +38,19 @@ class BookRepositoryImpl @Inject constructor(
             )
             val dto = api.addBook(bookCreationDto, bookCreationPayload.coverFile)
             dao.upsert(dto.toBookEntity())
+            dto.id
+        }
+    }
+
+    override fun getBookById(id: String): Flow<Book?> {
+        return dao.getBookById(id).map { it?.toBook() }
+    }
+
+    override suspend fun refreshBookById(id: String): Result<Unit> {
+        return runCatching {
+            val bookDto = api.getBookById(id)
+            val bookEntity = bookDto.toBookEntity()
+            dao.upsert(bookEntity)
         }
     }
 }
