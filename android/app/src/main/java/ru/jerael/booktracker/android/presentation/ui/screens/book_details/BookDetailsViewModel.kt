@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import ru.jerael.booktracker.android.domain.model.Book
 import ru.jerael.booktracker.android.domain.usecases.GetBookByIdUseCase
 import ru.jerael.booktracker.android.domain.usecases.RefreshBookByIdUseCase
-import ru.jerael.booktracker.android.presentation.ui.navigation.BOOK_DETAILS_ARG_KEY
+import ru.jerael.booktracker.android.presentation.ui.navigation.BOOK_ID_ARG_KEY
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,7 +25,7 @@ class BookDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private var _bookId: String = checkNotNull(savedStateHandle[BOOK_DETAILS_ARG_KEY])
+    private var _bookId: String = checkNotNull(savedStateHandle[BOOK_ID_ARG_KEY])
     private val _book: Flow<Book?> = getBookByIdUseCase(_bookId)
     private val _userMessage: MutableStateFlow<String?> = MutableStateFlow(null)
     private val _isInitialLoading: MutableStateFlow<Boolean> = MutableStateFlow(false)
