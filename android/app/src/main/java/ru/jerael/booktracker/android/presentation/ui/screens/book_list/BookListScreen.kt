@@ -1,10 +1,13 @@
 package ru.jerael.booktracker.android.presentation.ui.screens.book_list
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
@@ -83,44 +86,41 @@ fun BookListScreenContent(
     PullToRefreshBox(
         state = pullRefreshState,
         isRefreshing = uiState.isRefreshing,
-        onRefresh = onRefresh
+        onRefresh = onRefresh,
+        modifier = Modifier.fillMaxSize()
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(MaterialTheme.dimensions.screenPadding),
-            verticalArrangement = if (uiState.books.isNotEmpty()) {
-                Arrangement.spacedBy(BookListScreenDefaults.ItemsSpacing)
-            } else {
-                Arrangement.Center
-            },
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            when {
-                uiState.isInitialLoading -> {
-                    item {
-                        CircularProgressIndicator()
-                    }
+        when {
+            uiState.isInitialLoading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
+            }
 
-                uiState.books.isNotEmpty() -> {
+            uiState.books.isNotEmpty() -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(MaterialTheme.dimensions.screenPadding),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     items(uiState.books) { book ->
                         BookCard(book, onBookClick)
                     }
                 }
+            }
 
-                else -> {
-                    item {
-                        Text(text = "Список книг пуст")
-                    }
+            else -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Список книг пуст")
                 }
             }
         }
     }
-}
-
-private object BookListScreenDefaults {
-    val ItemsSpacing = 16.dp
 }
 
 @PreviewLightDark
