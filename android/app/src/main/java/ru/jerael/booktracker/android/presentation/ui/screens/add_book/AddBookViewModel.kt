@@ -47,14 +47,16 @@ class AddBookViewModel @Inject constructor(
     private val _userMessage: MutableStateFlow<String?> = MutableStateFlow(null)
 
     private val _bookAddedSuccessfully: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val _createdBookId: MutableStateFlow<String?> = MutableStateFlow(null)
 
     private val processStateFlow: Flow<ProcessState> = combine(
-        _isSaving, _userMessage, _bookAddedSuccessfully
-    ) { isSaving, userMessage, bookAddedSuccessfully ->
+        _isSaving, _userMessage, _bookAddedSuccessfully, _createdBookId
+    ) { isSaving, userMessage, bookAddedSuccessfully, createdBookId ->
         ProcessState(
             isSaving = isSaving,
             userMessage = userMessage,
-            bookAddedSuccessfully = bookAddedSuccessfully
+            bookAddedSuccessfully = bookAddedSuccessfully,
+            createdBookId = createdBookId
         )
     }
 
@@ -72,7 +74,8 @@ class AddBookViewModel @Inject constructor(
             isSaving = processState.isSaving,
             userMessage = processState.userMessage,
             isSaveButtonEnabled = isSaveButtonEnabled,
-            bookAddedSuccessfully = processState.bookAddedSuccessfully
+            bookAddedSuccessfully = processState.bookAddedSuccessfully,
+            createdBookId = processState.createdBookId
         )
     }.stateIn(
         scope = viewModelScope,
@@ -117,6 +120,7 @@ class AddBookViewModel @Inject constructor(
                 if (result.isSuccess) {
                     _userMessage.value = "Книга успешно добавлена"
                     _bookAddedSuccessfully.value = true
+                    _createdBookId.value = result.getOrThrow()
                 } else {
                     val exception = result.exceptionOrNull()
                     _userMessage.value = "Ошибка при добавлении книги"
@@ -154,6 +158,7 @@ class AddBookViewModel @Inject constructor(
     private data class ProcessState(
         val isSaving: Boolean,
         val userMessage: String?,
-        val bookAddedSuccessfully: Boolean
+        val bookAddedSuccessfully: Boolean,
+        val createdBookId: String?
     )
 }

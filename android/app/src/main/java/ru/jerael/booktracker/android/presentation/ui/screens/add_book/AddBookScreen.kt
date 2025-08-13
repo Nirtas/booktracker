@@ -20,11 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,16 +38,20 @@ import ru.jerael.booktracker.android.presentation.ui.components.BookDetailsForm
 import ru.jerael.booktracker.android.presentation.ui.components.CoverPicker
 import ru.jerael.booktracker.android.presentation.ui.components.FormActionButtons
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarAction
+import ru.jerael.booktracker.android.presentation.ui.model.TopBarScrollBehavior
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
+import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddBookScreen(appViewModel: AppViewModel, onNavigateBack: () -> Unit) {
+fun AddBookScreen(
+    appViewModel: AppViewModel,
+    onNavigateBack: () -> Unit,
+    onNavigateToBookDetails: (String) -> Unit
+) {
     val viewModel: AddBookViewModel = hiltViewModel()
     val uiState: AddBookUiState by viewModel.uiState.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -61,13 +62,13 @@ fun AddBookScreen(appViewModel: AppViewModel, onNavigateBack: () -> Unit) {
         appViewModel.updateTopBar(
             newState = TopBarState(
                 title = "Добавить книгу",
-                isVisible = true,
+                type = TopBarType.SMALL,
+                scrollBehavior = TopBarScrollBehavior.PINNED,
                 navigationAction = TopBarAction(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
                     onClick = { if (!uiState.isSaving) onNavigateBack.invoke() }
-                ),
-                scrollBehavior = scrollBehavior
+                )
             )
         )
         appViewModel.updateFab(newState = null)
@@ -80,9 +81,9 @@ fun AddBookScreen(appViewModel: AppViewModel, onNavigateBack: () -> Unit) {
         }
     }
 
-    LaunchedEffect(uiState.bookAddedSuccessfully) {
-        if (uiState.bookAddedSuccessfully) {
-            // TODO: Navigate to BookDetailsScreen
+    LaunchedEffect(uiState.bookAddedSuccessfully, uiState.createdBookId) {
+        if (uiState.bookAddedSuccessfully && uiState.createdBookId != null) {
+            onNavigateToBookDetails.invoke(uiState.createdBookId!!)
         }
     }
 

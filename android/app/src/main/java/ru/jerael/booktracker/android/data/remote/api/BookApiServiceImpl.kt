@@ -9,6 +9,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.appendPathSegments
 import kotlinx.serialization.json.Json
 import ru.jerael.booktracker.android.data.remote.HttpRoute
 import ru.jerael.booktracker.android.data.remote.dto.BookCreationDto
@@ -38,5 +39,13 @@ class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
                     }
                 ))
         }.body()
+    }
+
+    override suspend fun getBookById(id: String): BookDto {
+        return httpClient.get(HttpRoute.BOOKS) {
+            url {
+                appendPathSegments(id)
+            }
+        }.body<BookDto>()
     }
 }

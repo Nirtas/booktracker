@@ -1,13 +1,17 @@
 package ru.jerael.booktracker.android.presentation.ui.model
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBarScrollBehavior
-
-@OptIn(ExperimentalMaterial3Api::class)
 data class TopBarState(
     val title: String = "",
-    val isVisible: Boolean = true,
+    val type: TopBarType = TopBarType.SMALL,
+    val scrollBehavior: TopBarScrollBehavior = TopBarScrollBehavior.PINNED,
     val navigationAction: TopBarAction? = null,
-    val actions: List<TopBarAction> = emptyList(),
-    val scrollBehavior: TopAppBarScrollBehavior? = null
+    val actions: List<TopBarAction> = emptyList()
 )
+
+enum class TopBarType {
+    SMALL, MEDIUM, LARGE, CENTER_ALIGNED
+}
+
+enum class TopBarScrollBehavior {
+    PINNED, ENTER_ALWAYS, EXIT_UNTIL_COLLAPSED
+}

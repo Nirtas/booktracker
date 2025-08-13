@@ -24,15 +24,14 @@ import coil3.compose.AsyncImage
 import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.domain.model.Book
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
-import ru.jerael.booktracker.android.presentation.ui.theme.bookCardAuthor
-import ru.jerael.booktracker.android.presentation.ui.theme.bookCardTitle
 
 @Composable
-fun BookCard(book: Book) {
+fun BookCard(book: Book, onClick: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(BookCardDefaults.Height)
+            .height(BookCardDefaults.Height),
+        onClick = { onClick.invoke(book.id) }
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.width(BookCardDefaults.CoverWidth)) {
@@ -60,14 +59,14 @@ fun BookCard(book: Book) {
                     text = book.title,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bookCardTitle
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = book.author,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bookCardAuthor
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
@@ -90,7 +89,8 @@ fun BookCardPreviewNoCover() {
                 title = "Название книги",
                 author = "Автор книги",
                 coverUrl = null
-            )
+            ),
+            {}
         )
     }
 }
@@ -105,7 +105,8 @@ fun BookCardPreviewWithCover() {
                 title = "Название книги",
                 author = "Автор книги",
                 coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg"
-            )
+            ),
+            {}
         )
     }
 }
@@ -120,7 +121,8 @@ fun BookCardPreviewTitleTwoLines() {
                 title = "Очень длинное название книги",
                 author = "Автор книги",
                 coverUrl = null
-            )
+            ),
+            {}
         )
     }
 }
@@ -135,7 +137,8 @@ fun BookCardPreviewTitleTooLong() {
                 title = "Слишком длинное название книги, не помещается в карточку",
                 author = "Автор книги",
                 coverUrl = null
-            )
+            ),
+            {}
         )
     }
 }
