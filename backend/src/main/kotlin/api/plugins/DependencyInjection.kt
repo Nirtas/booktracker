@@ -6,6 +6,6 @@ import ru.jerael.booktracker.backend.api.di.appModule
 
 fun Application.configureDI() {
     install(Koin) {
-        modules(appModule)
+        modules(appModule(environment))
     }
 }
