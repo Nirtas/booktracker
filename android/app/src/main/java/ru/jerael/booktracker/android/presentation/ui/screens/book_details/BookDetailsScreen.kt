@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +40,11 @@ import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookDetailsScreen(appViewModel: AppViewModel, onNavigateBack: () -> Unit) {
+fun BookDetailsScreen(
+    appViewModel: AppViewModel,
+    onNavigateBack: () -> Unit,
+    onNavigateToBookEdit: (String) -> Unit
+) {
     val viewModel: BookDetailsViewModel = hiltViewModel()
     val uiState: BookDetailsUiState by viewModel.uiState.collectAsState()
 
@@ -53,6 +58,13 @@ fun BookDetailsScreen(appViewModel: AppViewModel, onNavigateBack: () -> Unit) {
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
                     onClick = onNavigateBack
+                ),
+                actions = listOf(
+                    TopBarAction(
+                        icon = Icons.Default.Edit,
+                        contentDescription = null,
+                        onClick = { onNavigateToBookEdit.invoke(uiState.book!!.id) }
+                    )
                 )
             )
         )
@@ -95,7 +107,7 @@ fun BookDetailsScreenContent(uiState: BookDetailsUiState, onRefresh: () -> Unit)
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BookCover(
-                        imageUrl = uiState.book.coverUrl,
+                        model = uiState.book.coverUrl,
                         contentDescription = null,
                         modifier = Modifier
                             .width(192.dp)

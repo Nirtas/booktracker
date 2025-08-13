@@ -8,8 +8,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.TopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import ru.jerael.booktracker.android.presentation.ui.model.FabState
@@ -22,20 +23,30 @@ fun AppScaffold(
     topBarState: TopBarState?,
     snackbarHostState: SnackbarHostState,
     fabState: FabState?,
+    currentRoute: String?,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val scrollBehavior = topBarState?.let {
         when (it.scrollBehavior) {
             TopBarScrollBehavior.PINNED -> {
-                TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+                val topAppBarState = remember(currentRoute) {
+                    TopAppBarState(0f, 0f, 0f)
+                }
+                TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
             }
 
             TopBarScrollBehavior.ENTER_ALWAYS -> {
-                TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+                val topAppBarState = remember(currentRoute) {
+                    TopAppBarState(0f, 0f, 0f)
+                }
+                TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
             }
 
             TopBarScrollBehavior.EXIT_UNTIL_COLLAPSED -> {
-                TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+                val topAppBarState = remember(currentRoute) {
+                    TopAppBarState(0f, 0f, 0f)
+                }
+                TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
             }
         }
     }

@@ -7,8 +7,10 @@ import ru.jerael.booktracker.android.data.mappers.toBook
 import ru.jerael.booktracker.android.data.mappers.toBookEntity
 import ru.jerael.booktracker.android.data.remote.api.BookApiService
 import ru.jerael.booktracker.android.data.remote.dto.BookCreationDto
+import ru.jerael.booktracker.android.data.remote.dto.BookDetailsUpdateDto
 import ru.jerael.booktracker.android.domain.model.Book
 import ru.jerael.booktracker.android.domain.model.BookCreationPayload
+import ru.jerael.booktracker.android.domain.model.BookUpdatePayload
 import ru.jerael.booktracker.android.domain.repository.BookRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,6 +51,22 @@ class BookRepositoryImpl @Inject constructor(
     override suspend fun refreshBookById(id: String): Result<Unit> {
         return runCatching {
             val bookDto = api.getBookById(id)
+            val bookEntity = bookDto.toBookEntity()
+            dao.upsert(bookEntity)
+        }
+    }
+
+    override suspend fun updateBook(bookUpdatePayload: BookUpdatePayload): Result<Unit> {
+        return runCatching {
+            val bookDetailsUpdateDto = BookDetailsUpdateDto(
+                title = bookUpdatePayload.title,
+                author = bookUpdatePayload.author
+            )
+            val bookDto = api.updateBook(
+                bookUpdatePayload.id,
+                bookDetailsUpdateDto,
+                bookUpdatePayload.coverFile
+            )
             val bookEntity = bookDto.toBookEntity()
             dao.upsert(bookEntity)
         }

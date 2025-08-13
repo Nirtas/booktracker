@@ -1,4 +1,4 @@
-package ru.jerael.booktracker.android.presentation.ui.screens.add_book
+package ru.jerael.booktracker.android.presentation.ui.screens.book_edit
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
@@ -45,13 +45,12 @@ import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 
 @Composable
-fun AddBookScreen(
+fun BookEditScreen(
     appViewModel: AppViewModel,
-    onNavigateBack: () -> Unit,
-    onNavigateToBookDetails: (String) -> Unit
+    onNavigateBack: () -> Unit
 ) {
-    val viewModel: AddBookViewModel = hiltViewModel()
-    val uiState: AddBookUiState by viewModel.uiState.collectAsState()
+    val viewModel: BookEditViewModel = hiltViewModel()
+    val uiState: BookEditUiState by viewModel.uiState.collectAsState()
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -61,13 +60,13 @@ fun AddBookScreen(
     LaunchedEffect(null) {
         appViewModel.updateTopBar(
             newState = TopBarState(
-                title = "Добавить книгу",
+                title = "Редактирование книги",
                 type = TopBarType.SMALL,
                 scrollBehavior = TopBarScrollBehavior.PINNED,
                 navigationAction = TopBarAction(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
-                    onClick = { if (!uiState.isSaving) onNavigateBack.invoke() }
+                    onClick = { if (!uiState.isSaving) onNavigateBack() }
                 )
             )
         )
@@ -81,13 +80,11 @@ fun AddBookScreen(
         }
     }
 
-    LaunchedEffect(uiState.bookAddedSuccessfully, uiState.createdBookId) {
-        if (uiState.bookAddedSuccessfully && uiState.createdBookId != null) {
-            onNavigateToBookDetails.invoke(uiState.createdBookId!!)
-        }
+    LaunchedEffect(uiState.navigateToBookId) {
+        uiState.navigateToBookId?.let { onNavigateBack() }
     }
 
-    AddBookScreenContent(
+    BookEditScreenContent(
         uiState = uiState,
         onTitleChange = viewModel::onTitleChanged,
         onAuthorChange = viewModel::onAuthorChanged,
@@ -99,8 +96,8 @@ fun AddBookScreen(
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun AddBookScreenContent(
-    uiState: AddBookUiState,
+fun BookEditScreenContent(
+    uiState: BookEditUiState,
     onTitleChange: (String) -> Unit,
     onAuthorChange: (String) -> Unit,
     onCoverSelectClick: () -> Unit,
@@ -137,13 +134,9 @@ fun AddBookScreenContent(
     }
 }
 
-private object AddBookScreenDefaults {
-    val ImageToFromSpacing = 36.dp
-}
-
 @Composable
 private fun LandscapeLayout(
-    uiState: AddBookUiState,
+    uiState: BookEditUiState,
     onTitleChange: (String) -> Unit,
     onAuthorChange: (String) -> Unit,
     onCoverSelectClick: () -> Unit,
@@ -155,14 +148,14 @@ private fun LandscapeLayout(
         verticalAlignment = Alignment.Top
     ) {
         CoverPicker(
-            model = uiState.coverUri,
+            model = uiState.coverUri ?: uiState.initialCoverUrl,
             contentDescription = null,
             onClick = onCoverSelectClick,
             modifier = Modifier
                 .weight(1.5f)
                 .aspectRatio(0.75f)
         )
-        Spacer(modifier = Modifier.width(AddBookScreenDefaults.ImageToFromSpacing))
+        Spacer(modifier = Modifier.width(36.dp))
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -191,7 +184,7 @@ private fun LandscapeLayout(
 
 @Composable
 private fun PortraitLayout(
-    uiState: AddBookUiState,
+    uiState: BookEditUiState,
     onTitleChange: (String) -> Unit,
     onAuthorChange: (String) -> Unit,
     onCoverSelectClick: () -> Unit,
@@ -210,7 +203,7 @@ private fun PortraitLayout(
                 .height(IntrinsicSize.Min)
         ) {
             CoverPicker(
-                model = uiState.coverUri,
+                model = uiState.coverUri ?: uiState.initialCoverUrl,
                 contentDescription = null,
                 onClick = onCoverSelectClick,
                 modifier = Modifier
@@ -246,7 +239,7 @@ private fun PortraitLayout(
 fun LandscapeLayoutPreview() {
     BookTrackerTheme {
         LandscapeLayout(
-            uiState = AddBookUiState(),
+            uiState = BookEditUiState(),
             onTitleChange = {},
             onAuthorChange = {},
             onCoverSelectClick = {},
@@ -261,7 +254,7 @@ fun LandscapeLayoutPreview() {
 fun PortraitLayoutPreview() {
     BookTrackerTheme {
         PortraitLayout(
-            uiState = AddBookUiState(),
+            uiState = BookEditUiState(),
             onTitleChange = {},
             onAuthorChange = {},
             onCoverSelectClick = {},

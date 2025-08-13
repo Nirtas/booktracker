@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ru.jerael.booktracker.android.presentation.ui.components.AppScaffold
 import ru.jerael.booktracker.android.presentation.ui.model.FabState
@@ -26,10 +27,13 @@ fun BookTrackerApp(appViewModel: AppViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val topBarState by appViewModel.topBarState.collectAsState()
     val fabState by appViewModel.fabState.collectAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
     AppScaffold(
         topBarState = topBarState,
         snackbarHostState = appViewModel.snackbarHostState,
-        fabState = fabState
+        fabState = fabState,
+        currentRoute = currentRoute
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
@@ -51,7 +55,8 @@ private fun BookTrackerAppPreview() {
         AppScaffold(
             topBarState = topBarState,
             snackbarHostState = snackbarHostState,
-            fabState = fabState
+            fabState = fabState,
+            currentRoute = null
         ) { innerPadding ->
             Box(
                 modifier = Modifier

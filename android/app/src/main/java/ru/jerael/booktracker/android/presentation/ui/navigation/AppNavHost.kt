@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.screens.add_book.AddBookScreen
 import ru.jerael.booktracker.android.presentation.ui.screens.book_details.BookDetailsScreen
+import ru.jerael.booktracker.android.presentation.ui.screens.book_edit.BookEditScreen
 import ru.jerael.booktracker.android.presentation.ui.screens.book_list.BookListScreen
 
 @Composable
@@ -52,13 +53,32 @@ fun AppNavHost(
         composable(
             route = Screen.BookDetails.route,
             arguments = listOf(
-                navArgument(BOOK_DETAILS_ARG_KEY) {
+                navArgument(BOOK_ID_ARG_KEY) {
                     type = NavType.StringType
                     nullable = false
                 }
             )
         ) {
             BookDetailsScreen(
+                appViewModel = appViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToBookEdit = { bookId ->
+                    navController.navigate(route = Screen.BookEdit.withArgs(bookId))
+                }
+            )
+        }
+        composable(
+            route = Screen.BookEdit.route,
+            arguments = listOf(
+                navArgument(BOOK_ID_ARG_KEY) {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) {
+            BookEditScreen(
                 appViewModel = appViewModel,
                 onNavigateBack = {
                     navController.popBackStack()

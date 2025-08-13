@@ -13,12 +13,12 @@ import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 
 @Composable
 fun BookCover(
-    imageUrl: String?,
+    model: Any?,
     contentDescription: String?,
     modifier: Modifier = Modifier
 ) {
     CoverContainer(modifier = modifier) {
-        if (imageUrl.isNullOrBlank()) {
+        if (model == null) {
             Image(
                 painter = painterResource(R.drawable.book_picture),
                 contentScale = ContentScale.Crop,
@@ -27,7 +27,7 @@ fun BookCover(
         } else {
             AsyncImage(
                 modifier = Modifier.fillMaxSize(),
-                model = imageUrl,
+                model = model,
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Crop
             )
@@ -39,6 +39,6 @@ fun BookCover(
 @Composable
 fun BookCoverPreview() {
     BookTrackerTheme {
-        BookCover(imageUrl = null, contentDescription = null)
+        BookCover(model = null, contentDescription = null)
     }
 }
