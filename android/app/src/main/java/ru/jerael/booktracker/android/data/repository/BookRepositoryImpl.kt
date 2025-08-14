@@ -71,4 +71,11 @@ class BookRepositoryImpl @Inject constructor(
             dao.upsert(bookEntity)
         }
     }
+
+    override suspend fun deleteBook(id: String): Result<Unit> {
+        return runCatching {
+            api.deleteBook(id)
+            dao.deleteBookById(id)
+        }
+    }
 }

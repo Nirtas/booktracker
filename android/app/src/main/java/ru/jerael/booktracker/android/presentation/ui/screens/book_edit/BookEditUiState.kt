@@ -13,5 +13,8 @@ data class BookEditUiState(
     val isSaveButtonEnabled: Boolean = false,
     val navigateToBookId: String? = null,
     val isLoading: Boolean = false,
-    val initialCoverUrl: String? = null
+    val initialCoverUrl: String? = null,
+    val isDeleting: Boolean = false,
+    val showDeleteConfirmDialog: Boolean = false,
+    val deletionCompleted: Boolean = false
 )

@@ -82,6 +82,13 @@ fun AppNavHost(
                 appViewModel = appViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToBookListAfterDeletion = {
+                    navController.navigate(route = Screen.BookList.route) {
+                        popUpTo(Screen.BookList.route) {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }

@@ -17,4 +17,6 @@ interface BookRepository {
     suspend fun refreshBookById(id: String): Result<Unit>
 
     suspend fun updateBook(bookUpdatePayload: BookUpdatePayload): Result<Unit>
+
+    suspend fun deleteBook(id: String): Result<Unit>
 }

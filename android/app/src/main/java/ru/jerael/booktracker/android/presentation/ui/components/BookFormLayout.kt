@@ -43,7 +43,8 @@ fun BookFormLayout(
     isSaving: Boolean,
     isSaveButtonEnabled: Boolean,
     onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit
+    onCancelClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     Surface(
         modifier = Modifier
@@ -65,7 +66,8 @@ fun BookFormLayout(
                     isSaving = isSaving,
                     isSaveButtonEnabled = isSaveButtonEnabled,
                     onSaveClick = onSaveClick,
-                    onCancelClick = onCancelClick
+                    onCancelClick = onCancelClick,
+                    onDeleteClick = onDeleteClick
                 )
             } else {
                 PortraitLayout(
@@ -80,7 +82,8 @@ fun BookFormLayout(
                     isSaving = isSaving,
                     isSaveButtonEnabled = isSaveButtonEnabled,
                     onSaveClick = onSaveClick,
-                    onCancelClick = onCancelClick
+                    onCancelClick = onCancelClick,
+                    onDeleteClick = onDeleteClick
                 )
             }
         }
@@ -100,7 +103,8 @@ private fun LandscapeLayout(
     isSaving: Boolean,
     isSaveButtonEnabled: Boolean,
     onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit
+    onCancelClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier.fillMaxSize(),
@@ -119,23 +123,29 @@ private fun LandscapeLayout(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(2f)
-                .verticalScroll(rememberScrollState())
         ) {
-            BookDetailsForm(
-                title = title,
-                onTitleChange = onTitleChange,
-                isTitleValid = isTitleValid,
-                author = author,
-                onAuthorChange = onAuthorChange,
-                isAuthorValid = isAuthorValid,
-                areFieldsEnabled = !isSaving
-            )
-            Spacer(modifier = Modifier.weight(1f))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                BookDetailsForm(
+                    title = title,
+                    onTitleChange = onTitleChange,
+                    isTitleValid = isTitleValid,
+                    author = author,
+                    onAuthorChange = onAuthorChange,
+                    isAuthorValid = isAuthorValid,
+                    areFieldsEnabled = !isSaving
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             FormActionButtons(
                 onSaveClick = onSaveClick,
                 isSaveButtonEnabled = isSaveButtonEnabled,
                 onCancelClick = onCancelClick,
-                isCancelButtonEnabled = !isSaving
+                isCancelButtonEnabled = !isSaving,
+                onDeleteClick = onDeleteClick
             )
         }
     }
@@ -154,46 +164,52 @@ private fun PortraitLayout(
     isSaving: Boolean,
     isSaveButtonEnabled: Boolean,
     onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit
+    onCancelClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min)
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
         ) {
-            CoverPicker(
-                model = coverModel,
-                contentDescription = null,
-                onClick = onCoverSelectClick,
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(0.75f)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1.6f)) {
-                BookDetailsForm(
-                    title = title,
-                    onTitleChange = onTitleChange,
-                    isTitleValid = isTitleValid,
-                    author = author,
-                    onAuthorChange = onAuthorChange,
-                    isAuthorValid = isAuthorValid,
-                    areFieldsEnabled = !isSaving
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+            ) {
+                CoverPicker(
+                    model = coverModel,
+                    contentDescription = null,
+                    onClick = onCoverSelectClick,
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(0.75f)
                 )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1.6f)) {
+                    BookDetailsForm(
+                        title = title,
+                        onTitleChange = onTitleChange,
+                        isTitleValid = isTitleValid,
+                        author = author,
+                        onAuthorChange = onAuthorChange,
+                        isAuthorValid = isAuthorValid,
+                        areFieldsEnabled = !isSaving
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(16.dp))
         FormActionButtons(
             onSaveClick = onSaveClick,
             isSaveButtonEnabled = isSaveButtonEnabled,
             onCancelClick = onCancelClick,
-            isCancelButtonEnabled = !isSaving
+            isCancelButtonEnabled = !isSaving,
+            onDeleteClick = onDeleteClick
         )
     }
 }
@@ -204,7 +220,7 @@ private fun PortraitLayout(
 private fun LandscapeLayoutPreview() {
     BookTrackerTheme {
         Surface(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-            PortraitLayout(
+            LandscapeLayout(
                 title = "Название",
                 isTitleValid = true,
                 onTitleChange = {},
@@ -216,7 +232,8 @@ private fun LandscapeLayoutPreview() {
                 isSaving = false,
                 isSaveButtonEnabled = false,
                 onSaveClick = {},
-                onCancelClick = {}
+                onCancelClick = {},
+                onDeleteClick = {}
             )
         }
     }
@@ -239,7 +256,8 @@ private fun PortraitLayoutPreview() {
                 isSaving = false,
                 isSaveButtonEnabled = false,
                 onSaveClick = {},
-                onCancelClick = {}
+                onCancelClick = {},
+                onDeleteClick = {}
             )
         }
     }
