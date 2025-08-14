@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.jerael.booktracker.android.domain.model.Book
 import ru.jerael.booktracker.android.domain.model.BookUpdatePayload
+import ru.jerael.booktracker.android.domain.usecases.DeleteBookUseCase
 import ru.jerael.booktracker.android.domain.usecases.GetBookByIdUseCase
 import ru.jerael.booktracker.android.domain.usecases.UpdateBookUseCase
 import ru.jerael.booktracker.android.presentation.ui.navigation.BOOK_ID_ARG_KEY
@@ -27,6 +28,7 @@ import javax.inject.Inject
 class BookEditViewModel @Inject constructor(
     getBookByIdUseCase: GetBookByIdUseCase,
     private val updateBookUseCase: UpdateBookUseCase,
+    private val deleteBookUseCase: DeleteBookUseCase,
     private val application: Application,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -86,11 +88,25 @@ class BookEditViewModel @Inject constructor(
         )
     }
 
+    private val _isDeleting: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val _showDeleteConfirmDialog: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val _deletionCompleted: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    private val deleteStateFlow: Flow<DeleteState> = combine(
+        _isDeleting, _showDeleteConfirmDialog, _deletionCompleted
+    ) { isDeleting, showDeleteConfirmDialog, deletionCompleted ->
+        DeleteState(
+            isDeleting = isDeleting,
+            showDeleteConfirmDialog = showDeleteConfirmDialog,
+            deletionCompleted = deletionCompleted
+        )
+    }
+
     val uiState: StateFlow<BookEditUiState> = combine(
-        formDataFlow, validationStateFlow, processStateFlow
-    ) { formData, validationState, processState ->
+        formDataFlow, validationStateFlow, processStateFlow, deleteStateFlow
+    ) { formData, validationState, processState, deleteState ->
         val isSaveButtonEnabled = formData.title.isNotBlank() && formData.author.isNotBlank() &&
-                !processState.isSaving && !processState.isLoading
+                !processState.isSaving && !processState.isLoading && !deleteState.isDeleting
         BookEditUiState(
             title = formData.title,
             author = formData.author,
@@ -102,7 +118,10 @@ class BookEditViewModel @Inject constructor(
             isSaveButtonEnabled = isSaveButtonEnabled,
             navigateToBookId = processState.navigateToBookId,
             isLoading = processState.isLoading,
-            initialCoverUrl = formData.initialCoverUrl
+            initialCoverUrl = formData.initialCoverUrl,
+            isDeleting = deleteState.isDeleting,
+            showDeleteConfirmDialog = deleteState.showDeleteConfirmDialog,
+            deletionCompleted = deleteState.deletionCompleted
         )
     }.stateIn(
         scope = viewModelScope,
@@ -160,7 +179,6 @@ class BookEditViewModel @Inject constructor(
                 if (result.isSuccess) {
                     _userMessage.value = "Книга успешно изменена"
                     _navigateToBookId.value = _bookId
-
                 } else {
                     val exception = result.exceptionOrNull()
                     _userMessage.value = "Ошибка при изменении книги"
@@ -172,6 +190,32 @@ class BookEditViewModel @Inject constructor(
             } finally {
                 _isSaving.value = false
             }
+        }
+    }
+
+    fun onDeleteClick() {
+        _showDeleteConfirmDialog.value = true
+    }
+
+    fun onDismissDeleteDialog() {
+        _showDeleteConfirmDialog.value = false
+    }
+
+    fun onConfirmDelete() {
+        viewModelScope.launch {
+            _isDeleting.value = true
+            _showDeleteConfirmDialog.value = false
+            val result = deleteBookUseCase(_bookId)
+            if (result.isSuccess) {
+                _userMessage.value = "Книга успешно удалена"
+                _deletionCompleted.value = true
+            } else {
+                val exception = result.exceptionOrNull()
+                _userMessage.value = "Ошибка при удалении книги"
+                Log.e("BookEditViewModel", "Ошибка при удалении книги", exception)
+                _deletionCompleted.value = false
+            }
+            _isDeleting.value = false
         }
     }
 
@@ -207,5 +251,11 @@ class BookEditViewModel @Inject constructor(
         val userMessage: String?,
         val navigateToBookId: String?,
         val isLoading: Boolean
+    )
+
+    private data class DeleteState(
+        val isDeleting: Boolean,
+        val showDeleteConfirmDialog: Boolean,
+        val deletionCompleted: Boolean
     )
 }

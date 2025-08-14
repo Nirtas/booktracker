@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookFormLayout
+import ru.jerael.booktracker.android.presentation.ui.components.DeleteConfirmationDialog
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarAction
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarScrollBehavior
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
@@ -19,7 +20,8 @@ import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
 @Composable
 fun BookEditScreen(
     appViewModel: AppViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToBookListAfterDeletion: () -> Unit
 ) {
     val viewModel: BookEditViewModel = hiltViewModel()
     val uiState: BookEditUiState by viewModel.uiState.collectAsState()
@@ -56,6 +58,19 @@ fun BookEditScreen(
         uiState.navigateToBookId?.let { onNavigateBack() }
     }
 
+    LaunchedEffect(uiState.deletionCompleted) {
+        if (uiState.deletionCompleted) {
+            onNavigateToBookListAfterDeletion()
+        }
+    }
+
+    if (uiState.showDeleteConfirmDialog) {
+        DeleteConfirmationDialog(
+            onConfirm = viewModel::onConfirmDelete,
+            onDismiss = viewModel::onDismissDeleteDialog
+        )
+    }
+
     BookFormLayout(
         title = uiState.title,
         isTitleValid = uiState.isTitleValid,
@@ -68,7 +83,8 @@ fun BookEditScreen(
         isSaving = uiState.isSaving,
         isSaveButtonEnabled = uiState.isSaveButtonEnabled,
         onSaveClick = viewModel::onSaveClick,
-        onCancelClick = onNavigateBack
+        onCancelClick = onNavigateBack,
+        onDeleteClick = viewModel::onDeleteClick
     )
 }
 

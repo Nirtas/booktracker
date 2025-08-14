@@ -17,4 +17,6 @@ interface BookApiService {
         bookDetailsUpdateDto: BookDetailsUpdateDto,
         coverFile: File?
     ): BookDto
+
+    suspend fun deleteBook(id: String)
 }

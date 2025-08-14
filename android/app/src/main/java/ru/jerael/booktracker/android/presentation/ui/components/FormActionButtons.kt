@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,13 +22,23 @@ fun FormActionButtons(
     onSaveClick: () -> Unit,
     isSaveButtonEnabled: Boolean,
     onCancelClick: () -> Unit,
-    isCancelButtonEnabled: Boolean
+    isCancelButtonEnabled: Boolean,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (onDeleteClick != null) {
+            TextButton(
+                onClick = onDeleteClick,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text(text = "Удалить")
+            }
+            Spacer(Modifier.weight(1f))
+        }
         TextButton(enabled = isCancelButtonEnabled, onClick = onCancelClick) {
             Text(text = "Отмена")
         }
@@ -39,13 +51,14 @@ fun FormActionButtons(
 
 @PreviewLightDark
 @Composable
-fun FormActionButtonsPreview() {
+private fun FormActionButtonsPreview() {
     BookTrackerTheme {
         FormActionButtons(
             onSaveClick = {},
             isSaveButtonEnabled = true,
             onCancelClick = {},
-            isCancelButtonEnabled = false
+            isCancelButtonEnabled = false,
+            onDeleteClick = {}
         )
     }
 }

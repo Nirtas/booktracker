@@ -2,6 +2,7 @@ package ru.jerael.booktracker.android.data.remote.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
@@ -75,5 +76,9 @@ class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
             }.body<BookDto>()
         }
         return bookDto
+    }
+
+    override suspend fun deleteBook(id: String) {
+        httpClient.delete(HttpRoute.bookById(id))
     }
 }
