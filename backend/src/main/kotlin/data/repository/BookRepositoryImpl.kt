@@ -11,7 +11,6 @@ import org.jetbrains.exposed.v1.jdbc.update
 import ru.jerael.booktracker.backend.data.db.tables.Books
 import ru.jerael.booktracker.backend.data.mappers.toBook
 import ru.jerael.booktracker.backend.domain.model.Book
-import ru.jerael.booktracker.backend.domain.model.BookCoverUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
@@ -68,11 +67,11 @@ class BookRepositoryImpl : BookRepository {
         }
     }
 
-    override suspend fun updateBookCover(id: UUID, bookCoverUpdatePayload: BookCoverUpdatePayload): Book? {
+    override suspend fun updateBookCover(id: UUID, newCoverPath: String): Book? {
         return withContext(Dispatchers.IO) {
             transaction {
                 val updatedRows = Books.update({ Books.id eq id }) {
-                    it[coverPath] = bookCoverUpdatePayload.coverPath
+                    it[coverPath] = newCoverPath
                 }
                 if (updatedRows > 0) {
                     Books.selectAll().where(Books.id eq id).singleOrNull()?.toBook()

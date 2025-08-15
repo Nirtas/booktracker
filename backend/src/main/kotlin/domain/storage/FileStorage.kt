@@ -4,5 +4,5 @@ import io.ktor.utils.io.*
 
 interface FileStorage {
     suspend fun saveFile(path: String, channel: ByteReadChannel): String
-    suspend fun deleteFile(path: String): Boolean
+    suspend fun deleteFile(path: String)
 }
