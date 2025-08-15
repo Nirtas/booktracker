@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import java.io.File
 
-class LocalFileStorage(private val environment: ApplicationEnvironment) : FileStorage {
+class FileStorageImpl(private val environment: ApplicationEnvironment) : FileStorage {
 
     private val storagePath = environment.config.property("ktor.storage.persistentPath").getString()
 
@@ -22,13 +22,15 @@ class LocalFileStorage(private val environment: ApplicationEnvironment) : FileSt
         return path
     }
 
-    override suspend fun deleteFile(path: String): Boolean {
-        return withContext(Dispatchers.IO) {
+    override suspend fun deleteFile(path: String) {
+        withContext(Dispatchers.IO) {
             try {
-                File(storagePath, path).delete()
+                val file = File(storagePath, path)
+                if (file.exists()) {
+                    file.delete()
+                }
             } catch (e: Exception) {
                 environment.log.error("Failed to delete file at path: $path")
-                false
             }
         }
     }

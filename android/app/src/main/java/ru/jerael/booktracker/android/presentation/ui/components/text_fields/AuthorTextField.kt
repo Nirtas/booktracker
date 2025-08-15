@@ -1,6 +1,5 @@
 package ru.jerael.booktracker.android.presentation.ui.components.text_fields
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,20 +15,19 @@ fun AuthorTextField(
     modifier: Modifier = Modifier,
     author: String,
     onTextChanged: (String) -> Unit,
+    onClearClick: () -> Unit,
     isInvalid: Boolean,
     isEnabled: Boolean
 ) {
     AppTextField(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         text = author,
-        label = "Автор",
+        label = "Автор *",
         placeholder = "",
         onTextChanged = onTextChanged,
         isInvalid = isInvalid,
         isEnabled = isEnabled,
-        onClearButtonClick = {
-            onTextChanged("")
-        },
+        onClearButtonClick = onClearClick,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Words,
             keyboardType = KeyboardType.Text,
@@ -42,6 +40,12 @@ fun AuthorTextField(
 @Composable
 fun AuthorTextFieldPreview() {
     BookTrackerTheme {
-        AuthorTextField(author = "", onTextChanged = {}, isInvalid = true, isEnabled = true)
+        AuthorTextField(
+            author = "",
+            onTextChanged = {},
+            onClearClick = {},
+            isInvalid = true,
+            isEnabled = true
+        )
     }
 }

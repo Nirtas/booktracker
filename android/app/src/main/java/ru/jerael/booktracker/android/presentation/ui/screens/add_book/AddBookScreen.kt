@@ -2,12 +2,18 @@ package ru.jerael.booktracker.android.presentation.ui.screens.add_book
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookFormLayout
@@ -27,7 +33,7 @@ fun AddBookScreen(
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        viewModel.onCoverSelected(uri = uri)
+        viewModel.onCoverSelected(newUri = uri)
     }
 
     LaunchedEffect(null) {
@@ -59,18 +65,32 @@ fun AddBookScreen(
         }
     }
 
-    BookFormLayout(
-        title = uiState.title,
-        isTitleValid = uiState.isTitleValid,
-        onTitleChange = viewModel::onTitleChanged,
-        author = uiState.author,
-        isAuthorValid = uiState.isAuthorValid,
-        onAuthorChange = viewModel::onAuthorChanged,
-        coverModel = uiState.coverUri,
-        onCoverSelectClick = { imagePickerLauncher.launch("image/*") },
-        isSaving = uiState.isSaving,
-        isSaveButtonEnabled = uiState.isSaveButtonEnabled,
-        onSaveClick = viewModel::onSaveClick,
-        onCancelClick = onNavigateBack
-    )
+    val focusManager = LocalFocusManager.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures { focusManager.clearFocus() }
+            }
+    ) {
+        BookFormLayout(
+            title = uiState.title,
+            showTitleError = uiState.showTitleError,
+            onTitleChange = viewModel::onTitleChanged,
+            onTitleFocusChanged = viewModel::onTitleFocusChanged,
+            onTitleClearClick = viewModel::onClearTitle,
+            author = uiState.author,
+            showAuthorError = uiState.showAuthorError,
+            onAuthorChange = viewModel::onAuthorChanged,
+            onAuthorFocusChanged = viewModel::onAuthorFocusChanged,
+            onAuthorClearClick = viewModel::onClearAuthor,
+            coverModel = uiState.coverUri,
+            onCoverSelectClick = { imagePickerLauncher.launch("image/*") },
+            isSaving = uiState.isSaving,
+            isSaveButtonEnabled = uiState.isSaveButtonEnabled,
+            onSaveClick = viewModel::onSaveClick,
+            onCancelClick = onNavigateBack
+        )
+    }
 }

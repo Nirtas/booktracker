@@ -22,10 +22,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import ru.jerael.booktracker.android.presentation.ui.components.text_fields.AuthorTextField
+import ru.jerael.booktracker.android.presentation.ui.components.text_fields.TitleTextField
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 
@@ -33,11 +36,15 @@ import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
 @Composable
 fun BookFormLayout(
     title: String,
-    isTitleValid: Boolean,
+    showTitleError: Boolean,
     onTitleChange: (String) -> Unit,
+    onTitleFocusChanged: (Boolean) -> Unit,
+    onTitleClearClick: () -> Unit,
     author: String,
-    isAuthorValid: Boolean,
+    showAuthorError: Boolean,
     onAuthorChange: (String) -> Unit,
+    onAuthorFocusChanged: (Boolean) -> Unit,
+    onAuthorClearClick: () -> Unit,
     coverModel: Any?,
     onCoverSelectClick: () -> Unit,
     isSaving: Boolean,
@@ -56,11 +63,15 @@ fun BookFormLayout(
             if (maxWidth > maxHeight) {
                 LandscapeLayout(
                     title = title,
-                    isTitleValid = isTitleValid,
+                    showTitleError = showTitleError,
                     onTitleChange = onTitleChange,
+                    onTitleFocusChanged = onTitleFocusChanged,
+                    onTitleClearClick = onTitleClearClick,
                     author = author,
-                    isAuthorValid = isAuthorValid,
+                    showAuthorError = showAuthorError,
                     onAuthorChange = onAuthorChange,
+                    onAuthorFocusChanged = onAuthorFocusChanged,
+                    onAuthorClearClick = onAuthorClearClick,
                     coverModel = coverModel,
                     onCoverSelectClick = onCoverSelectClick,
                     isSaving = isSaving,
@@ -72,11 +83,15 @@ fun BookFormLayout(
             } else {
                 PortraitLayout(
                     title = title,
-                    isTitleValid = isTitleValid,
+                    showTitleError = showTitleError,
                     onTitleChange = onTitleChange,
+                    onTitleFocusChanged = onTitleFocusChanged,
+                    onTitleClearClick = onTitleClearClick,
                     author = author,
-                    isAuthorValid = isAuthorValid,
+                    showAuthorError = showAuthorError,
                     onAuthorChange = onAuthorChange,
+                    onAuthorFocusChanged = onAuthorFocusChanged,
+                    onAuthorClearClick = onAuthorClearClick,
                     coverModel = coverModel,
                     onCoverSelectClick = onCoverSelectClick,
                     isSaving = isSaving,
@@ -93,11 +108,15 @@ fun BookFormLayout(
 @Composable
 private fun LandscapeLayout(
     title: String,
-    isTitleValid: Boolean,
+    showTitleError: Boolean,
     onTitleChange: (String) -> Unit,
+    onTitleFocusChanged: (Boolean) -> Unit,
+    onTitleClearClick: () -> Unit,
     author: String,
-    isAuthorValid: Boolean,
+    showAuthorError: Boolean,
     onAuthorChange: (String) -> Unit,
+    onAuthorFocusChanged: (Boolean) -> Unit,
+    onAuthorClearClick: () -> Unit,
     coverModel: Any?,
     onCoverSelectClick: () -> Unit,
     isSaving: Boolean,
@@ -129,14 +148,30 @@ private fun LandscapeLayout(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
-                BookDetailsForm(
+                TitleTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            onTitleFocusChanged(focusState.isFocused)
+                        },
                     title = title,
-                    onTitleChange = onTitleChange,
-                    isTitleValid = isTitleValid,
+                    onTextChanged = onTitleChange,
+                    onClearClick = onTitleClearClick,
+                    isInvalid = showTitleError,
+                    isEnabled = !isSaving
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                AuthorTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            onAuthorFocusChanged(focusState.isFocused)
+                        },
                     author = author,
-                    onAuthorChange = onAuthorChange,
-                    isAuthorValid = isAuthorValid,
-                    areFieldsEnabled = !isSaving
+                    onTextChanged = onAuthorChange,
+                    onClearClick = onAuthorClearClick,
+                    isInvalid = showAuthorError,
+                    isEnabled = !isSaving
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -154,11 +189,15 @@ private fun LandscapeLayout(
 @Composable
 private fun PortraitLayout(
     title: String,
-    isTitleValid: Boolean,
+    showTitleError: Boolean,
     onTitleChange: (String) -> Unit,
+    onTitleFocusChanged: (Boolean) -> Unit,
+    onTitleClearClick: () -> Unit,
     author: String,
-    isAuthorValid: Boolean,
+    showAuthorError: Boolean,
     onAuthorChange: (String) -> Unit,
+    onAuthorFocusChanged: (Boolean) -> Unit,
+    onAuthorClearClick: () -> Unit,
     coverModel: Any?,
     onCoverSelectClick: () -> Unit,
     isSaving: Boolean,
@@ -191,14 +230,30 @@ private fun PortraitLayout(
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1.6f)) {
-                    BookDetailsForm(
+                    TitleTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                onTitleFocusChanged(focusState.isFocused)
+                            },
                         title = title,
-                        onTitleChange = onTitleChange,
-                        isTitleValid = isTitleValid,
+                        onTextChanged = onTitleChange,
+                        onClearClick = onTitleClearClick,
+                        isInvalid = showTitleError,
+                        isEnabled = !isSaving
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AuthorTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                onAuthorFocusChanged(focusState.isFocused)
+                            },
                         author = author,
-                        onAuthorChange = onAuthorChange,
-                        isAuthorValid = isAuthorValid,
-                        areFieldsEnabled = !isSaving
+                        onTextChanged = onAuthorChange,
+                        onClearClick = onAuthorClearClick,
+                        isInvalid = showAuthorError,
+                        isEnabled = !isSaving
                     )
                 }
             }
@@ -222,11 +277,15 @@ private fun LandscapeLayoutPreview() {
         Surface(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
             LandscapeLayout(
                 title = "Название",
-                isTitleValid = true,
+                showTitleError = true,
                 onTitleChange = {},
+                onTitleFocusChanged = {},
+                onTitleClearClick = {},
                 author = "Автор",
-                isAuthorValid = false,
+                showAuthorError = false,
                 onAuthorChange = {},
+                onAuthorFocusChanged = {},
+                onAuthorClearClick = {},
                 coverModel = null,
                 onCoverSelectClick = {},
                 isSaving = false,
@@ -246,11 +305,15 @@ private fun PortraitLayoutPreview() {
         Surface(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
             PortraitLayout(
                 title = "Название",
-                isTitleValid = true,
+                showTitleError = true,
                 onTitleChange = {},
+                onTitleFocusChanged = {},
+                onTitleClearClick = {},
                 author = "Автор",
-                isAuthorValid = false,
+                showAuthorError = false,
                 onAuthorChange = {},
+                onAuthorFocusChanged = {},
+                onAuthorClearClick = {},
                 coverModel = null,
                 onCoverSelectClick = {},
                 isSaving = false,
