@@ -1,6 +1,6 @@
-package ru.jerael.booktracker.backend.domain.usecases
+package ru.jerael.booktracker.backend.domain.usecases.book
 
-import ru.jerael.booktracker.backend.domain.model.Book
+import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import java.util.*
 

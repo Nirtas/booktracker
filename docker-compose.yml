@@ -26,7 +26,10 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_SETUP_SERVERS: "1"
     volumes:
+      - ./pgadmin-config/servers.json:/pgadmin4/servers.json
+      - ./pgadmin-config/pgpass:/var/lib/pgadmin/pgpass
       - pgadmin_data:/var/lib/pgadmin
     networks:
       - app-network

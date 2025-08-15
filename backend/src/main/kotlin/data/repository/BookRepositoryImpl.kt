@@ -10,9 +10,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import ru.jerael.booktracker.backend.data.db.tables.Books
 import ru.jerael.booktracker.backend.data.mappers.toBook
-import ru.jerael.booktracker.backend.domain.model.Book
-import ru.jerael.booktracker.backend.domain.model.BookCreationPayload
-import ru.jerael.booktracker.backend.domain.model.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.Book
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import java.util.*
 

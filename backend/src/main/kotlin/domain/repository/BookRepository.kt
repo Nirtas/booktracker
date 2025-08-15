@@ -1,8 +1,8 @@
 package ru.jerael.booktracker.backend.domain.repository
 
-import ru.jerael.booktracker.backend.domain.model.Book
-import ru.jerael.booktracker.backend.domain.model.BookCreationPayload
-import ru.jerael.booktracker.backend.domain.model.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.Book
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import java.util.*
 
 interface BookRepository {

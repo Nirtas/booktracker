@@ -6,14 +6,14 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.serialization.json.Json
-import ru.jerael.booktracker.backend.data.dto.BookCreationDto
-import ru.jerael.booktracker.backend.data.dto.BookDto
-import ru.jerael.booktracker.backend.data.dto.BookUpdateDto
+import ru.jerael.booktracker.backend.data.dto.book.BookCreationDto
+import ru.jerael.booktracker.backend.data.dto.book.BookDto
+import ru.jerael.booktracker.backend.data.dto.book.BookUpdateDto
 import ru.jerael.booktracker.backend.data.mappers.toBookDto
-import ru.jerael.booktracker.backend.domain.model.BookCreationPayload
-import ru.jerael.booktracker.backend.domain.model.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
-import ru.jerael.booktracker.backend.domain.usecases.*
+import ru.jerael.booktracker.backend.domain.usecases.book.*
 import java.util.*
 
 class BookController(

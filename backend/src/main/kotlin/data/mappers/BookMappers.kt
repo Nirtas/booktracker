@@ -2,8 +2,8 @@ package ru.jerael.booktracker.backend.data.mappers
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import ru.jerael.booktracker.backend.data.db.tables.Books
-import ru.jerael.booktracker.backend.data.dto.BookDto
-import ru.jerael.booktracker.backend.domain.model.Book
+import ru.jerael.booktracker.backend.data.dto.book.BookDto
+import ru.jerael.booktracker.backend.domain.model.book.Book
 
 fun Book.toBookDto(imageBaseUrl: String): BookDto {
     return BookDto(

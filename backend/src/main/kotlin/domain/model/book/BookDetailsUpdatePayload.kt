@@ -1,4 +1,4 @@
-package ru.jerael.booktracker.backend.domain.model
+package ru.jerael.booktracker.backend.domain.model.book
 
 data class BookDetailsUpdatePayload(
     val title: String,
