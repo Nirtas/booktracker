@@ -22,13 +22,15 @@ fun appModule(environment: ApplicationEnvironment) = module {
     single<CoverStorage> { CoverStorageImpl(get()) }
 
     single<BookRepository> { BookRepositoryImpl() }
+    single<GenreRepository> { GenreRepositoryImpl() }
 
     single { GetBooksUseCase(get()) }
-    single { AddBookUseCase(get()) }
+    single { AddBookUseCase(get(), get()) }
     single { GetBookByIdUseCase(get()) }
     single { UpdateBookDetailsUseCase(get()) }
     single { UpdateBookCoverUseCase(get(), get()) }
     single { DeleteBookUseCase(get(), get()) }
+    single { GetGenresUseCase(get()) }
 
     single {
         BookController(
@@ -42,10 +44,6 @@ fun appModule(environment: ApplicationEnvironment) = module {
             imageBaseUrl = getProperty(IMAGE_BASE_URL_PROPERTY)
         )
     }
-
-    single<GenreRepository> { GenreRepositoryImpl() }
-
-    single { GetGenresUseCase(get()) }
 
     single {
         GenreController(

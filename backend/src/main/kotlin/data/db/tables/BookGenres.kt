@@ -2,8 +2,9 @@ package ru.jerael.booktracker.backend.data.db.tables
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
+import ru.jerael.booktracker.backend.data.db.DbConstants.TABLE_BOOK_GENRES
 
-object BookGenres : Table("book_genres") {
+object BookGenres : Table(TABLE_BOOK_GENRES) {
     val bookId = uuid("book_id").references(Books.id, onDelete = ReferenceOption.CASCADE)
     val genreId = integer("genre_id").references(Genres.id, onDelete = ReferenceOption.CASCADE)
 

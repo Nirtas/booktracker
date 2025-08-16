@@ -17,4 +17,12 @@ class GenreRepositoryImpl : GenreRepository {
             }
         }
     }
+
+    override suspend fun getGenreById(id: Int): Genre? {
+        return withContext(Dispatchers.IO) {
+            transaction {
+                Genres.selectAll().where { Genres.id eq id }.map { it.toGenre() }.singleOrNull()
+            }
+        }
+    }
 }

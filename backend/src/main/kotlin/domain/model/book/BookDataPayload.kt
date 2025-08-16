@@ -1,9 +1,11 @@
 package ru.jerael.booktracker.backend.domain.model.book
 
-data class BookCreationPayload(
+import ru.jerael.booktracker.backend.domain.model.genre.Genre
+
+data class BookDataPayload(
     val title: String,
     val author: String,
     val coverPath: String?,
     val status: BookStatus,
-    val genreIds: List<Int>
+    val genres: List<Genre>
 )

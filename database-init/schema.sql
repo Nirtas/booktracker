@@ -1,10 +1,12 @@
+CREATE TYPE book_status_enum AS ENUM ('WANT_TO_READ', 'READING', 'READ');
+
 CREATE TABLE IF NOT EXISTS public.books
 (
     book_id uuid NOT NULL,
     title text NOT NULL,
     author text NOT NULL,
     cover_path text,
-    status text NOT NULL,
+    status book_status_enum NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT books_pkey PRIMARY KEY (book_id)
 );

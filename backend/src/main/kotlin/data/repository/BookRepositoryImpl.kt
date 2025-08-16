@@ -2,82 +2,98 @@ package ru.jerael.booktracker.backend.data.repository
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
 import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import ru.jerael.booktracker.backend.data.db.tables.BookGenres
 import ru.jerael.booktracker.backend.data.db.tables.Books
-import ru.jerael.booktracker.backend.data.mappers.toBook
+import ru.jerael.booktracker.backend.data.db.tables.Genres
 import ru.jerael.booktracker.backend.domain.model.book.Book
-import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDataPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import java.util.*
 
 class BookRepositoryImpl : BookRepository {
     override suspend fun getBooks(): List<Book> {
-        return withContext(Dispatchers.IO) {
-            transaction {
-                Books.selectAll().map { it.toBook() }
-            }
-        }
+        return findBooks()
     }
 
-    override suspend fun addBook(bookCreationPayload: BookCreationPayload): Book {
+    override suspend fun addBook(bookDataPayload: BookDataPayload): Book {
         return withContext(Dispatchers.IO) {
             transaction {
                 val result = Books.insert {
-                    it[title] = bookCreationPayload.title
-                    it[author] = bookCreationPayload.author
-                    it[coverPath] = bookCreationPayload.coverPath
+                    it[title] = bookDataPayload.title
+                    it[author] = bookDataPayload.author
+                    it[coverPath] = bookDataPayload.coverPath
+                    it[status] = bookDataPayload.status
+                }
+                bookDataPayload.genres.forEach { genre ->
+                    BookGenres.insert {
+                        it[bookId] = result[Books.id]
+                        it[genreId] = genre.id
+                    }
                 }
                 Book(
                     id = result[Books.id],
-                    title = bookCreationPayload.title,
-                    author = bookCreationPayload.author,
-                    coverPath = bookCreationPayload.coverPath
+                    title = bookDataPayload.title,
+                    author = bookDataPayload.author,
+                    coverPath = bookDataPayload.coverPath,
+                    status = bookDataPayload.status,
+                    createdAt = result[Books.createdAt].toInstant(),
+                    genres = bookDataPayload.genres
                 )
             }
         }
     }
 
     override suspend fun getBookById(id: UUID): Book? {
-        return withContext(Dispatchers.IO) {
-            transaction {
-                Books.selectAll().where(Books.id eq id).singleOrNull()?.toBook()
-            }
-        }
+        return findBooks(wherePredicate = { Books.id eq id }).singleOrNull()
     }
 
     override suspend fun updateBookDetails(id: UUID, bookDetailsUpdatePayload: BookDetailsUpdatePayload): Book? {
         return withContext(Dispatchers.IO) {
-            transaction {
-                val updatedRows = Books.update({ Books.id eq id }) {
+            val updatedRows = transaction {
+                Books.update({ Books.id eq id }) {
                     it[title] = bookDetailsUpdatePayload.title
                     it[author] = bookDetailsUpdatePayload.author
+                    it[status] = bookDetailsUpdatePayload.status
                 }
-                if (updatedRows > 0) {
-                    Books.selectAll().where(Books.id eq id).singleOrNull()?.toBook()
-                } else {
-                    null
+            }
+            if (updatedRows > 0) {
+                transaction {
+                    BookGenres.deleteWhere { bookId eq id }
+                    bookDetailsUpdatePayload.genreIds.forEach { genreId ->
+                        BookGenres.insert {
+                            it[bookId] = id
+                            it[this.genreId] = genreId
+                        }
+                    }
                 }
+                findBooks(wherePredicate = { Books.id eq id }).singleOrNull()
+            } else {
+                null
             }
         }
     }
 
     override suspend fun updateBookCover(id: UUID, newCoverPath: String): Book? {
         return withContext(Dispatchers.IO) {
-            transaction {
-                val updatedRows = Books.update({ Books.id eq id }) {
+            val updatedRows = transaction {
+                Books.update({ Books.id eq id }) {
                     it[coverPath] = newCoverPath
                 }
-                if (updatedRows > 0) {
-                    Books.selectAll().where(Books.id eq id).singleOrNull()?.toBook()
-                } else {
-                    null
-                }
+            }
+            if (updatedRows > 0) {
+                findBooks(wherePredicate = { Books.id eq id }).singleOrNull()
+            } else {
+                null
             }
         }
     }
@@ -87,6 +103,42 @@ class BookRepositoryImpl : BookRepository {
             transaction {
                 val deletedRows = Books.deleteWhere { Books.id eq id }
                 deletedRows > 0
+            }
+        }
+    }
+
+    private suspend fun findBooks(wherePredicate: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): List<Book> {
+        return withContext(Dispatchers.IO) {
+            transaction {
+                val query = (Books leftJoin BookGenres leftJoin Genres).selectAll()
+                wherePredicate?.let { query.where(it) }
+                query.groupBy(
+                    keySelector = { it[Books.id] },
+                    valueTransform = { it }
+                ).map { (bookId, rows) ->
+                    val book = rows.first()
+                    val genres = rows.mapNotNull {
+                        val genreId = it.getOrNull(Genres.id)
+                        val genreName = it.getOrNull(Genres.name)
+                        if (genreId != null && genreName != null) {
+                            Genre(
+                                id = it[Genres.id],
+                                name = it[Genres.name]
+                            )
+                        } else {
+                            null
+                        }
+                    }
+                    Book(
+                        id = bookId,
+                        title = book[Books.title],
+                        author = book[Books.author],
+                        coverPath = book[Books.coverPath],
+                        status = book[Books.status],
+                        createdAt = book[Books.createdAt].toInstant(),
+                        genres = genres
+                    )
+                }
             }
         }
     }
