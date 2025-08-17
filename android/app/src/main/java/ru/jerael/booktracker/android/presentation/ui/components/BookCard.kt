@@ -22,8 +22,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import ru.jerael.booktracker.android.R
-import ru.jerael.booktracker.android.domain.model.Book
+import ru.jerael.booktracker.android.domain.model.book.Book
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
+import java.time.Instant
 
 @Composable
 fun BookCard(book: Book, onClick: (String) -> Unit) {
@@ -84,13 +86,16 @@ private object BookCardDefaults {
 fun BookCardPreviewNoCover() {
     BookTrackerTheme {
         BookCard(
-            Book(
+            book = Book(
                 id = "1",
                 title = "Название книги",
                 author = "Автор книги",
-                coverUrl = null
+                coverUrl = null,
+                createdAt = Instant.ofEpochMilli(0),
+                status = BookStatus.WANT_TO_READ,
+                genres = emptyList()
             ),
-            {}
+            onClick = {}
         )
     }
 }
@@ -104,7 +109,10 @@ fun BookCardPreviewWithCover() {
                 id = "1",
                 title = "Название книги",
                 author = "Автор книги",
-                coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg"
+                coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg",
+                createdAt = Instant.ofEpochMilli(0),
+                status = BookStatus.WANT_TO_READ,
+                genres = emptyList()
             ),
             {}
         )
@@ -120,7 +128,10 @@ fun BookCardPreviewTitleTwoLines() {
                 id = "1",
                 title = "Очень длинное название книги",
                 author = "Автор книги",
-                coverUrl = null
+                coverUrl = null,
+                createdAt = Instant.ofEpochMilli(0),
+                status = BookStatus.WANT_TO_READ,
+                genres = emptyList()
             ),
             {}
         )
@@ -136,7 +147,10 @@ fun BookCardPreviewTitleTooLong() {
                 id = "1",
                 title = "Слишком длинное название книги, не помещается в карточку",
                 author = "Автор книги",
-                coverUrl = null
+                coverUrl = null,
+                createdAt = Instant.ofEpochMilli(0),
+                status = BookStatus.WANT_TO_READ,
+                genres = emptyList()
             ),
             {}
         )

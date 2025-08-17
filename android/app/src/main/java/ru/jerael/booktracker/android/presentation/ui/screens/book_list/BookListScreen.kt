@@ -25,7 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import ru.jerael.booktracker.android.domain.model.Book
+import ru.jerael.booktracker.android.domain.model.book.Book
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookCard
 import ru.jerael.booktracker.android.presentation.ui.model.FabState
@@ -34,6 +35,7 @@ import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
+import java.time.Instant
 
 @Composable
 fun BookListScreen(
@@ -131,16 +133,38 @@ fun BookListScreenContentPreview() {
             id = "1",
             title = "Название 1",
             author = "Автор 1",
-            coverUrl = "http://localhost:4001/storage/covers/7e224477-0673-4cb5-8ac8-9ae99eadf7bd.jpg"
+            coverUrl = "http://localhost:4001/storage/covers/7e224477-0673-4cb5-8ac8-9ae99eadf7bd.jpg",
+            createdAt = Instant.ofEpochMilli(0),
+            status = BookStatus.WANT_TO_READ,
+            genres = emptyList()
         ),
         Book(
             id = "2",
             title = "Название 2",
             author = "Автор 2",
-            coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg"
+            coverUrl = "https://cs15.pikabu.ru/post_img/2024/09/11/6/1726043826195950836.jpg",
+            createdAt = Instant.ofEpochMilli(0),
+            status = BookStatus.WANT_TO_READ,
+            genres = emptyList()
         ),
-        Book(id = "3", title = "Название 3", author = "Автор 3", coverUrl = null),
-        Book(id = "4", title = "Название 4", author = "Автор 4", coverUrl = null)
+        Book(
+            id = "3",
+            title = "Название 3",
+            author = "Автор 3",
+            coverUrl = null,
+            createdAt = Instant.ofEpochMilli(0),
+            status = BookStatus.WANT_TO_READ,
+            genres = emptyList()
+        ),
+        Book(
+            id = "4",
+            title = "Название 4",
+            author = "Автор 4",
+            coverUrl = null,
+            createdAt = Instant.ofEpochMilli(0),
+            status = BookStatus.WANT_TO_READ,
+            genres = emptyList()
+        )
     )
     BookTrackerTheme {
         BookListScreenContent(

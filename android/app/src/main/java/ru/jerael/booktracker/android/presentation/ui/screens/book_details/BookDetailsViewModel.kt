@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ru.jerael.booktracker.android.domain.model.Book
-import ru.jerael.booktracker.android.domain.usecases.GetBookByIdUseCase
-import ru.jerael.booktracker.android.domain.usecases.RefreshBookByIdUseCase
+import ru.jerael.booktracker.android.domain.model.book.Book
+import ru.jerael.booktracker.android.domain.usecases.book.GetBookByIdUseCase
+import ru.jerael.booktracker.android.domain.usecases.book.RefreshBookByIdUseCase
 import ru.jerael.booktracker.android.presentation.ui.navigation.BOOK_ID_ARG_KEY
 import javax.inject.Inject
 

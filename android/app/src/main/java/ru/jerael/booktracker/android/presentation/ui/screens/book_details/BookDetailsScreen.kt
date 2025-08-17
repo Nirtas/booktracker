@@ -28,7 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import ru.jerael.booktracker.android.domain.model.Book
+import ru.jerael.booktracker.android.domain.model.book.Book
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookCover
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarAction
@@ -37,6 +38,7 @@ import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
+import java.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,7 +146,10 @@ fun BookDetailsScreenContentPreview() {
         id = "1",
         title = "Название 1",
         author = "Автор 1",
-        coverUrl = "http://localhost:4001/storage/covers/7e224477-0673-4cb5-8ac8-9ae99eadf7bd.jpg"
+        coverUrl = "http://localhost:4001/storage/covers/7e224477-0673-4cb5-8ac8-9ae99eadf7bd.jpg",
+        createdAt = Instant.ofEpochMilli(0),
+        status = BookStatus.WANT_TO_READ,
+        genres = emptyList()
     )
     BookTrackerTheme {
         BookDetailsScreenContent(BookDetailsUiState(book = book), onRefresh = {})

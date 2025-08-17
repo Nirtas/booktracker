@@ -15,9 +15,9 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
 import ru.jerael.booktracker.android.data.remote.HttpRoute
-import ru.jerael.booktracker.android.data.remote.dto.BookCreationDto
-import ru.jerael.booktracker.android.data.remote.dto.BookDetailsUpdateDto
-import ru.jerael.booktracker.android.data.remote.dto.BookDto
+import ru.jerael.booktracker.android.data.remote.dto.book.BookDetailsCreationDto
+import ru.jerael.booktracker.android.data.remote.dto.book.BookDetailsUpdateDto
+import ru.jerael.booktracker.android.data.remote.dto.book.BookDto
 import java.io.File
 
 class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
@@ -25,8 +25,11 @@ class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
         return httpClient.get(HttpRoute.BOOKS).body<List<BookDto>>()
     }
 
-    override suspend fun addBook(bookCreationDto: BookCreationDto, coverFile: File?): BookDto {
-        val bookJson = Json.encodeToString(bookCreationDto)
+    override suspend fun addBook(
+        bookDetailsCreationDto: BookDetailsCreationDto,
+        coverFile: File?
+    ): BookDto {
+        val bookJson = Json.encodeToString(bookDetailsCreationDto)
         return httpClient.post(HttpRoute.BOOKS) {
             setBody(
                 MultiPartFormDataContent(

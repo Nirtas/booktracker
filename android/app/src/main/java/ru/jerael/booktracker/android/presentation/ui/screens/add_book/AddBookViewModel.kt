@@ -6,7 +6,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.jerael.booktracker.android.domain.usecases.AddBookUseCase
+import ru.jerael.booktracker.android.domain.model.book.BookCreationParams
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
+import ru.jerael.booktracker.android.domain.usecases.book.AddBookUseCase
 import ru.jerael.booktracker.android.presentation.ui.screens.common.BaseBookFormViewModel
 import javax.inject.Inject
 
@@ -21,11 +23,14 @@ class AddBookViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
             try {
-                val result = addBookUseCase(
+                val bookCreationParams = BookCreationParams(
                     title = _uiState.value.title,
                     author = _uiState.value.author,
-                    coverUri = _uiState.value.coverUri
+                    coverUri = _uiState.value.coverUri,
+                    status = BookStatus.WANT_TO_READ,
+                    genreIds = emptyList()
                 )
+                val result = addBookUseCase(bookCreationParams)
                 if (result.isSuccess) {
                     _uiState.update {
                         it.copy(

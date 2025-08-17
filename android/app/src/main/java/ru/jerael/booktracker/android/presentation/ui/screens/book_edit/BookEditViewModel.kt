@@ -8,9 +8,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.jerael.booktracker.android.domain.usecases.DeleteBookUseCase
-import ru.jerael.booktracker.android.domain.usecases.GetBookByIdUseCase
-import ru.jerael.booktracker.android.domain.usecases.UpdateBookUseCase
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
+import ru.jerael.booktracker.android.domain.model.book.BookUpdateParams
+import ru.jerael.booktracker.android.domain.usecases.book.DeleteBookUseCase
+import ru.jerael.booktracker.android.domain.usecases.book.GetBookByIdUseCase
+import ru.jerael.booktracker.android.domain.usecases.book.UpdateBookUseCase
 import ru.jerael.booktracker.android.presentation.ui.navigation.BOOK_ID_ARG_KEY
 import ru.jerael.booktracker.android.presentation.ui.screens.common.BaseBookFormViewModel
 import javax.inject.Inject
@@ -50,12 +52,15 @@ class BookEditViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
             try {
-                val result = updateBookUseCase(
+                val bookUpdateParams = BookUpdateParams(
                     id = _bookId,
                     title = _uiState.value.title,
                     author = _uiState.value.author,
-                    coverUri = _uiState.value.coverUri
+                    coverUri = _uiState.value.coverUri,
+                    status = BookStatus.WANT_TO_READ,
+                    genreIds = emptyList()
                 )
+                val result = updateBookUseCase(bookUpdateParams)
                 if (result.isSuccess) {
                     _uiState.update {
                         it.copy(

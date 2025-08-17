@@ -1,4 +1,4 @@
-package ru.jerael.booktracker.android.domain.usecases
+package ru.jerael.booktracker.android.domain.usecases.book
 
 import ru.jerael.booktracker.android.domain.repository.BookRepository
 import javax.inject.Inject

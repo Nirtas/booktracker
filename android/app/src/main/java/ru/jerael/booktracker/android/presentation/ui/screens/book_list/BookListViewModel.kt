@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ru.jerael.booktracker.android.domain.model.Book
-import ru.jerael.booktracker.android.domain.usecases.GetBooksUseCase
-import ru.jerael.booktracker.android.domain.usecases.RefreshBooksUseCase
+import ru.jerael.booktracker.android.domain.model.book.Book
+import ru.jerael.booktracker.android.domain.usecases.book.GetBooksUseCase
+import ru.jerael.booktracker.android.domain.usecases.book.RefreshBooksUseCase
 import javax.inject.Inject
 
 @HiltViewModel

@@ -12,4 +12,6 @@ object HttpRoute {
     fun bookCover(id: String): String {
         return "${bookById(id)}/cover"
     }
+
+    const val GENRES = "$API_PREFIX/genres"
 }
