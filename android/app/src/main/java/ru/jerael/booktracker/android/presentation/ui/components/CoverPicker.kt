@@ -47,7 +47,7 @@ fun CoverPicker(
 
 @PreviewLightDark
 @Composable
-fun CoverPickerPreview() {
+private fun CoverPickerPreview() {
     BookTrackerTheme {
         CoverPicker(model = null, contentDescription = null, onClick = {})
     }

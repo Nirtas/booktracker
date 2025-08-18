@@ -14,6 +14,7 @@ import ru.jerael.booktracker.android.data.local.DbConstants.TABLE_BOOKS
 import ru.jerael.booktracker.android.data.local.DbConstants.TABLE_BOOK_GENRES
 import ru.jerael.booktracker.android.data.local.DbConstants.TABLE_GENRES
 import ru.jerael.booktracker.android.data.local.dao.BookDao
+import ru.jerael.booktracker.android.data.local.dao.GenreDao
 import javax.inject.Singleton
 
 @Module
@@ -38,6 +39,12 @@ object BookDatabaseModule {
     @Singleton
     fun provideBookDao(database: BookDatabase): BookDao {
         return database.bookDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGenreDao(database: BookDatabase): GenreDao {
+        return database.genreDao()
     }
 }
 

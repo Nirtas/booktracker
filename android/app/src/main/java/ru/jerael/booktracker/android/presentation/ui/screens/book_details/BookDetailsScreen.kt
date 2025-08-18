@@ -141,7 +141,7 @@ fun BookDetailsScreenContent(uiState: BookDetailsUiState, onRefresh: () -> Unit)
 
 @PreviewLightDark
 @Composable
-fun BookDetailsScreenContentPreview() {
+private fun BookDetailsScreenContentPreview() {
     val book = Book(
         id = "1",
         title = "Название 1",

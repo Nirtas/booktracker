@@ -83,7 +83,7 @@ private object BookCardDefaults {
 
 @PreviewLightDark
 @Composable
-fun BookCardPreviewNoCover() {
+private fun BookCardPreviewNoCover() {
     BookTrackerTheme {
         BookCard(
             book = Book(
@@ -102,7 +102,7 @@ fun BookCardPreviewNoCover() {
 
 @PreviewLightDark
 @Composable
-fun BookCardPreviewWithCover() {
+private fun BookCardPreviewWithCover() {
     BookTrackerTheme {
         BookCard(
             Book(
@@ -121,7 +121,7 @@ fun BookCardPreviewWithCover() {
 
 @PreviewLightDark
 @Composable
-fun BookCardPreviewTitleTwoLines() {
+private fun BookCardPreviewTitleTwoLines() {
     BookTrackerTheme {
         BookCard(
             Book(
@@ -140,7 +140,7 @@ fun BookCardPreviewTitleTwoLines() {
 
 @PreviewLightDark
 @Composable
-fun BookCardPreviewTitleTooLong() {
+private fun BookCardPreviewTitleTooLong() {
     BookTrackerTheme {
         BookCard(
             Book(

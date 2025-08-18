@@ -37,7 +37,7 @@ fun BookCover(
 
 @PreviewLightDark
 @Composable
-fun BookCoverPreview() {
+private fun BookCoverPreview() {
     BookTrackerTheme {
         BookCover(model = null, contentDescription = null)
     }

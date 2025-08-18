@@ -3,6 +3,7 @@ package ru.jerael.booktracker.android.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import ru.jerael.booktracker.android.data.local.dao.BookDao
+import ru.jerael.booktracker.android.data.local.dao.GenreDao
 import ru.jerael.booktracker.android.data.local.entity.BookEntity
 import ru.jerael.booktracker.android.data.local.entity.BookGenresEntity
 import ru.jerael.booktracker.android.data.local.entity.GenreEntity
@@ -18,6 +19,8 @@ import ru.jerael.booktracker.android.data.local.entity.GenreEntity
 )
 abstract class BookDatabase : RoomDatabase() {
     abstract fun bookDao(): BookDao
+
+    abstract fun genreDao(): GenreDao
 
     companion object {
         const val DATABASE_NAME = "booktracker_db"

@@ -127,7 +127,7 @@ fun BookListScreenContent(
 
 @PreviewLightDark
 @Composable
-fun BookListScreenContentPreview() {
+private fun BookListScreenContentPreview() {
     val books = listOf(
         Book(
             id = "1",

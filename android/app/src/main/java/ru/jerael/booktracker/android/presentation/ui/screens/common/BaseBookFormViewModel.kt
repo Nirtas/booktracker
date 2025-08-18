@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
+import ru.jerael.booktracker.android.domain.model.genre.Genre
 
 abstract class BaseBookFormViewModel<T : BaseBookFormUiState<T>> : ViewModel() {
     protected abstract val _uiState: MutableStateFlow<T>
@@ -49,6 +51,43 @@ abstract class BaseBookFormViewModel<T : BaseBookFormUiState<T>> : ViewModel() {
     fun onClearAuthor() {
         _uiState.update { it.copyState(author = "", hasAuthorBeenTouched = false) }
         _wasAuthorEverFocused = false
+    }
+
+    fun onStatusMenuExpandedChanged(isExpanded: Boolean) {
+        _uiState.update { it.copyState(isStatusMenuExpanded = isExpanded) }
+    }
+
+    fun onStatusSelected(status: BookStatus) {
+        _uiState.update { it.copyState(selectedStatus = status, isStatusMenuExpanded = false) }
+    }
+
+    fun onStatusMenuDismiss() {
+        _uiState.update { it.copyState(isStatusMenuExpanded = false) }
+    }
+
+    fun onAddGenreClick() {
+        _uiState.update { it.copyState(isGenreSheetVisible = true) }
+    }
+
+    fun onRemoveGenreClick(genre: Genre) {
+        _uiState.update { currentState ->
+            val currentGenres = currentState.selectedGenres
+            val newGenres = currentGenres.filter { it.id != genre.id }
+            currentState.copyState(selectedGenres = newGenres)
+        }
+    }
+
+    fun onGenresSelected(newSelection: List<Genre>) {
+        _uiState.update {
+            it.copyState(
+                selectedGenres = newSelection,
+                isGenreSheetVisible = false
+            )
+        }
+    }
+
+    fun onGenreSheetDismiss() {
+        _uiState.update { it.copyState(isGenreSheetVisible = false) }
     }
 
     fun userMessageShown() {
