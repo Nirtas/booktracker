@@ -12,9 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 
 @Composable
@@ -38,6 +40,8 @@ fun CoverPicker(
             AsyncImage(
                 modifier = Modifier.fillMaxSize(),
                 model = model,
+                fallback = painterResource(R.drawable.book_picture),
+                error = painterResource(R.drawable.book_picture),
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Crop
             )

@@ -30,8 +30,8 @@ fun GenreSelectionBox(
     modifier: Modifier = Modifier,
     selectedGenres: List<Genre>,
     isEditable: Boolean = false,
-    onAddClick: () -> Unit,
-    onRemoveClick: (Genre) -> Unit
+    onAddClick: (() -> Unit)? = null,
+    onRemoveClick: ((Genre) -> Unit)? = null
 ) {
     OutlinedCard(modifier = modifier) {
         Column(
@@ -46,16 +46,15 @@ fun GenreSelectionBox(
             Spacer(modifier = Modifier.height(8.dp))
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (selectedGenres.isEmpty() && !isEditable) {
                     Text(text = "Не указаны")
                 }
-                selectedGenres.forEach { genre ->
+                selectedGenres.sortedBy { it.name }.forEach { genre ->
                     InputChip(
                         selected = false,
-                        onClick = { if (isEditable) onRemoveClick(genre) },
+                        onClick = { if (isEditable) onRemoveClick?.invoke(genre) },
                         label = { Text(text = genre.name) },
                         trailingIcon = {
                             if (isEditable) {
@@ -69,7 +68,7 @@ fun GenreSelectionBox(
                     )
                 }
                 if (isEditable) {
-                    IconButton(onClick = onAddClick) {
+                    IconButton(onClick = { onAddClick?.invoke() }) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = null
@@ -95,8 +94,8 @@ private fun GenreSelectionBoxPreview() {
         GenreSelectionBox(
             selectedGenres = selectedGenres,
             isEditable = true,
-            onAddClick = {},
-            onRemoveClick = {}
+            onAddClick = null,
+            onRemoveClick = null
         )
     }
 }
