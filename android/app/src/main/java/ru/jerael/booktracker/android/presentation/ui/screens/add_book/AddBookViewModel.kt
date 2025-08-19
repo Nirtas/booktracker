@@ -6,26 +6,41 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.jerael.booktracker.android.domain.usecases.AddBookUseCase
+import ru.jerael.booktracker.android.domain.model.book.BookCreationParams
+import ru.jerael.booktracker.android.domain.usecases.book.AddBookUseCase
+import ru.jerael.booktracker.android.domain.usecases.genre.GetGenresUseCase
 import ru.jerael.booktracker.android.presentation.ui.screens.common.BaseBookFormViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class AddBookViewModel @Inject constructor(
-    private val addBookUseCase: AddBookUseCase
+    private val addBookUseCase: AddBookUseCase,
+    private val getGenresUseCase: GetGenresUseCase
 ) : BaseBookFormViewModel<AddBookUiState>() {
 
     override val _uiState: MutableStateFlow<AddBookUiState> = MutableStateFlow(AddBookUiState())
+
+    init {
+        viewModelScope.launch {
+            getGenresUseCase().collect { genres ->
+                _uiState.update { it.copyState(allGenres = genres) }
+            }
+        }
+    }
 
     override fun onSaveClick() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
             try {
-                val result = addBookUseCase(
-                    title = _uiState.value.title,
-                    author = _uiState.value.author,
-                    coverUri = _uiState.value.coverUri
+                val currentState = _uiState.value
+                val bookCreationParams = BookCreationParams(
+                    title = currentState.title,
+                    author = currentState.author,
+                    coverUri = currentState.coverUri,
+                    status = currentState.selectedStatus,
+                    genreIds = currentState.selectedGenres.map { it.id }
                 )
+                val result = addBookUseCase(bookCreationParams)
                 if (result.isSuccess) {
                     _uiState.update {
                         it.copy(

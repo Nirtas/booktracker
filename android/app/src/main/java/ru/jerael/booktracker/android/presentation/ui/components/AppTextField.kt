@@ -18,12 +18,14 @@ fun AppTextField(
     modifier: Modifier = Modifier,
     text: String,
     label: String,
-    placeholder: String,
+    placeholder: String = "",
     onTextChanged: (String) -> Unit,
-    isInvalid: Boolean,
-    isEnabled: Boolean,
-    onClearButtonClick: () -> Unit,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+    isInvalid: Boolean = false,
+    isEnabled: Boolean = true,
+    onClearButtonClick: (() -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         modifier = modifier,
@@ -43,13 +45,18 @@ fun AppTextField(
                 )
             }
         },
+        leadingIcon = leadingIcon,
         trailingIcon = {
-            if (text.isNotEmpty() && isEnabled) {
-                IconButton(onClick = onClearButtonClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Clear,
-                        contentDescription = null
-                    )
+            if (trailingIcon != null) {
+                trailingIcon
+            } else {
+                if (text.isNotEmpty() && isEnabled && onClearButtonClick != null) {
+                    IconButton(onClick = onClearButtonClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = null
+                        )
+                    }
                 }
             }
         }
@@ -58,7 +65,7 @@ fun AppTextField(
 
 @PreviewLightDark
 @Composable
-fun AppTextFieldPreview() {
+private fun AppTextFieldPreview() {
     BookTrackerTheme {
         AppTextField(
             text = "Текст",

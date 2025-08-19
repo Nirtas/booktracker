@@ -86,7 +86,7 @@ fun AppTopBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
-fun SmallAppTopBarPreviewNoActions() {
+private fun SmallAppTopBarPreviewNoActions() {
     BookTrackerTheme {
         AppTopBar(title = "Книжная полка", type = TopBarType.SMALL)
     }
@@ -95,7 +95,7 @@ fun SmallAppTopBarPreviewNoActions() {
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
-fun SmallAppTopBarPreviewWithActions() {
+private fun SmallAppTopBarPreviewWithActions() {
     BookTrackerTheme {
         AppTopBar(
             title = "Книжная полка",
@@ -114,7 +114,7 @@ fun SmallAppTopBarPreviewWithActions() {
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
-fun SmallAppTopBarPreviewWithBackButton() {
+private fun SmallAppTopBarPreviewWithBackButton() {
     BookTrackerTheme {
         AppTopBar(
             title = "Книжная полка",
@@ -131,7 +131,7 @@ fun SmallAppTopBarPreviewWithBackButton() {
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
-fun SmallAppTopBarPreviewWithActionsAndBackButton() {
+private fun SmallAppTopBarPreviewWithActionsAndBackButton() {
     BookTrackerTheme {
         AppTopBar(
             title = "Книжная полка",
@@ -155,7 +155,7 @@ fun SmallAppTopBarPreviewWithActionsAndBackButton() {
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
-fun MediumAppTopBarPreviewWithActionsAndBackButton() {
+private fun MediumAppTopBarPreviewWithActionsAndBackButton() {
     BookTrackerTheme {
         AppTopBar(
             title = "Книжная полка",
@@ -179,7 +179,7 @@ fun MediumAppTopBarPreviewWithActionsAndBackButton() {
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
-fun LargeAppTopBarPreviewWithActionsAndBackButton() {
+private fun LargeAppTopBarPreviewWithActionsAndBackButton() {
     BookTrackerTheme {
         AppTopBar(
             title = "Книжная полка",
@@ -203,7 +203,7 @@ fun LargeAppTopBarPreviewWithActionsAndBackButton() {
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
-fun CenterAlignedAppTopBarPreviewWithActionsAndBackButton() {
+private fun CenterAlignedAppTopBarPreviewWithActionsAndBackButton() {
     BookTrackerTheme {
         AppTopBar(
             title = "Книжная полка",

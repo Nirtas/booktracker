@@ -23,7 +23,6 @@ fun AuthorTextField(
         modifier = modifier,
         text = author,
         label = "Автор *",
-        placeholder = "",
         onTextChanged = onTextChanged,
         isInvalid = isInvalid,
         isEnabled = isEnabled,
@@ -38,7 +37,7 @@ fun AuthorTextField(
 
 @PreviewLightDark
 @Composable
-fun AuthorTextFieldPreview() {
+private fun AuthorTextFieldPreview() {
     BookTrackerTheme {
         AuthorTextField(
             author = "",

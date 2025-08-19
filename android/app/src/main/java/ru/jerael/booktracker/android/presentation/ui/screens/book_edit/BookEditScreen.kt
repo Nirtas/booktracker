@@ -103,7 +103,21 @@ fun BookEditScreen(
             isSaveButtonEnabled = uiState.isSaveButtonEnabled,
             onSaveClick = viewModel::onSaveClick,
             onCancelClick = onNavigateBack,
-            onDeleteClick = viewModel::onDeleteClick
+            onDeleteClick = viewModel::onDeleteClick,
+            isStatusMenuExpanded = uiState.isStatusMenuExpanded,
+            selectedStatus = uiState.selectedStatus,
+            allStatuses = uiState.allStatuses,
+            onStatusMenuExpandedChanged = viewModel::onStatusMenuExpandedChanged,
+            onStatusSelected = viewModel::onStatusSelected,
+            onStatusMenuDismiss = viewModel::onStatusMenuDismiss,
+            selectedGenres = uiState.selectedGenres,
+            isGenreBoxEditable = uiState.isGenreBoxEditable,
+            onAddGenreClick = viewModel::onAddGenreClick,
+            onRemoveGenreClick = viewModel::onRemoveGenreClick,
+            isGenreSheetVisible = uiState.isGenreSheetVisible,
+            allGenres = uiState.allGenres,
+            onGenresSelected = viewModel::onGenresSelected,
+            onGenreSheetDismiss = viewModel::onGenreSheetDismiss
         )
     }
 }

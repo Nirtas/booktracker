@@ -1,7 +1,9 @@
 package ru.jerael.booktracker.android.presentation.ui.screens.book_details
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -28,15 +31,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import ru.jerael.booktracker.android.domain.model.Book
+import ru.jerael.booktracker.android.domain.model.book.Book
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookCover
+import ru.jerael.booktracker.android.presentation.ui.components.GenreSelectionBox
+import ru.jerael.booktracker.android.presentation.ui.components.StatusChip
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarAction
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarScrollBehavior
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 import ru.jerael.booktracker.android.presentation.ui.theme.dimensions
+import java.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,6 +127,12 @@ fun BookDetailsScreenContent(uiState: BookDetailsUiState, onRefresh: () -> Unit)
                         text = uiState.book.author,
                         style = MaterialTheme.typography.titleMedium
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        StatusChip(status = uiState.book.status)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    GenreSelectionBox(selectedGenres = uiState.book.genres)
                 }
             }
 
@@ -139,14 +152,19 @@ fun BookDetailsScreenContent(uiState: BookDetailsUiState, onRefresh: () -> Unit)
 
 @PreviewLightDark
 @Composable
-fun BookDetailsScreenContentPreview() {
+private fun BookDetailsScreenContentPreview() {
     val book = Book(
         id = "1",
         title = "Название 1",
         author = "Автор 1",
-        coverUrl = "http://localhost:4001/storage/covers/7e224477-0673-4cb5-8ac8-9ae99eadf7bd.jpg"
+        coverUrl = "http://localhost:4001/storage/covers/7e224477-0673-4cb5-8ac8-9ae99eadf7bd.jpg",
+        createdAt = Instant.ofEpochMilli(0),
+        status = BookStatus.WANT_TO_READ,
+        genres = emptyList()
     )
     BookTrackerTheme {
-        BookDetailsScreenContent(BookDetailsUiState(book = book), onRefresh = {})
+        Surface(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
+            BookDetailsScreenContent(BookDetailsUiState(book = book), onRefresh = {})
+        }
     }
 }

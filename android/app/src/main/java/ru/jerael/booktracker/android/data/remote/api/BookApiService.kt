@@ -1,14 +1,14 @@
 package ru.jerael.booktracker.android.data.remote.api
 
-import ru.jerael.booktracker.android.data.remote.dto.BookCreationDto
-import ru.jerael.booktracker.android.data.remote.dto.BookDetailsUpdateDto
-import ru.jerael.booktracker.android.data.remote.dto.BookDto
+import ru.jerael.booktracker.android.data.remote.dto.book.BookDetailsCreationDto
+import ru.jerael.booktracker.android.data.remote.dto.book.BookDetailsUpdateDto
+import ru.jerael.booktracker.android.data.remote.dto.book.BookDto
 import java.io.File
 
 interface BookApiService {
     suspend fun getBooks(): List<BookDto>
 
-    suspend fun addBook(bookCreationDto: BookCreationDto, coverFile: File?): BookDto
+    suspend fun addBook(bookDetailsCreationDto: BookDetailsCreationDto, coverFile: File?): BookDto
 
     suspend fun getBookById(id: String): BookDto
 

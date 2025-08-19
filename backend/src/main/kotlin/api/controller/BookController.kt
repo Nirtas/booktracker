@@ -6,14 +6,15 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.serialization.json.Json
-import ru.jerael.booktracker.backend.data.dto.BookCreationDto
-import ru.jerael.booktracker.backend.data.dto.BookDto
-import ru.jerael.booktracker.backend.data.dto.BookUpdateDto
+import ru.jerael.booktracker.backend.data.dto.book.BookCreationDto
+import ru.jerael.booktracker.backend.data.dto.book.BookDto
+import ru.jerael.booktracker.backend.data.dto.book.BookUpdateDto
 import ru.jerael.booktracker.backend.data.mappers.toBookDto
-import ru.jerael.booktracker.backend.domain.model.BookCreationPayload
-import ru.jerael.booktracker.backend.domain.model.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
-import ru.jerael.booktracker.backend.domain.usecases.*
+import ru.jerael.booktracker.backend.domain.usecases.book.*
 import java.util.*
 
 class BookController(
@@ -59,14 +60,25 @@ class BookController(
             call.respond(HttpStatusCode.BadRequest, "Form item 'book' is missing")
             return
         }
+        val status = BookStatus.fromString(bookCreationDto!!.status)
+        if (status == null) {
+            call.respond(HttpStatusCode.BadRequest, "Invalid status: ${bookCreationDto!!.status}")
+            return
+        }
         val bookCreationPayload = BookCreationPayload(
             title = bookCreationDto!!.title,
             author = bookCreationDto!!.author,
-            coverPath = coverPath
+            coverPath = coverPath,
+            status = status,
+            genreIds = bookCreationDto!!.genreIds
         )
-        val newBook = addBookUseCase(bookCreationPayload)
-        val newBookDto = newBook.toBookDto(imageBaseUrl)
-        call.respond(newBookDto)
+        try {
+            val newBook = addBookUseCase(bookCreationPayload)
+            val newBookDto = newBook.toBookDto(imageBaseUrl)
+            call.respond(newBookDto)
+        } catch (e: Exception) {
+            call.respond(HttpStatusCode.BadRequest, e.message.toString())
+        }
     }
 
     suspend fun getBookById(call: ApplicationCall) {
@@ -89,9 +101,16 @@ class BookController(
     suspend fun updateBookDetails(call: ApplicationCall) {
         val id = call.getIdOrRespondError() ?: return
         val bookUpdateDto = call.receive<BookUpdateDto>()
+        val status = BookStatus.fromString(bookUpdateDto.status)
+        if (status == null) {
+            call.respond(HttpStatusCode.BadRequest, "Invalid status: ${bookUpdateDto.status}")
+            return
+        }
         val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
             title = bookUpdateDto.title,
-            author = bookUpdateDto.author
+            author = bookUpdateDto.author,
+            status = status,
+            genreIds = bookUpdateDto.genreIds
         )
         updateBookDetailsUseCase(id, bookDetailsUpdatePayload)?.let { book ->
             val bookDto = book.toBookDto(imageBaseUrl)

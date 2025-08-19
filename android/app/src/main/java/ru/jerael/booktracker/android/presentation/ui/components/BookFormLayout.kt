@@ -27,6 +27,8 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import ru.jerael.booktracker.android.domain.model.book.BookStatus
+import ru.jerael.booktracker.android.domain.model.genre.Genre
 import ru.jerael.booktracker.android.presentation.ui.components.text_fields.AuthorTextField
 import ru.jerael.booktracker.android.presentation.ui.components.text_fields.TitleTextField
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
@@ -47,6 +49,20 @@ fun BookFormLayout(
     onAuthorClearClick: () -> Unit,
     coverModel: Any?,
     onCoverSelectClick: () -> Unit,
+    isStatusMenuExpanded: Boolean,
+    selectedStatus: BookStatus,
+    allStatuses: List<BookStatus>,
+    onStatusMenuExpandedChanged: (Boolean) -> Unit,
+    onStatusSelected: (BookStatus) -> Unit,
+    onStatusMenuDismiss: () -> Unit,
+    selectedGenres: List<Genre>,
+    isGenreBoxEditable: Boolean,
+    onAddGenreClick: () -> Unit,
+    onRemoveGenreClick: (Genre) -> Unit,
+    isGenreSheetVisible: Boolean,
+    allGenres: List<Genre>,
+    onGenresSelected: (List<Genre>) -> Unit,
+    onGenreSheetDismiss: () -> Unit,
     isSaving: Boolean,
     isSaveButtonEnabled: Boolean,
     onSaveClick: () -> Unit,
@@ -78,7 +94,17 @@ fun BookFormLayout(
                     isSaveButtonEnabled = isSaveButtonEnabled,
                     onSaveClick = onSaveClick,
                     onCancelClick = onCancelClick,
-                    onDeleteClick = onDeleteClick
+                    onDeleteClick = onDeleteClick,
+                    isStatusMenuExpanded = isStatusMenuExpanded,
+                    selectedStatus = selectedStatus,
+                    allStatuses = allStatuses,
+                    onStatusMenuExpandedChanged = onStatusMenuExpandedChanged,
+                    onStatusSelected = onStatusSelected,
+                    onStatusMenuDismiss = onStatusMenuDismiss,
+                    selectedGenres = selectedGenres,
+                    isGenreBoxEditable = isGenreBoxEditable,
+                    onAddGenreClick = onAddGenreClick,
+                    onRemoveGenreClick = onRemoveGenreClick
                 )
             } else {
                 PortraitLayout(
@@ -98,10 +124,27 @@ fun BookFormLayout(
                     isSaveButtonEnabled = isSaveButtonEnabled,
                     onSaveClick = onSaveClick,
                     onCancelClick = onCancelClick,
-                    onDeleteClick = onDeleteClick
+                    onDeleteClick = onDeleteClick,
+                    isStatusMenuExpanded = isStatusMenuExpanded,
+                    selectedStatus = selectedStatus,
+                    allStatuses = allStatuses,
+                    onStatusMenuExpandedChanged = onStatusMenuExpandedChanged,
+                    onStatusSelected = onStatusSelected,
+                    onStatusMenuDismiss = onStatusMenuDismiss,
+                    selectedGenres = selectedGenres,
+                    isGenreBoxEditable = isGenreBoxEditable,
+                    onAddGenreClick = onAddGenreClick,
+                    onRemoveGenreClick = onRemoveGenreClick
                 )
             }
         }
+        GenreSelectionSheet(
+            isVisible = isGenreSheetVisible,
+            onDismiss = onGenreSheetDismiss,
+            allGenres = allGenres,
+            selectedGenres = selectedGenres,
+            onGenresSelected = onGenresSelected
+        )
     }
 }
 
@@ -119,6 +162,16 @@ private fun LandscapeLayout(
     onAuthorClearClick: () -> Unit,
     coverModel: Any?,
     onCoverSelectClick: () -> Unit,
+    isStatusMenuExpanded: Boolean,
+    selectedStatus: BookStatus,
+    allStatuses: List<BookStatus>,
+    onStatusMenuExpandedChanged: (Boolean) -> Unit,
+    onStatusSelected: (BookStatus) -> Unit,
+    onStatusMenuDismiss: () -> Unit,
+    selectedGenres: List<Genre>,
+    isGenreBoxEditable: Boolean,
+    onAddGenreClick: () -> Unit,
+    onRemoveGenreClick: (Genre) -> Unit,
     isSaving: Boolean,
     isSaveButtonEnabled: Boolean,
     onSaveClick: () -> Unit,
@@ -173,6 +226,25 @@ private fun LandscapeLayout(
                     isInvalid = showAuthorError,
                     isEnabled = !isSaving
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                StatusDropdownMenu(
+                    isExpanded = isStatusMenuExpanded,
+                    selectedStatus = selectedStatus,
+                    options = allStatuses,
+                    onExpandedChange = { onStatusMenuExpandedChanged(it) },
+                    onStatusSelected = { onStatusSelected(it) },
+                    onDismiss = { onStatusMenuDismiss() }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                GenreSelectionBox(
+                    modifier = Modifier.fillMaxWidth(),
+                    selectedGenres = selectedGenres,
+                    isEditable = isGenreBoxEditable,
+                    onAddClick = onAddGenreClick,
+                    onRemoveClick = {
+                        onRemoveGenreClick(it)
+                    }
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
             FormActionButtons(
@@ -200,6 +272,16 @@ private fun PortraitLayout(
     onAuthorClearClick: () -> Unit,
     coverModel: Any?,
     onCoverSelectClick: () -> Unit,
+    isStatusMenuExpanded: Boolean,
+    selectedStatus: BookStatus,
+    allStatuses: List<BookStatus>,
+    onStatusMenuExpandedChanged: (Boolean) -> Unit,
+    onStatusSelected: (BookStatus) -> Unit,
+    onStatusMenuDismiss: () -> Unit,
+    selectedGenres: List<Genre>,
+    isGenreBoxEditable: Boolean,
+    onAddGenreClick: () -> Unit,
+    onRemoveGenreClick: (Genre) -> Unit,
     isSaving: Boolean,
     isSaveButtonEnabled: Boolean,
     onSaveClick: () -> Unit,
@@ -257,6 +339,25 @@ private fun PortraitLayout(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            StatusDropdownMenu(
+                isExpanded = isStatusMenuExpanded,
+                selectedStatus = selectedStatus,
+                options = allStatuses,
+                onExpandedChange = { onStatusMenuExpandedChanged(it) },
+                onStatusSelected = { onStatusSelected(it) },
+                onDismiss = { onStatusMenuDismiss() }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            GenreSelectionBox(
+                modifier = Modifier.fillMaxWidth(),
+                selectedGenres = selectedGenres,
+                isEditable = isGenreBoxEditable,
+                onAddClick = onAddGenreClick,
+                onRemoveClick = {
+                    onRemoveGenreClick(it)
+                }
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
         FormActionButtons(
@@ -292,7 +393,17 @@ private fun LandscapeLayoutPreview() {
                 isSaveButtonEnabled = false,
                 onSaveClick = {},
                 onCancelClick = {},
-                onDeleteClick = {}
+                onDeleteClick = {},
+                isStatusMenuExpanded = true,
+                selectedStatus = BookStatus.WANT_TO_READ,
+                allStatuses = BookStatus.entries,
+                onStatusMenuExpandedChanged = {},
+                onStatusSelected = {},
+                onStatusMenuDismiss = {},
+                selectedGenres = emptyList(),
+                isGenreBoxEditable = true,
+                onAddGenreClick = {},
+                onRemoveGenreClick = {}
             )
         }
     }
@@ -320,7 +431,17 @@ private fun PortraitLayoutPreview() {
                 isSaveButtonEnabled = false,
                 onSaveClick = {},
                 onCancelClick = {},
-                onDeleteClick = {}
+                onDeleteClick = {},
+                isStatusMenuExpanded = true,
+                selectedStatus = BookStatus.WANT_TO_READ,
+                allStatuses = BookStatus.entries,
+                onStatusMenuExpandedChanged = {},
+                onStatusSelected = {},
+                onStatusMenuDismiss = {},
+                selectedGenres = emptyList(),
+                isGenreBoxEditable = true,
+                onAddGenreClick = {},
+                onRemoveGenreClick = {}
             )
         }
     }

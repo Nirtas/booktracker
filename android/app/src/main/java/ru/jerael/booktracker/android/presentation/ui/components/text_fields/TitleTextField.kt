@@ -23,7 +23,6 @@ fun TitleTextField(
         modifier = modifier,
         text = title,
         label = "Название книги *",
-        placeholder = "",
         onTextChanged = onTextChanged,
         isInvalid = isInvalid,
         isEnabled = isEnabled,
@@ -38,7 +37,7 @@ fun TitleTextField(
 
 @PreviewLightDark
 @Composable
-fun TitleTextFieldPreview() {
+private fun TitleTextFieldPreview() {
     BookTrackerTheme {
         TitleTextField(
             title = "",
