@@ -1,5 +1,6 @@
 package ru.jerael.booktracker.backend.api.controller
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import ru.jerael.booktracker.backend.data.dto.genre.GenreDto
@@ -13,6 +14,6 @@ class GenreController(
     suspend fun getAllGenres(call: ApplicationCall) {
         val genres = getGenresUseCase()
         val genreDtos: List<GenreDto> = genres.map { it.toGenreDto() }
-        call.respond(genreDtos)
+        call.respond(HttpStatusCode.OK, genreDtos)
     }
 }

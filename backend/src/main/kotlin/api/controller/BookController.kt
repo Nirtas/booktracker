@@ -10,6 +10,7 @@ import ru.jerael.booktracker.backend.data.dto.book.BookCreationDto
 import ru.jerael.booktracker.backend.data.dto.book.BookDto
 import ru.jerael.booktracker.backend.data.dto.book.BookUpdateDto
 import ru.jerael.booktracker.backend.data.mappers.toBookDto
+import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
@@ -31,7 +32,7 @@ class BookController(
     suspend fun getAllBooks(call: ApplicationCall) {
         val books = getBooksUseCase()
         val bookDtos: List<BookDto> = books.map { it.toBookDto(imageBaseUrl) }
-        call.respond(bookDtos)
+        call.respond(HttpStatusCode.OK, bookDtos)
     }
 
     suspend fun addBook(call: ApplicationCall) {
@@ -56,96 +57,80 @@ class BookController(
             }
             part.dispose()
         }
-        if (bookCreationDto == null) {
-            call.respond(HttpStatusCode.BadRequest, "Form item 'book' is missing")
-            return
-        }
-        val status = BookStatus.fromString(bookCreationDto!!.status)
-        if (status == null) {
-            call.respond(HttpStatusCode.BadRequest, "Invalid status: ${bookCreationDto!!.status}")
-            return
-        }
+        val dto = bookCreationDto ?: throw ValidationException("Form item 'book' is missing or has invalid format.")
+        if (dto.title.isBlank()) throw ValidationException("Book title can't be empty.")
+        if (dto.author.isBlank()) throw ValidationException("Book author can't be empty.")
+        val status = BookStatus.fromString(dto.status)
+            ?: throw ValidationException("Invalid status: ${dto.status}. Allowed values are: ${BookStatus.entries.joinToString()}")
         val bookCreationPayload = BookCreationPayload(
-            title = bookCreationDto!!.title,
-            author = bookCreationDto!!.author,
+            title = dto.title,
+            author = dto.author,
             coverPath = coverPath,
             status = status,
-            genreIds = bookCreationDto!!.genreIds
+            genreIds = dto.genreIds
         )
-        try {
-            val newBook = addBookUseCase(bookCreationPayload)
-            val newBookDto = newBook.toBookDto(imageBaseUrl)
-            call.respond(newBookDto)
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.BadRequest, e.message.toString())
-        }
+        val newBook = addBookUseCase(bookCreationPayload)
+        val newBookDto = newBook.toBookDto(imageBaseUrl)
+        call.respond(HttpStatusCode.Created, newBookDto)
     }
 
     suspend fun getBookById(call: ApplicationCall) {
-        val id = call.getIdOrRespondError() ?: return
-        getBookByIdUseCase(id)?.let { book ->
-            val bookDto = book.toBookDto(imageBaseUrl)
-            call.respond(bookDto)
-        } ?: call.respond(HttpStatusCode.NotFound, "Book not found")
+        val id = call.getIdOrRespondError()
+        val book = getBookByIdUseCase(id)
+        val bookDto = book.toBookDto(imageBaseUrl)
+        call.respond(HttpStatusCode.OK, bookDto)
     }
 
     suspend fun deleteBook(call: ApplicationCall) {
-        val id = call.getIdOrRespondError() ?: return
-        if (deleteBookUseCase(id)) {
-            call.respond(HttpStatusCode.NoContent)
-        } else {
-            call.respond(HttpStatusCode.NotFound, "Book not found")
-        }
+        val id = call.getIdOrRespondError()
+        deleteBookUseCase(id)
+        call.respond(HttpStatusCode.NoContent)
     }
 
     suspend fun updateBookDetails(call: ApplicationCall) {
-        val id = call.getIdOrRespondError() ?: return
-        val bookUpdateDto = call.receive<BookUpdateDto>()
-        val status = BookStatus.fromString(bookUpdateDto.status)
-        if (status == null) {
-            call.respond(HttpStatusCode.BadRequest, "Invalid status: ${bookUpdateDto.status}")
-            return
-        }
-        val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
-            title = bookUpdateDto.title,
-            author = bookUpdateDto.author,
-            status = status,
-            genreIds = bookUpdateDto.genreIds
-        )
-        updateBookDetailsUseCase(id, bookDetailsUpdatePayload)?.let { book ->
-            val bookDto = book.toBookDto(imageBaseUrl)
-            call.respond(bookDto)
-        } ?: call.respond(HttpStatusCode.NotFound, "Book not found")
+        val id = call.getIdOrRespondError()
+        val bookDetailsUpdatePayload = validateBookUpdate(call.receive<BookUpdateDto>())
+        val book = updateBookDetailsUseCase(id, bookDetailsUpdatePayload)
+        val bookDto = book.toBookDto(imageBaseUrl)
+        call.respond(HttpStatusCode.OK, bookDto)
     }
 
     suspend fun updateBookCover(call: ApplicationCall) {
-        val id = call.getIdOrRespondError() ?: return
+        val id = call.getIdOrRespondError()
         val part = call.receiveMultipart().readPart()
         try {
             if (part !is PartData.FileItem || part.name != "cover" || part.originalFileName.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "File part 'cover' is missing or invalid")
-                return
+                throw ValidationException("File part 'cover' is missing or invalid")
             }
-            updateBookCoverUseCase(id, part)?.let { book ->
-                val bookDto = book.toBookDto(imageBaseUrl)
-                call.respond(bookDto)
-            } ?: call.respond(HttpStatusCode.NotFound, "Book not found")
+            val book = updateBookCoverUseCase(id, part)
+            val bookDto = book.toBookDto(imageBaseUrl)
+            call.respond(HttpStatusCode.OK, bookDto)
         } finally {
             part?.dispose?.let { it() }
         }
     }
 
-    private suspend fun ApplicationCall.getIdOrRespondError(): UUID? {
-        val idParameter = parameters["id"]
-        if (idParameter == null) {
-            respond(HttpStatusCode.BadRequest, "Book ID is missing")
-            return null
-        }
+    private fun ApplicationCall.getIdOrRespondError(): UUID {
+        val idParameter = parameters["id"] ?: throw ValidationException("Book ID is missing")
         return try {
             UUID.fromString(idParameter)
         } catch (e: Exception) {
-            respond(HttpStatusCode.BadRequest, "Invalid Book ID format")
-            null
+            throw ValidationException("Invalid Book ID format: '$idParameter' is not a valid UUID.")
         }
+    }
+
+    private fun validateBookUpdate(bookUpdateDto: BookUpdateDto): BookDetailsUpdatePayload {
+        if (bookUpdateDto.title.isBlank()) throw ValidationException("Book title can't be empty.")
+        if (bookUpdateDto.title.length > 500) throw ValidationException("Book title can't be longer than 500 characters.")
+        if (bookUpdateDto.author.isBlank()) throw ValidationException("Book author can't be empty.")
+        if (bookUpdateDto.author.length > 500) throw ValidationException("Book author can't be longer than 500 characters.")
+        val status = BookStatus.fromString(bookUpdateDto.status)
+            ?: throw ValidationException("Invalid status: ${bookUpdateDto.status}. Allowed values are: ${BookStatus.entries.joinToString()}")
+        return BookDetailsUpdatePayload(
+            title = bookUpdateDto.title,
+            author = bookUpdateDto.author,
+            status = status,
+            genreIds = bookUpdateDto.genreIds
+        )
     }
 }
