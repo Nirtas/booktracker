@@ -27,8 +27,8 @@ fun appModule(environment: ApplicationEnvironment) = module {
     single { GetBooksUseCase(get()) }
     single { AddBookUseCase(get(), get()) }
     single { GetBookByIdUseCase(get()) }
-    single { UpdateBookDetailsUseCase(get()) }
-    single { UpdateBookCoverUseCase(get(), get()) }
+    single { UpdateBookDetailsUseCase(get(), get(), get()) }
+    single { UpdateBookCoverUseCase(get(), get(), get()) }
     single { DeleteBookUseCase(get(), get()) }
     single { GetGenresUseCase(get()) }
 
