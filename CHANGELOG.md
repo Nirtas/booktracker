@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-08-20
+
+### Added
+
+- **Backend Server:** `GET /api/books/{id}` endpoint to retrieve a single book by its ID.
+- **Backend Server:** `PUT /api/books/{id}` and `DELETE /api/books/{id}` endpoints for updating and deleting books.
+- **Android App:** New screen `BookDetailsScreen` to display detailed information about a book.
+- **Android App:** New screen `BookEditScreen` for modifying existing book entries.
+- **Android App:** Implemented functionality to delete books from the details or list screen.
+- **Android App:** Implemented search, sort, and filter capabilities for the book list.
+
+### Changed
+
+- **Project:** Enhanced the core `Book` model across both backend and Android applications with new properties such as status, genres and a `createdAt` timestamp.
+
 ## [0.2.0] - 2025-08-12
 
 ### Added
