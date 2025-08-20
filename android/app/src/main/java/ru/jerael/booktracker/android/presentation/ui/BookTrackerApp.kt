@@ -14,8 +14,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ru.jerael.booktracker.android.presentation.ui.components.AppScaffold
+import ru.jerael.booktracker.android.presentation.ui.model.FabAction
 import ru.jerael.booktracker.android.presentation.ui.model.FabState
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarState
 import ru.jerael.booktracker.android.presentation.ui.navigation.AppNavHost
@@ -26,10 +28,13 @@ fun BookTrackerApp(appViewModel: AppViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val topBarState by appViewModel.topBarState.collectAsState()
     val fabState by appViewModel.fabState.collectAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
     AppScaffold(
         topBarState = topBarState,
         snackbarHostState = appViewModel.snackbarHostState,
-        fabState = fabState
+        fabState = fabState,
+        currentRoute = currentRoute
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
@@ -47,11 +52,18 @@ private fun BookTrackerAppPreview() {
     fun BookTrackerAppPreviewContent() {
         val topBarState = TopBarState(title = "Книжная полка")
         val snackbarHostState = SnackbarHostState()
-        val fabState = FabState(icon = Icons.Default.Add, contentDescription = null, onClick = {})
+        val fabState = FabState(
+            mainAction = FabAction(
+                icon = Icons.Default.Add,
+                contentDescription = null,
+                onClick = {}
+            )
+        )
         AppScaffold(
             topBarState = topBarState,
             snackbarHostState = snackbarHostState,
-            fabState = fabState
+            fabState = fabState,
+            currentRoute = null
         ) { innerPadding ->
             Box(
                 modifier = Modifier

@@ -3,22 +3,19 @@ package ru.jerael.booktracker.backend.api.plugins
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import ru.jerael.booktracker.backend.api.controller.BookController
+import ru.jerael.booktracker.backend.api.controller.GenreController
 import ru.jerael.booktracker.backend.api.routes.books
-import ru.jerael.booktracker.backend.domain.usecases.AddBookUseCase
-import ru.jerael.booktracker.backend.domain.usecases.GetBooksUseCase
+import ru.jerael.booktracker.backend.api.routes.genres
 
 fun Application.configureRouting() {
-    val getBooksUseCase: GetBooksUseCase by inject()
-    val addBookUseCase: AddBookUseCase by inject()
-    val imageBaseUrl: String = environment.config.property("ktor.storage.baseUrl").getString()
+    val bookController: BookController by inject()
+    val genreController: GenreController by inject()
 
     routing {
         route("/api") {
-            books(
-                getBooksUseCase = getBooksUseCase,
-                addBookUseCase = addBookUseCase,
-                imageBaseUrl = imageBaseUrl
-            )
+            books(bookController)
+            genres(genreController)
         }
     }
 }

@@ -19,6 +19,8 @@ import io.ktor.serialization.kotlinx.json.json
 import ru.jerael.booktracker.android.BuildConfig
 import ru.jerael.booktracker.android.data.remote.api.BookApiService
 import ru.jerael.booktracker.android.data.remote.api.BookApiServiceImpl
+import ru.jerael.booktracker.android.data.remote.api.GenreApiService
+import ru.jerael.booktracker.android.data.remote.api.GenreApiServiceImpl
 import javax.inject.Singleton
 
 @Module
@@ -47,5 +49,11 @@ object NetworkModule {
     @Singleton
     fun provideBookApiService(httpClient: HttpClient): BookApiService {
         return BookApiServiceImpl(httpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGenreApiService(httpClient: HttpClient): GenreApiService {
+        return GenreApiServiceImpl(httpClient)
     }
 }

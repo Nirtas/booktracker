@@ -6,3 +6,5 @@ local.properties
 secrets.properties
 .env
 .env.local
+pgadmin-config/servers.json
+pgadmin-config/pgpass

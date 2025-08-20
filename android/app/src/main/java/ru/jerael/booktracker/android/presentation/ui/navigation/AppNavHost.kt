@@ -3,10 +3,14 @@ package ru.jerael.booktracker.android.presentation.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.screens.add_book.AddBookScreen
+import ru.jerael.booktracker.android.presentation.ui.screens.book_details.BookDetailsScreen
+import ru.jerael.booktracker.android.presentation.ui.screens.book_edit.BookEditScreen
 import ru.jerael.booktracker.android.presentation.ui.screens.book_list.BookListScreen
 
 @Composable
@@ -25,6 +29,9 @@ fun AppNavHost(
                 appViewModel = appViewModel,
                 onNavigateToAddBook = {
                     navController.navigate(route = Screen.AddBook.route)
+                },
+                onNavigateToBookDetails = { bookId ->
+                    navController.navigate(route = Screen.BookDetails.withArgs(bookId))
                 }
             )
         }
@@ -33,6 +40,55 @@ fun AppNavHost(
                 appViewModel = appViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToBookDetails = { bookId ->
+                    navController.navigate(route = Screen.BookDetails.withArgs(bookId)) {
+                        popUpTo(Screen.AddBook.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Screen.BookDetails.route,
+            arguments = listOf(
+                navArgument(BOOK_ID_ARG_KEY) {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) {
+            BookDetailsScreen(
+                appViewModel = appViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToBookEdit = { bookId ->
+                    navController.navigate(route = Screen.BookEdit.withArgs(bookId))
+                }
+            )
+        }
+        composable(
+            route = Screen.BookEdit.route,
+            arguments = listOf(
+                navArgument(BOOK_ID_ARG_KEY) {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) {
+            BookEditScreen(
+                appViewModel = appViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToBookListAfterDeletion = {
+                    navController.navigate(route = Screen.BookList.route) {
+                        popUpTo(Screen.BookList.route) {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }

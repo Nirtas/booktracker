@@ -1,7 +1,5 @@
 package ru.jerael.booktracker.android.presentation.ui.components
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -13,32 +11,25 @@ import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 
 @Composable
 fun BookCover(
-    imageUrl: String?,
+    model: Any?,
     contentDescription: String?,
     modifier: Modifier = Modifier
 ) {
     CoverContainer(modifier = modifier) {
-        if (imageUrl.isNullOrBlank()) {
-            Image(
-                painter = painterResource(R.drawable.book_picture),
-                contentScale = ContentScale.Crop,
-                contentDescription = contentDescription
-            )
-        } else {
-            AsyncImage(
-                modifier = Modifier.fillMaxSize(),
-                model = imageUrl,
-                contentDescription = contentDescription,
-                contentScale = ContentScale.Crop
-            )
-        }
+        AsyncImage(
+            model = model,
+            fallback = painterResource(R.drawable.book_picture),
+            error = painterResource(R.drawable.book_picture),
+            contentScale = ContentScale.Crop,
+            contentDescription = contentDescription
+        )
     }
 }
 
 @PreviewLightDark
 @Composable
-fun BookCoverPreview() {
+private fun BookCoverPreview() {
     BookTrackerTheme {
-        BookCover(imageUrl = null, contentDescription = null)
+        BookCover(model = null, contentDescription = null)
     }
 }

@@ -1,6 +1,5 @@
 package ru.jerael.booktracker.android.presentation.ui.components.text_fields
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,20 +15,18 @@ fun TitleTextField(
     modifier: Modifier = Modifier,
     title: String,
     onTextChanged: (String) -> Unit,
+    onClearClick: () -> Unit,
     isInvalid: Boolean,
     isEnabled: Boolean
 ) {
     AppTextField(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         text = title,
-        label = "Название книги",
-        placeholder = "",
+        label = "Название книги *",
         onTextChanged = onTextChanged,
         isInvalid = isInvalid,
         isEnabled = isEnabled,
-        onClearButtonClick = {
-            onTextChanged("")
-        },
+        onClearButtonClick = onClearClick,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Sentences,
             keyboardType = KeyboardType.Text,
@@ -40,8 +37,14 @@ fun TitleTextField(
 
 @PreviewLightDark
 @Composable
-fun TitleTextFieldPreview() {
+private fun TitleTextFieldPreview() {
     BookTrackerTheme {
-        TitleTextField(title = "", onTextChanged = {}, isInvalid = true, isEnabled = true)
+        TitleTextField(
+            title = "",
+            onTextChanged = {},
+            onClearClick = {},
+            isInvalid = true,
+            isEnabled = true
+        )
     }
 }
