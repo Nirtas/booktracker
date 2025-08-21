@@ -10,23 +10,23 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import ru.jerael.booktracker.backend.data.db.tables.BookGenres
 import ru.jerael.booktracker.backend.data.db.tables.Books
 import ru.jerael.booktracker.backend.data.db.tables.Genres
+import ru.jerael.booktracker.backend.data.mappers.toGenre
 import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.exceptions.InternalException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookDataPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
-import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import java.util.*
 
 class BookRepositoryImpl : BookRepository {
-    override suspend fun getBooks(): List<Book> {
+    override suspend fun getBooks(language: String): List<Book> {
         return withContext(Dispatchers.IO) {
-            findBooks()
+            findBooks(language = language)
         }
     }
 
-    override suspend fun addBook(bookDataPayload: BookDataPayload): Book {
+    override suspend fun addBook(bookDataPayload: BookDataPayload, language: String): Book {
         return withContext(Dispatchers.IO) {
             transaction {
                 val result = Books.insert {
@@ -35,32 +35,30 @@ class BookRepositoryImpl : BookRepository {
                     it[coverPath] = bookDataPayload.coverPath
                     it[status] = bookDataPayload.status
                 }
+                val newBookId = result[Books.id]
                 bookDataPayload.genres.forEach { genre ->
                     BookGenres.insert {
-                        it[bookId] = result[Books.id]
+                        it[bookId] = newBookId
                         it[genreId] = genre.id
                     }
                 }
-                Book(
-                    id = result[Books.id],
-                    title = bookDataPayload.title,
-                    author = bookDataPayload.author,
-                    coverPath = bookDataPayload.coverPath,
-                    status = bookDataPayload.status,
-                    createdAt = result[Books.createdAt].toInstant(),
-                    genres = bookDataPayload.genres
-                )
+                findBooks(wherePredicate = { Books.id eq newBookId }, language = language).singleOrNull()
+                    ?: throw InternalException(message = "Book with ID $newBookId was updated but could not be found immediately after.")
             }
         }
     }
 
-    override suspend fun getBookById(id: UUID): Book? {
+    override suspend fun getBookById(id: UUID, language: String): Book? {
         return withContext(Dispatchers.IO) {
-            findBooks(wherePredicate = { Books.id eq id }).singleOrNull()
+            findBooks(wherePredicate = { Books.id eq id }, language = language).singleOrNull()
         }
     }
 
-    override suspend fun updateBookDetails(id: UUID, bookDetailsUpdatePayload: BookDetailsUpdatePayload): Book {
+    override suspend fun updateBookDetails(
+        id: UUID,
+        bookDetailsUpdatePayload: BookDetailsUpdatePayload,
+        language: String
+    ): Book {
         return withContext(Dispatchers.IO) {
             transaction {
                 val updatedRows = Books.update({ Books.id eq id }) {
@@ -76,13 +74,13 @@ class BookRepositoryImpl : BookRepository {
                     this[BookGenres.bookId] = id
                     this[BookGenres.genreId] = genreId
                 }
-                findBooks(wherePredicate = { Books.id eq id }).singleOrNull()
+                findBooks(wherePredicate = { Books.id eq id }, language = language).singleOrNull()
                     ?: throw InternalException(message = "Book with ID $id was updated but could not be found immediately after.")
             }
         }
     }
 
-    override suspend fun updateBookCover(id: UUID, newCoverPath: String): Book {
+    override suspend fun updateBookCover(id: UUID, newCoverPath: String, language: String): Book {
         return withContext(Dispatchers.IO) {
             transaction {
                 val updatedRows = Books.update({ Books.id eq id }) {
@@ -91,7 +89,7 @@ class BookRepositoryImpl : BookRepository {
                 if (updatedRows == 0) {
                     throw BookNotFoundException(id.toString())
                 }
-                findBooks(wherePredicate = { Books.id eq id }).singleOrNull()
+                findBooks(wherePredicate = { Books.id eq id }, language = language).singleOrNull()
                     ?: throw InternalException(message = "Book with ID $id was updated but could not be found immediately after.")
             }
         }
@@ -106,8 +104,12 @@ class BookRepositoryImpl : BookRepository {
         }
     }
 
-    private fun findBooks(wherePredicate: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): List<Book> {
+    private fun findBooks(
+        wherePredicate: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        language: String
+    ): List<Book> {
         return transaction {
+            val nameColumn = if (language.startsWith("ru")) Genres.nameRu else Genres.nameEn
             val query = (Books leftJoin BookGenres leftJoin Genres).selectAll()
             wherePredicate?.let { query.where(it) }
             query.groupBy(
@@ -117,12 +119,9 @@ class BookRepositoryImpl : BookRepository {
                 val book = rows.first()
                 val genres = rows.mapNotNull {
                     val genreId = it.getOrNull(Genres.id)
-                    val genreName = it.getOrNull(Genres.name)
+                    val genreName = it.getOrNull(nameColumn)
                     if (genreId != null && genreName != null) {
-                        Genre(
-                            id = it[Genres.id],
-                            name = it[Genres.name]
-                        )
+                        it.toGenre(nameColumn)
                     } else {
                         null
                     }

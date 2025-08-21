@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.serialization.json.Json
+import ru.jerael.booktracker.backend.api.util.language
 import ru.jerael.booktracker.backend.data.dto.book.BookCreationDto
 import ru.jerael.booktracker.backend.data.dto.book.BookDto
 import ru.jerael.booktracker.backend.data.dto.book.BookUpdateDto
@@ -30,12 +31,14 @@ class BookController(
 ) {
 
     suspend fun getAllBooks(call: ApplicationCall) {
-        val books = getBooksUseCase()
+        val language = call.request.language()
+        val books = getBooksUseCase(language)
         val bookDtos: List<BookDto> = books.map { it.toBookDto(imageBaseUrl) }
         call.respond(HttpStatusCode.OK, bookDtos)
     }
 
     suspend fun addBook(call: ApplicationCall) {
+        val language = call.request.language()
         var bookCreationDto: BookCreationDto? = null
         var coverPath: String? = null
         val multipartData = call.receiveMultipart()
@@ -69,14 +72,15 @@ class BookController(
             status = status,
             genreIds = dto.genreIds
         )
-        val newBook = addBookUseCase(bookCreationPayload)
+        val newBook = addBookUseCase(bookCreationPayload, language)
         val newBookDto = newBook.toBookDto(imageBaseUrl)
         call.respond(HttpStatusCode.Created, newBookDto)
     }
 
     suspend fun getBookById(call: ApplicationCall) {
+        val language = call.request.language()
         val id = call.getIdOrRespondError()
-        val book = getBookByIdUseCase(id)
+        val book = getBookByIdUseCase(id, language)
         val bookDto = book.toBookDto(imageBaseUrl)
         call.respond(HttpStatusCode.OK, bookDto)
     }
@@ -88,21 +92,23 @@ class BookController(
     }
 
     suspend fun updateBookDetails(call: ApplicationCall) {
+        val language = call.request.language()
         val id = call.getIdOrRespondError()
         val bookDetailsUpdatePayload = validateBookUpdate(call.receive<BookUpdateDto>())
-        val book = updateBookDetailsUseCase(id, bookDetailsUpdatePayload)
+        val book = updateBookDetailsUseCase(id, bookDetailsUpdatePayload, language)
         val bookDto = book.toBookDto(imageBaseUrl)
         call.respond(HttpStatusCode.OK, bookDto)
     }
 
     suspend fun updateBookCover(call: ApplicationCall) {
+        val language = call.request.language()
         val id = call.getIdOrRespondError()
         val part = call.receiveMultipart().readPart()
         try {
             if (part !is PartData.FileItem || part.name != "cover" || part.originalFileName.isNullOrBlank()) {
                 throw ValidationException("File part 'cover' is missing or invalid")
             }
-            val book = updateBookCoverUseCase(id, part)
+            val book = updateBookCoverUseCase(id, part, language)
             val bookDto = book.toBookDto(imageBaseUrl)
             call.respond(HttpStatusCode.OK, bookDto)
         } finally {

@@ -12,16 +12,16 @@ class UpdateBookDetailsUseCase(
     private val genreRepository: GenreRepository,
     private val getBookByIdUseCase: GetBookByIdUseCase
 ) {
-    suspend operator fun invoke(id: UUID, payload: BookDetailsUpdatePayload): Book {
-        getBookByIdUseCase(id)
+    suspend operator fun invoke(id: UUID, payload: BookDetailsUpdatePayload, language: String): Book {
+        getBookByIdUseCase(id, language)
         val uniqueGenres = payload.genreIds.distinct()
         if (uniqueGenres.isNotEmpty()) {
-            val foundGenres = genreRepository.getGenresByIds(uniqueGenres)
+            val foundGenres = genreRepository.getGenresByIds(uniqueGenres, language)
             if (foundGenres.count() != uniqueGenres.count()) {
                 val notFoundGenreIds = uniqueGenres.toSet() - foundGenres.map { it.id }.toSet()
                 throw ValidationException("One or more genres not found: ${notFoundGenreIds.joinToString()}")
             }
         }
-        return bookRepository.updateBookDetails(id, payload)
+        return bookRepository.updateBookDetails(id, payload, language)
     }
 }

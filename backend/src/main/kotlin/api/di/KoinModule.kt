@@ -29,7 +29,7 @@ fun appModule(environment: ApplicationEnvironment) = module {
     single { GetBookByIdUseCase(get()) }
     single { UpdateBookDetailsUseCase(get(), get(), get()) }
     single { UpdateBookCoverUseCase(get(), get(), get()) }
-    single { DeleteBookUseCase(get(), get()) }
+    single { DeleteBookUseCase(get(), get(), get()) }
     single { GetGenresUseCase(get()) }
 
     single {
