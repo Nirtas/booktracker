@@ -13,8 +13,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 
 @Composable
@@ -35,16 +37,16 @@ fun FormActionButtons(
                 onClick = onDeleteClick,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Text(text = "Удалить")
+                Text(text = stringResource(R.string.delete))
             }
             Spacer(Modifier.weight(1f))
         }
         TextButton(enabled = isCancelButtonEnabled, onClick = onCancelClick) {
-            Text(text = "Отмена")
+            Text(text = stringResource(R.string.cancel))
         }
         Spacer(Modifier.width(8.dp))
         Button(enabled = isSaveButtonEnabled, onClick = onSaveClick) {
-            Text(text = "Сохранить")
+            Text(text = stringResource(R.string.save))
         }
     }
 }

@@ -10,8 +10,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.domain.model.book.BookStatus
-import ru.jerael.booktracker.android.domain.model.book.toDisplayString
+import ru.jerael.booktracker.android.presentation.ui.util.toDisplayString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +36,7 @@ fun StatusDropdownMenu(
             value = selectedStatus.toDisplayString(),
             onValueChange = {},
             readOnly = true,
-            label = { Text(text = "Статус") },
+            label = { Text(text = stringResource(R.string.status)) },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
             }

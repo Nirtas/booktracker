@@ -7,8 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import ru.jerael.booktracker.android.domain.model.book.BookStatus
-import ru.jerael.booktracker.android.domain.model.book.toDisplayString
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
+import ru.jerael.booktracker.android.presentation.ui.util.toDisplayString
 
 @Composable
 fun StatusChip(status: BookStatus) {

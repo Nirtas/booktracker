@@ -37,6 +37,25 @@ interface BookDao {
         upsertBookGenres(bookGenresEntities)
     }
 
+    @Query("DELETE FROM books")
+    suspend fun clearBooks()
+
+    @Query("DELETE FROM book_genres")
+    suspend fun clearBookGenres()
+
+    @Transaction
+    suspend fun clearAndInsertBooks(
+        books: List<BookEntity>,
+        genres: List<BookGenresEntity>
+    ) {
+        clearBooks()
+        clearBookGenres()
+        books.forEach { book ->
+            val bookGenres = genres.filter { it.bookId == book.id }
+            upsertBookWithGenres(book, bookGenres)
+        }
+    }
+
     @Query("DELETE FROM $TABLE_BOOK_GENRES WHERE book_id = :id")
     suspend fun deleteBookGenres(id: String)
 

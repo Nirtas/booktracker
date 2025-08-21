@@ -28,9 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.domain.model.book.Book
 import ru.jerael.booktracker.android.domain.model.book.BookStatus
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
@@ -59,7 +61,7 @@ fun BookListScreen(
     LaunchedEffect(null) {
         appViewModel.updateTopBar(
             newState = TopBarState(
-                title = "Книжная полка",
+                titleResId = R.string.bookshelf,
                 type = TopBarType.SMALL,
                 scrollBehavior = TopBarScrollBehavior.ENTER_ALWAYS
             )
@@ -168,7 +170,7 @@ fun BookListScreenContent(
                             .verticalScroll(rememberScrollState()),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Список книг пуст")
+                        Text(text = stringResource(R.string.empty_book_list))
                     }
                 }
             }

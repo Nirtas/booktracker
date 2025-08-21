@@ -4,5 +4,5 @@ import android.net.Uri
 import java.io.File
 
 interface FileStorage {
-    suspend fun saveFile(uri: Uri): File?
+    suspend fun saveFile(uri: Uri): Result<File>
 }

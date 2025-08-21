@@ -1,13 +1,13 @@
 package ru.jerael.booktracker.android.presentation.ui.screens.book_edit
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.domain.model.book.BookUpdateParams
 import ru.jerael.booktracker.android.domain.usecases.book.DeleteBookUseCase
 import ru.jerael.booktracker.android.domain.usecases.book.GetBookByIdUseCase
@@ -15,6 +15,8 @@ import ru.jerael.booktracker.android.domain.usecases.book.UpdateBookUseCase
 import ru.jerael.booktracker.android.domain.usecases.genre.GetGenresUseCase
 import ru.jerael.booktracker.android.presentation.ui.navigation.BOOK_ID_ARG_KEY
 import ru.jerael.booktracker.android.presentation.ui.screens.common.BaseBookFormViewModel
+import ru.jerael.booktracker.android.presentation.ui.util.ErrorHandler
+import ru.jerael.booktracker.android.presentation.ui.util.StringResourceProvider
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,7 +25,9 @@ class BookEditViewModel @Inject constructor(
     private val updateBookUseCase: UpdateBookUseCase,
     private val deleteBookUseCase: DeleteBookUseCase,
     private val getGenresUseCase: GetGenresUseCase,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val errorHandler: ErrorHandler,
+    private val stringResourceProvider: StringResourceProvider
 ) : BaseBookFormViewModel<BookEditUiState>() {
 
     private val _bookId: String = checkNotNull(savedStateHandle[BOOK_ID_ARG_KEY])
@@ -32,62 +36,64 @@ class BookEditViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            getGenresUseCase().collect { genres ->
-                _uiState.update { it.copyState(allGenres = genres) }
-            }
-        }
-        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val book = getBookByIdUseCase(_bookId).firstOrNull()
-            if (book != null) {
-                _uiState.update {
-                    it.copy(
-                        title = book.title,
-                        author = book.author,
-                        initialCoverUrl = book.coverUrl,
-                        selectedStatus = book.status,
-                        selectedGenres = book.genres,
-                        isLoading = false
-                    )
+            getGenresUseCase().first()
+                .onSuccess { genres ->
+                    _uiState.update { it.copyState(allGenres = genres) }
                 }
-            } else {
-                _uiState.update { it.copy(userMessage = "Книга не найдена", isLoading = false) }
-            }
+                .onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(
+                            userMessage = errorHandler.handleError(throwable),
+                            isLoading = false
+                        )
+                    }
+                    return@launch
+                }
+            getBookByIdUseCase(_bookId).first()
+                .onSuccess { book ->
+                    _uiState.update {
+                        it.copy(
+                            title = book.title,
+                            author = book.author,
+                            initialCoverUrl = book.coverUrl,
+                            selectedStatus = book.status,
+                            selectedGenres = book.genres
+                        )
+                    }
+                }
+                .onFailure { throwable ->
+                    _uiState.update { it.copy(userMessage = errorHandler.handleError(throwable)) }
+                }
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
     override fun onSaveClick() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
-            try {
-                val currentState = _uiState.value
-                val bookUpdateParams = BookUpdateParams(
-                    id = _bookId,
-                    title = currentState.title,
-                    author = currentState.author,
-                    coverUri = currentState.coverUri,
-                    status = currentState.selectedStatus,
-                    genreIds = currentState.selectedGenres.map { it.id }
-                )
-                val result = updateBookUseCase(bookUpdateParams)
-                if (result.isSuccess) {
+            val currentState = _uiState.value
+            val bookUpdateParams = BookUpdateParams(
+                id = _bookId,
+                title = currentState.title,
+                author = currentState.author,
+                coverUri = currentState.coverUri,
+                status = currentState.selectedStatus,
+                genreIds = currentState.selectedGenres.map { it.id }
+            )
+            updateBookUseCase(bookUpdateParams)
+                .onSuccess {
                     _uiState.update {
                         it.copy(
-                            userMessage = "Книга успешно изменена",
+                            userMessage = stringResourceProvider.getString(R.string.book_updated_successfully),
                             navigateToBookId = _bookId
                         )
                     }
-                } else {
-                    _uiState.update { it.copy(userMessage = "Ошибка при изменении книги") }
-                    val exception = result.exceptionOrNull()
-                    Log.e("BookEditViewModel", "Ошибка при изменении книги", exception)
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(userMessage = "Ошибка при изменении книги") }
-                Log.e("BookEditViewModel", "Ошибка при изменении книги", e)
-            } finally {
-                _uiState.update { it.copy(isSaving = false) }
-            }
+                .onFailure { throwable ->
+                    _uiState.update { it.copy(userMessage = errorHandler.handleError(throwable)) }
+                }
+            _uiState.update { it.copy(isSaving = false) }
         }
     }
 
@@ -102,24 +108,23 @@ class BookEditViewModel @Inject constructor(
     fun onConfirmDelete() {
         viewModelScope.launch {
             _uiState.update { it.copy(isDeleting = true, showDeleteConfirmDialog = false) }
-            val result = deleteBookUseCase(_bookId)
-            if (result.isSuccess) {
-                _uiState.update {
-                    it.copy(
-                        userMessage = "Книга успешно удалена",
-                        deletionCompleted = true
-                    )
+            deleteBookUseCase(_bookId)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            userMessage = stringResourceProvider.getString(R.string.book_deleted_successfully),
+                            deletionCompleted = true
+                        )
+                    }
                 }
-            } else {
-                _uiState.update {
-                    it.copy(
-                        userMessage = "Ошибка при удалении книги",
-                        deletionCompleted = false
-                    )
+                .onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(
+                            userMessage = errorHandler.handleError(throwable),
+                            deletionCompleted = false
+                        )
+                    }
                 }
-                val exception = result.exceptionOrNull()
-                Log.e("BookEditViewModel", "Ошибка при удалении книги", exception)
-            }
             _uiState.update { it.copy(isDeleting = false) }
         }
     }

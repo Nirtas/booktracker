@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetBookByIdUseCase @Inject constructor(
     private val repository: BookRepository
 ) {
-    operator fun invoke(id: String): Flow<Book?> {
+    operator fun invoke(id: String): Flow<Result<Book>> {
         return repository.getBookById(id)
     }
 }

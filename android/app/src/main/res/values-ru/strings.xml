@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BookTracker</string>
+
+    <!-- Заголовки экранов -->
+    <string name="bookshelf">Книжная полка</string>
+    <string name="add_book">Добавить книгу</string>
+    <string name="book_edit">Редактирование книги</string>
+
+    <!-- Кнопки -->
+    <string name="save">Сохранить</string>
+    <string name="delete">Удалить</string>
+    <string name="cancel">Отмена</string>
+    <string name="apply">Применить</string>
+    <string name="reset">Сбросить</string>
+    <string name="done">Готово</string>
+
+    <!-- Книжные статусы -->
+    <string name="status">Статус</string>
+    <string name="want_to_read">В планах</string>
+    <string name="reading">Читаю</string>
+    <string name="read">Прочитано</string>
+
+    <!-- Сортировка и фильтры -->
+    <string name="sorting_and_filters">Сортировка и фильтры</string>
+    <string name="sort_by">Сортировать по</string>
+    <string name="sort_order">Порядок</string>
+    <string name="genres">Жанры</string>
+    <string name="choose_genres">Выберите жанры</string>
+    <string name="sort_by_title">Названию</string>
+    <string name="sort_by_author">Автору</string>
+    <string name="sort_by_date_added">Дате добавления</string>
+    <string name="sort_order_ascending">По возрастанию</string>
+    <string name="sort_order_descending">По убыванию</string>
+    <string name="not_specified">Не указаны</string>
+
+    <!-- Надписи и поля -->
+    <string name="text_field_label_title">Название книги *</string>
+    <string name="text_field_label_author">Автор *</string>
+    <string name="text_field_label_search">Поиск</string>
+    <string name="text_field_error">Некорректное содержимое</string>
+
+    <!-- Диалоги подтверждения -->
+    <string name="confirm_delete_title">Подтвердите удаление</string>
+    <string name="confirm_delete_text">Вы уверены, что хотите удалить эту книгу?</string>
+
+    <!-- Пользовательские сообщения -->
+    <string name="book_added_successfully">Книга успешно добавлена.</string>
+    <string name="book_updated_successfully">Книга успешно обновлена.</string>
+    <string name="book_deleted_successfully">Книга успешно удалена.</string>
+    <string name="empty_book_list">Список книг пуст</string>
+
+    <!-- Ошибки на стороне клиента -->
+    <string name="error_network">Ошибка сети. Проверьте подключение.</string>
+    <string name="error_database">Произошла ошибка локального хранилища данных.</string>
+    <string name="error_file_storage">Произошла ошибка при работе с файлами.</string>
+    <string name="error_not_found">Запрошенный элемент не найден.</string>
+    <string name="error_unknown">Произошла неизвестная ошибка.</string>
+
+    <!-- Коды ошибок сервера -->
+    <string name="error_code_VALIDATION_ERROR">Предоставленные вами данные недействительны.</string>
+    <string name="error_code_BOOK_NOT_FOUND">Книга не найдена.</string>
+    <string name="error_code_GENRE_NOT_FOUND">Один или несколько выбранных жанров не существует.</string>
+    <string name="error_code_RESOURCE_NOT_FOUND">Ресурс не найден.</string>
+    <string name="error_code_UNSUPPORTED_MEDIA_TYPE">Неподдерживаемый тип данных. Пожалуйста, проверьте формат файла.</string>
+    <string name="error_code_STORAGE_ERROR">Произошла ошибка в серверном хранилище.</string>
+    <string name="error_code_EXTERNAL_SERVICE_ERROR">Произошла внешняя ошибка службы.</string>
+    <string name="error_code_INTERNAL_SERVER_ERROR">Произошла внутренняя ошибка сервера.</string>
+</resources>

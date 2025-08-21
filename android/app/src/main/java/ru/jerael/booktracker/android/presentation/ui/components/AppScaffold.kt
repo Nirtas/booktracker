@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.jerael.booktracker.android.presentation.ui.model.FabState
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarScrollBehavior
@@ -64,8 +65,13 @@ fun AppScaffold(
         },
         topBar = {
             topBarState?.let { state ->
+                val title = if (state.titleResId != null) {
+                    stringResource(state.titleResId)
+                } else {
+                    state.title
+                }
                 AppTopBar(
-                    title = state.title,
+                    title = title,
                     type = state.type,
                     scrollBehavior = scrollBehavior,
                     navigationAction = state.navigationAction,

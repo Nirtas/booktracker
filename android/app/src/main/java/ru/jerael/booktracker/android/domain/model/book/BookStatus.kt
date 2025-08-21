@@ -11,11 +11,3 @@ enum class BookStatus(val value: String) {
         }
     }
 }
-
-fun BookStatus.toDisplayString(): String {
-    return when (this) {
-        BookStatus.WANT_TO_READ -> "В планах"
-        BookStatus.READING -> "Читаю"
-        BookStatus.READ -> "Прочитано"
-    }
-}

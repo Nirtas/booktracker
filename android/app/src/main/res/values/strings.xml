@@ -1,3 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BookTracker</string>
+
+    <!-- Screen titles -->
+    <string name="bookshelf">Bookshelf</string>
+    <string name="add_book">Add Book</string>
+    <string name="book_edit">Edit Book</string>
+
+    <!-- Buttons -->
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
+    <string name="done">Done</string>
+
+    <!-- Book statuses -->
+    <string name="status">Status</string>
+    <string name="want_to_read">Want to Read</string>
+    <string name="reading">Reading</string>
+    <string name="read">Read</string>
+
+    <!-- Sorting and filters -->
+    <string name="sorting_and_filters">Sorting and Filters</string>
+    <string name="sort_by">Sort by</string>
+    <string name="sort_order">Order</string>
+    <string name="genres">Genres</string>
+    <string name="choose_genres">Choose Genres</string>
+    <string name="sort_by_title">Title</string>
+    <string name="sort_by_author">Author</string>
+    <string name="sort_by_date_added">Date Added</string>
+    <string name="sort_order_ascending">Ascending</string>
+    <string name="sort_order_descending">Descending</string>
+    <string name="not_specified">Not specified</string>
+
+    <!-- Form labels and Text fields -->
+    <string name="text_field_label_title">Book Title *</string>
+    <string name="text_field_label_author">Author *</string>
+    <string name="text_field_label_search">Search</string>
+    <string name="text_field_error">Incorrect content</string>
+
+    <!-- Confirmation dialogs -->
+    <string name="confirm_delete_title">Confirm Deletion</string>
+    <string name="confirm_delete_text">Are you sure you want to delete this book?</string>
+
+    <!-- User messages -->
+    <string name="book_added_successfully">Book added successfully.</string>
+    <string name="book_updated_successfully">Book updated successfully.</string>
+    <string name="book_deleted_successfully">Book deleted successfully.</string>
+    <string name="empty_book_list">Your book list is empty</string>
+
+    <!-- Client-side errors -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_database">A local data storage error occurred.</string>
+    <string name="error_file_storage">A file storage error occurred.</string>
+    <string name="error_not_found">The requested item was not found.</string>
+    <string name="error_unknown">An unknown error occurred.</string>
+
+    <!-- Server error codes -->
+    <string name="error_code_VALIDATION_ERROR">The data you provided is invalid.</string>
+    <string name="error_code_BOOK_NOT_FOUND">Book not found.</string>
+    <string name="error_code_GENRE_NOT_FOUND">One or more genres not found.</string>
+    <string name="error_code_RESOURCE_NOT_FOUND">Resource not found.</string>
+    <string name="error_code_UNSUPPORTED_MEDIA_TYPE">Unsupported media type. Please check the file format.</string>
+    <string name="error_code_STORAGE_ERROR">An error occurred in the server storage.</string>
+    <string name="error_code_EXTERNAL_SERVICE_ERROR">An external service error occurred.</string>
+    <string name="error_code_INTERNAL_SERVER_ERROR">An internal server error occurred.</string>
 </resources>
