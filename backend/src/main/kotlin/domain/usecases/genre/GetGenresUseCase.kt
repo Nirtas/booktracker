@@ -4,7 +4,7 @@ import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
 
 class GetGenresUseCase(private val genreRepository: GenreRepository) {
-    suspend operator fun invoke(): List<Genre> {
-        return genreRepository.getGenres()
+    suspend operator fun invoke(language: String): List<Genre> {
+        return genreRepository.getGenres(language)
     }
 }

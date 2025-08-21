@@ -37,10 +37,10 @@ interface BookDao {
         upsertBookGenres(bookGenresEntities)
     }
 
-    @Query("DELETE FROM books")
+    @Query("DELETE FROM $TABLE_BOOKS")
     suspend fun clearBooks()
 
-    @Query("DELETE FROM book_genres")
+    @Query("DELETE FROM $TABLE_BOOK_GENRES")
     suspend fun clearBookGenres()
 
     @Transaction

@@ -11,10 +11,10 @@ class UpdateBookCoverUseCase(
     private val coverStorage: CoverStorage,
     private val getBookByIdUseCase: GetBookByIdUseCase
 ) {
-    suspend operator fun invoke(id: UUID, coverPart: PartData.FileItem): Book {
-        val existingBook = getBookByIdUseCase(id)
+    suspend operator fun invoke(id: UUID, coverPart: PartData.FileItem, language: String): Book {
+        val existingBook = getBookByIdUseCase(id, language)
         existingBook.coverPath?.let { coverStorage.delete(it) }
         val newCoverPath = coverStorage.save(coverPart)
-        return bookRepository.updateBookCover(id, newCoverPath)
+        return bookRepository.updateBookCover(id, newCoverPath, language)
     }
 }

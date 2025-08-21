@@ -11,12 +11,12 @@ class AddBookUseCase(
     private val bookRepository: BookRepository,
     private val genreRepository: GenreRepository
 ) {
-    suspend operator fun invoke(payload: BookCreationPayload): Book {
+    suspend operator fun invoke(payload: BookCreationPayload, language: String): Book {
         val uniqueGenres = payload.genreIds.distinct()
         val genres = if (uniqueGenres.isEmpty()) {
             emptyList()
         } else {
-            val foundGenres = genreRepository.getGenresByIds(uniqueGenres)
+            val foundGenres = genreRepository.getGenresByIds(uniqueGenres, language)
             if (foundGenres.count() != uniqueGenres.count()) {
                 val notFoundGenreIds = uniqueGenres.toSet() - foundGenres.map { it.id }.toSet()
                 throw ValidationException("One or more genres not found: ${notFoundGenreIds.joinToString()}")
@@ -30,6 +30,6 @@ class AddBookUseCase(
             status = payload.status,
             genres = genres
         )
-        return bookRepository.addBook(bookDataPayload)
+        return bookRepository.addBook(bookDataPayload, language)
     }
 }

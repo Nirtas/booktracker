@@ -4,7 +4,7 @@ import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 
 class GetBooksUseCase(private val bookRepository: BookRepository) {
-    suspend operator fun invoke(): List<Book> {
-        return bookRepository.getBooks()
+    suspend operator fun invoke(language: String): List<Book> {
+        return bookRepository.getBooks(language)
     }
 }

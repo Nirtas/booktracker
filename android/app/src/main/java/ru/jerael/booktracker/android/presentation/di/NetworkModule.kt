@@ -21,6 +21,7 @@ import ru.jerael.booktracker.android.data.remote.api.BookApiService
 import ru.jerael.booktracker.android.data.remote.api.BookApiServiceImpl
 import ru.jerael.booktracker.android.data.remote.api.GenreApiService
 import ru.jerael.booktracker.android.data.remote.api.GenreApiServiceImpl
+import java.util.Locale
 import javax.inject.Singleton
 
 @Module
@@ -41,6 +42,8 @@ object NetworkModule {
             defaultRequest {
                 url(urlString = BuildConfig.BACKEND_BASE_URL)
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
+                val languageTag = Locale.getDefault().toLanguageTag()
+                header(HttpHeaders.AcceptLanguage, languageTag)
             }
         }
     }
