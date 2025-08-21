@@ -19,8 +19,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.domain.model.genre.Genre
 import ru.jerael.booktracker.android.presentation.ui.model.SortBy
 import ru.jerael.booktracker.android.presentation.ui.model.SortOrder
@@ -43,7 +45,7 @@ fun FilterSheetContent(
             .padding(16.dp)
     ) {
         Text(
-            text = "Сортировка и фильтры",
+            text = stringResource(R.string.sorting_and_filters),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.align(
                 Alignment.CenterHorizontally
@@ -64,7 +66,7 @@ fun FilterSheetContent(
             Spacer(modifier = Modifier.height(16.dp))
             SearchableChecklist(
                 modifier = Modifier.weight(1f),
-                title = "Выберите жанры",
+                title = stringResource(R.string.choose_genres),
                 allItems = allGenres,
                 selectedItems = allGenres.filter { it.id in filterState.selectedGenreIds }.toSet(),
                 onItemClick = { genre, isSelected ->
@@ -80,11 +82,11 @@ fun FilterSheetContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(onClick = onResetClick) {
-                Text(text = "Сбросить")
+                Text(text = stringResource(R.string.reset))
             }
             Spacer(Modifier.width(8.dp))
             Button(onClick = onAppyClick) {
-                Text(text = "Применить")
+                Text(text = stringResource(R.string.apply))
             }
         }
     }

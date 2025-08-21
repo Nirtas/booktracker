@@ -6,13 +6,13 @@ import ru.jerael.booktracker.android.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.android.domain.model.book.BookUpdatePayload
 
 interface BookRepository {
-    fun getBooks(): Flow<List<Book>>
+    fun getBooks(): Flow<Result<List<Book>>>
 
     suspend fun refreshBooks(): Result<Unit>
 
     suspend fun addBook(bookCreationPayload: BookCreationPayload): Result<String>
 
-    fun getBookById(id: String): Flow<Book?>
+    fun getBookById(id: String): Flow<Result<Book>>
 
     suspend fun refreshBookById(id: String): Result<Unit>
 

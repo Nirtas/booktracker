@@ -11,6 +11,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import ru.jerael.booktracker.android.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,22 +27,22 @@ fun DeleteConfirmationDialog(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
-                Text(text = "Удалить")
+                Text(text = stringResource(R.string.delete))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Отмена")
+                Text(text = stringResource(R.string.cancel))
             }
         },
         icon = {
             Icon(imageVector = Icons.Default.Warning, contentDescription = null)
         },
         title = {
-            Text(text = "Подтвердите удаление")
+            Text(text = stringResource(R.string.confirm_delete_title))
         },
         text = {
-            Text(text = "Вы уверены, что хотите удалить эту книгу?")
+            Text(text = stringResource(R.string.confirm_delete_text))
         }
     )
 }

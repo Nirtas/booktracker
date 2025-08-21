@@ -3,10 +3,12 @@ package ru.jerael.booktracker.android.presentation.ui.components.text_fields
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.presentation.ui.components.AppTextField
 import ru.jerael.booktracker.android.presentation.ui.theme.BookTrackerTheme
 
@@ -22,7 +24,7 @@ fun AuthorTextField(
     AppTextField(
         modifier = modifier,
         text = author,
-        label = "Автор *",
+        label = stringResource(R.string.text_field_label_author),
         onTextChanged = onTextChanged,
         isInvalid = isInvalid,
         isEnabled = isEnabled,

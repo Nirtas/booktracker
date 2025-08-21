@@ -12,10 +12,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.presentation.ui.model.SortBy
 import ru.jerael.booktracker.android.presentation.ui.model.SortOrder
-import ru.jerael.booktracker.android.presentation.ui.model.toDisplayString
+import ru.jerael.booktracker.android.presentation.ui.util.toDisplayString
 
 @Composable
 fun SortSection(
@@ -25,7 +27,7 @@ fun SortSection(
     onSortOrderChanged: (SortOrder) -> Unit
 ) {
     Column {
-        Text(text = "Сортировать по", style = MaterialTheme.typography.titleMedium)
+        Text(text = stringResource(R.string.sort_by), style = MaterialTheme.typography.titleMedium)
         SortBy.entries.forEach { sortBy ->
             Row(
                 modifier = Modifier
@@ -41,7 +43,10 @@ fun SortSection(
                 Text(text = sortBy.toDisplayString())
             }
         }
-        Text(text = "Порядок", style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = stringResource(R.string.sort_order),
+            style = MaterialTheme.typography.titleMedium
+        )
         SortOrder.entries.forEach { sortOrder ->
             Row(
                 modifier = Modifier

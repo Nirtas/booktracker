@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.hilt.navigation.compose.hiltViewModel
+import ru.jerael.booktracker.android.R
 import ru.jerael.booktracker.android.presentation.ui.AppViewModel
 import ru.jerael.booktracker.android.presentation.ui.components.BookFormLayout
 import ru.jerael.booktracker.android.presentation.ui.components.DeleteConfirmationDialog
@@ -40,7 +41,7 @@ fun BookEditScreen(
     LaunchedEffect(null) {
         appViewModel.updateTopBar(
             newState = TopBarState(
-                title = "Редактирование книги",
+                titleResId = R.string.book_edit,
                 type = TopBarType.SMALL,
                 scrollBehavior = TopBarScrollBehavior.PINNED,
                 navigationAction = TopBarAction(

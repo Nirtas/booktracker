@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarAction
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
@@ -47,7 +48,14 @@ fun AppTopBar(
     when (type) {
         TopBarType.SMALL -> {
             TopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior
@@ -56,7 +64,14 @@ fun AppTopBar(
 
         TopBarType.LARGE -> {
             LargeTopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.headlineMedium) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior
@@ -65,7 +80,14 @@ fun AppTopBar(
 
         TopBarType.MEDIUM -> {
             MediumTopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior
@@ -74,7 +96,14 @@ fun AppTopBar(
 
         TopBarType.CENTER_ALIGNED -> {
             CenterAlignedTopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior

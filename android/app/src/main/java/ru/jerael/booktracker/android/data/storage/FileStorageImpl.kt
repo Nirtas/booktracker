@@ -2,9 +2,10 @@ package ru.jerael.booktracker.android.data.storage
 
 import android.app.Application
 import android.net.Uri
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ru.jerael.booktracker.android.domain.model.AppError
+import ru.jerael.booktracker.android.domain.model.appFailure
 import ru.jerael.booktracker.android.domain.storage.FileStorage
 import java.io.File
 import javax.inject.Inject
@@ -12,7 +13,7 @@ import javax.inject.Inject
 class FileStorageImpl @Inject constructor(
     private val application: Application
 ) : FileStorage {
-    override suspend fun saveFile(uri: Uri): File? {
+    override suspend fun saveFile(uri: Uri): Result<File> {
         return withContext(Dispatchers.IO) {
             try {
                 val contentResolver = application.contentResolver
@@ -22,13 +23,11 @@ class FileStorageImpl @Inject constructor(
                     file.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
-                }
-                file
+                } ?: return@withContext appFailure(AppError.FileStorageError)
+                Result.success(file)
             } catch (e: Exception) {
-                Log.e("FileStorageImpl", "Ошибка при сохранении файла", e)
-                null
+                appFailure(AppError.FileStorageError)
             }
         }
     }
-
 }
