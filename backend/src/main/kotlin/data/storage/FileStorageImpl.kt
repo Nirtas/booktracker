@@ -1,8 +1,8 @@
 package ru.jerael.booktracker.backend.data.storage
 
 import io.ktor.server.application.*
-import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.jerael.booktracker.backend.domain.exceptions.AppException
@@ -10,6 +10,7 @@ import ru.jerael.booktracker.backend.domain.exceptions.StorageException
 import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import java.io.File
+import java.io.FileOutputStream
 
 class FileStorageImpl(private val environment: ApplicationEnvironment) : FileStorage {
 
@@ -20,9 +21,12 @@ class FileStorageImpl(private val environment: ApplicationEnvironment) : FileSto
         try {
             withContext(Dispatchers.IO) {
                 file.parentFile.mkdirs()
-                val writeChannel = file.writeChannel()
-                val bytesCopied = channel.copyTo(writeChannel)
-                writeChannel.flushAndClose()
+                var bytesCopied = 0L
+                channel.toInputStream().use { inputStream ->
+                    FileOutputStream(file).use { outputStream ->
+                        bytesCopied = inputStream.copyTo(outputStream)
+                    }
+                }
                 if (bytesCopied == 0L) {
                     file.delete()
                     throw ValidationException("Uploaded file can't be empty.")
