@@ -1,35 +1,21 @@
 package ru.jerael.booktracker.backend.domain.usecases.book
 
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import io.ktor.http.content.*
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
-import ru.jerael.booktracker.backend.domain.model.book.BookDataPayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.repository.GenreRepository
+import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
 
 class AddBookUseCase(
     private val bookRepository: BookRepository,
-    private val genreRepository: GenreRepository
+    private val genresValidator: GenresValidator,
+    private val coverStorage: CoverStorage
 ) {
-    suspend operator fun invoke(payload: BookCreationPayload, language: String): Book {
-        val uniqueGenres = payload.genreIds.distinct()
-        val genres = if (uniqueGenres.isEmpty()) {
-            emptyList()
-        } else {
-            val foundGenres = genreRepository.getGenresByIds(uniqueGenres, language)
-            if (foundGenres.count() != uniqueGenres.count()) {
-                val notFoundGenreIds = uniqueGenres.toSet() - foundGenres.map { it.id }.toSet()
-                throw ValidationException("One or more genres not found: ${notFoundGenreIds.joinToString()}")
-            }
-            foundGenres
-        }
-        val bookDataPayload = BookDataPayload(
-            title = payload.title,
-            author = payload.author,
-            coverPath = payload.coverPath,
-            status = payload.status,
-            genres = genres
-        )
-        return bookRepository.addBook(bookDataPayload, language)
+    suspend operator fun invoke(payload: BookCreationPayload, filePart: PartData.FileItem?, language: String): Book {
+        genresValidator.invoke(payload.genreIds, language)
+        val coverPath = filePart?.let { coverStorage.save(it) }
+        val finalPayload = payload.copy(coverPath = coverPath)
+        return bookRepository.addBook(finalPayload, language)
     }
 }

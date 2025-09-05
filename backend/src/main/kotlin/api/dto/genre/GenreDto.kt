@@ -1,4 +1,4 @@
-package ru.jerael.booktracker.backend.data.dto.genre
+package ru.jerael.booktracker.backend.api.dto.genre
 
 import kotlinx.serialization.Serializable
 

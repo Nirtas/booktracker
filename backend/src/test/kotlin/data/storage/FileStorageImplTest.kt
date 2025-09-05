@@ -1,0 +1,117 @@
+package data.storage
+
+import io.ktor.server.application.*
+import io.ktor.server.config.*
+import io.ktor.utils.io.*
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.io.TempDir
+import ru.jerael.booktracker.backend.data.storage.FileStorageImpl
+import ru.jerael.booktracker.backend.domain.exceptions.StorageException
+import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.domain.storage.FileStorage
+import java.io.File
+
+class FileStorageImplTest {
+
+    private lateinit var fileStorage: FileStorage
+
+    @TempDir
+    lateinit var tempDir: File
+
+    @BeforeEach
+    fun setUp() {
+        val mockkConfig = mockk<ApplicationConfig>()
+        coEvery { mockkConfig.property("ktor.storage.persistentPath").getString() } returns tempDir.absolutePath
+        val mockkEnvironment = mockk<ApplicationEnvironment>()
+        coEvery { mockkEnvironment.config } returns mockkConfig
+        coEvery { mockkEnvironment.log } returns mockk(relaxed = true)
+        fileStorage = FileStorageImpl(mockkEnvironment)
+    }
+
+    @Test
+    fun `when saveFile is called with valid data, it should create file and write content to it`() = runTest {
+        val path = "test/file.txt"
+        val content = "file content"
+        val channel = ByteReadChannel(content)
+
+        val result = fileStorage.saveFile(path, channel)
+
+        assertEquals(path, result)
+        val file = File(tempDir, path)
+        assertTrue(file.exists())
+        assertEquals(content, file.readText())
+    }
+
+    @Test
+    fun `when saveFile is called with an empty ByteReadChannel, a ValidationException should be thrown`() = runTest {
+        val path = "test/file.txt"
+        val content = ""
+        val channel = ByteReadChannel(content)
+
+        assertThrows<ValidationException> {
+            fileStorage.saveFile(path, channel)
+        }
+
+        val file = File(tempDir, path)
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun `when saveFile is called and disk write fails, a StorageException should be thrown`() = runTest {
+        val parentPath = "test"
+        val fullPath = "$parentPath/file.txt"
+        val channel = ByteReadChannel("file content")
+
+        val parentAsFile = File(tempDir, parentPath)
+        parentAsFile.writeText("")
+        assertTrue(parentAsFile.isFile)
+
+        assertThrows<StorageException> {
+            fileStorage.saveFile(fullPath, channel)
+        }
+
+        val attemptedFile = File(tempDir, fullPath)
+        assertFalse(attemptedFile.exists())
+    }
+
+    @Test
+    fun `when deleteFile is called with an existing file path, it should remove the file from disk`() = runTest {
+        val path = "file.txt"
+        val file = File(tempDir, path)
+        file.writeText("file content")
+
+        fileStorage.deleteFile(path)
+
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun `when deleteFile is called with an non-existing file path, it should complete without errors`() = runTest {
+        val path = "file.txt"
+
+        fileStorage.deleteFile(path)
+    }
+
+    @Test
+    fun `when deleteFile is called on a non-empty directory, a StorageException should be thrown`() = runTest {
+        val dirPath = "test"
+        val directory = File(tempDir, dirPath)
+        directory.mkdir()
+
+        val file = File(directory, "file.txt")
+        file.writeText("")
+
+        assertThrows<StorageException> {
+            fileStorage.deleteFile(dirPath)
+        }
+
+        assertTrue(directory.exists())
+        assertTrue(file.exists())
+    }
+}

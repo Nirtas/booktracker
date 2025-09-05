@@ -14,7 +14,7 @@ import ru.jerael.booktracker.backend.data.mappers.toGenre
 import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.exceptions.InternalException
 import ru.jerael.booktracker.backend.domain.model.book.Book
-import ru.jerael.booktracker.backend.domain.model.book.BookDataPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import java.util.*
@@ -26,20 +26,20 @@ class BookRepositoryImpl : BookRepository {
         }
     }
 
-    override suspend fun addBook(bookDataPayload: BookDataPayload, language: String): Book {
+    override suspend fun addBook(bookCreationPayload: BookCreationPayload, language: String): Book {
         return withContext(Dispatchers.IO) {
             transaction {
                 val result = Books.insert {
-                    it[title] = bookDataPayload.title
-                    it[author] = bookDataPayload.author
-                    it[coverPath] = bookDataPayload.coverPath
-                    it[status] = bookDataPayload.status
+                    it[title] = bookCreationPayload.title
+                    it[author] = bookCreationPayload.author
+                    it[coverPath] = bookCreationPayload.coverPath
+                    it[status] = bookCreationPayload.status
                 }
                 val newBookId = result[Books.id]
-                bookDataPayload.genres.forEach { genre ->
+                bookCreationPayload.genreIds.forEach { genreId ->
                     BookGenres.insert {
                         it[bookId] = newBookId
-                        it[genreId] = genre.id
+                        it[this.genreId] = genreId
                     }
                 }
                 findBooks(wherePredicate = { Books.id eq newBookId }, language = language).singleOrNull()

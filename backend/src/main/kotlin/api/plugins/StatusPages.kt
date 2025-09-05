@@ -8,7 +8,7 @@ import io.ktor.server.response.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.SerializationException
-import ru.jerael.booktracker.backend.data.dto.ErrorDto
+import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.domain.exceptions.AppException
 import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 

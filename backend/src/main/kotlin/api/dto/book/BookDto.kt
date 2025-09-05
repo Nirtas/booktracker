@@ -1,7 +1,7 @@
-package ru.jerael.booktracker.backend.data.dto.book
+package ru.jerael.booktracker.backend.api.dto.book
 
 import kotlinx.serialization.Serializable
-import ru.jerael.booktracker.backend.data.dto.genre.GenreDto
+import ru.jerael.booktracker.backend.api.dto.genre.GenreDto
 
 @Serializable
 data class BookDto(
