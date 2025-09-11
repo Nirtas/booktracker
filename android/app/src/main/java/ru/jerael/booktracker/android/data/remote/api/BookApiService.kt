@@ -12,11 +12,9 @@ interface BookApiService {
 
     suspend fun getBookById(id: String): BookDto
 
-    suspend fun updateBook(
-        id: String,
-        bookDetailsUpdateDto: BookDetailsUpdateDto,
-        coverFile: File?
-    ): BookDto
+    suspend fun updateBookDetails(id: String, bookDetailsUpdateDto: BookDetailsUpdateDto): BookDto
+
+    suspend fun updateBookCover(id: String, coverFile: File): BookDto
 
     suspend fun deleteBook(id: String)
 }

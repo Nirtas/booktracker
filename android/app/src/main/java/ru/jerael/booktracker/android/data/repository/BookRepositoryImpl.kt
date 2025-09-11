@@ -5,8 +5,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import ru.jerael.booktracker.android.data.local.dao.BookDao
 import ru.jerael.booktracker.android.data.local.entity.BookGenresEntity
-import ru.jerael.booktracker.android.data.mappers.toBook
-import ru.jerael.booktracker.android.data.mappers.toBookEntity
+import ru.jerael.booktracker.android.data.mappers.BookMapper
 import ru.jerael.booktracker.android.data.remote.api.BookApiService
 import ru.jerael.booktracker.android.data.remote.dto.book.BookDetailsCreationDto
 import ru.jerael.booktracker.android.data.remote.dto.book.BookDetailsUpdateDto
@@ -20,17 +19,18 @@ import ru.jerael.booktracker.android.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.android.domain.model.book.BookUpdatePayload
 import ru.jerael.booktracker.android.domain.repository.BookRepository
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 class BookRepositoryImpl @Inject constructor(
     private val dao: BookDao,
     private val api: BookApiService,
-    private val errorMapper: ErrorMapper
+    private val errorMapper: ErrorMapper,
+    private val bookMapper: BookMapper
 ) : BookRepository {
     override fun getBooks(): Flow<Result<List<Book>>> {
-        return dao.getBookWithGenres()
-            .map { entities -> appSuccess(entities.map { it.toBook() }) }
+        return dao.getBooksWithGenres()
+            .map { booksWithGenres ->
+                appSuccess(bookMapper.mapBooksWithGenresToBooks(booksWithGenres))
+            }
             .catch { emit(appFailure(it, errorMapper)) }
     }
 
@@ -38,7 +38,7 @@ class BookRepositoryImpl @Inject constructor(
         return dao.getBookWithGenresById(id)
             .map {
                 if (it != null) {
-                    appSuccess(it.toBook())
+                    appSuccess(bookMapper.mapBookWithGenresToBook(it))
                 } else {
                     appFailure(AppError.NotFoundError)
                 }
@@ -49,7 +49,7 @@ class BookRepositoryImpl @Inject constructor(
     override suspend fun refreshBooks(): Result<Unit> {
         return try {
             val bookDtos = api.getBooks()
-            val booksToInsert = bookDtos.map { it.toBookEntity() }
+            val booksToInsert = bookMapper.mapDtosToEntities(bookDtos)
             val genresToInsert = bookDtos.flatMap { bookDto ->
                 bookDto.genres.map { genreDto ->
                     BookGenresEntity(bookId = bookDto.id, genreId = genreDto.id)
@@ -96,11 +96,10 @@ class BookRepositoryImpl @Inject constructor(
                 status = bookUpdatePayload.status.value,
                 genreIds = bookUpdatePayload.genreIds
             )
-            val bookDto = api.updateBook(
-                bookUpdatePayload.id,
-                bookDetailsUpdateDto,
-                bookUpdatePayload.coverFile
-            )
+            var bookDto = api.updateBookDetails(bookUpdatePayload.id, bookDetailsUpdateDto)
+            bookUpdatePayload.coverFile?.let { file ->
+                bookDto = api.updateBookCover(bookUpdatePayload.id, bookUpdatePayload.coverFile)
+            }
             saveBookDtoToDb(bookDto)
             appSuccess(Unit)
         } catch (e: Exception) {
@@ -119,7 +118,7 @@ class BookRepositoryImpl @Inject constructor(
     }
 
     private suspend fun saveBookDtoToDb(bookDto: BookDto) {
-        val bookEntity = bookDto.toBookEntity()
+        val bookEntity = bookMapper.mapDtoToEntity(bookDto)
         val bookWithGenres = bookDto.genres.map { genreDto ->
             BookGenresEntity(bookId = bookDto.id, genreId = genreDto.id)
         }
