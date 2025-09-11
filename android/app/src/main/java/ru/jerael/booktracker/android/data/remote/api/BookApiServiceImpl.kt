@@ -2,6 +2,7 @@ package ru.jerael.booktracker.android.data.remote.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -22,7 +23,7 @@ import java.io.File
 
 class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
     override suspend fun getBooks(): List<BookDto> {
-        return httpClient.get(HttpRoute.BOOKS).body<List<BookDto>>()
+        return httpClient.get(HttpRoute.BOOKS) { expectSuccess = true }.body<List<BookDto>>()
     }
 
     override suspend fun addBook(
@@ -31,6 +32,7 @@ class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
     ): BookDto {
         val bookJson = Json.encodeToString(bookDetailsCreationDto)
         return httpClient.post(HttpRoute.BOOKS) {
+            expectSuccess = true
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -49,39 +51,40 @@ class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
     }
 
     override suspend fun getBookById(id: String): BookDto {
-        return httpClient.get(HttpRoute.bookById(id)).body<BookDto>()
+        return httpClient.get(HttpRoute.bookById(id)) { expectSuccess = true }.body<BookDto>()
     }
 
-    override suspend fun updateBook(
+    override suspend fun updateBookDetails(
         id: String,
-        bookDetailsUpdateDto: BookDetailsUpdateDto,
-        coverFile: File?
+        bookDetailsUpdateDto: BookDetailsUpdateDto
     ): BookDto {
-        var bookDto = httpClient.put(HttpRoute.bookById(id)) {
+        return httpClient.put(HttpRoute.bookById(id)) {
+            expectSuccess = true
             contentType(ContentType.Application.Json)
             setBody(bookDetailsUpdateDto)
         }.body<BookDto>()
-        if (coverFile != null) {
-            bookDto = httpClient.post(HttpRoute.bookCover(id)) {
-                setBody(
-                    MultiPartFormDataContent(
-                        formData {
-                            append("cover", coverFile.readBytes(), Headers.build {
-                                append(HttpHeaders.ContentType, "image/jpeg")
-                                append(
-                                    HttpHeaders.ContentDisposition,
-                                    "filename=\"${coverFile.name}\""
-                                )
-                            })
-                        }
-                    )
+    }
+
+    override suspend fun updateBookCover(id: String, coverFile: File): BookDto {
+        return httpClient.post(HttpRoute.bookCover(id)) {
+            expectSuccess = true
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("cover", coverFile.readBytes(), Headers.build {
+                            append(HttpHeaders.ContentType, "image/jpeg")
+                            append(
+                                HttpHeaders.ContentDisposition,
+                                "filename=\"${coverFile.name}\""
+                            )
+                        })
+                    }
                 )
-            }.body<BookDto>()
-        }
-        return bookDto
+            )
+        }.body<BookDto>()
     }
 
     override suspend fun deleteBook(id: String) {
-        httpClient.delete(HttpRoute.bookById(id))
+        httpClient.delete(HttpRoute.bookById(id)) { expectSuccess = true }
     }
 }

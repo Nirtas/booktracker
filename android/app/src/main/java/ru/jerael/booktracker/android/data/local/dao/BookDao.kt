@@ -1,5 +1,6 @@
 package ru.jerael.booktracker.android.data.local.dao
 
+import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
@@ -15,11 +16,19 @@ import ru.jerael.booktracker.android.data.local.relations.BookWithGenres
 interface BookDao {
     @Transaction
     @Query("SELECT * FROM $TABLE_BOOKS")
-    fun getBookWithGenres(): Flow<List<BookWithGenres>>
+    fun getBooksWithGenres(): Flow<List<BookWithGenres>>
 
     @Transaction
     @Query("SELECT * FROM $TABLE_BOOKS WHERE id = :id")
     fun getBookWithGenresById(id: String): Flow<BookWithGenres?>
+
+    @VisibleForTesting
+    @Query("SELECT * FROM $TABLE_BOOK_GENRES")
+    fun getBookGenres(): List<BookGenresEntity>
+
+    @VisibleForTesting
+    @Query("SELECT * FROM $TABLE_BOOKS")
+    fun getBooks(): List<BookEntity>
 
     @Upsert
     suspend fun upsertBook(bookEntity: BookEntity)
@@ -40,16 +49,12 @@ interface BookDao {
     @Query("DELETE FROM $TABLE_BOOKS")
     suspend fun clearBooks()
 
-    @Query("DELETE FROM $TABLE_BOOK_GENRES")
-    suspend fun clearBookGenres()
-
     @Transaction
     suspend fun clearAndInsertBooks(
         books: List<BookEntity>,
         genres: List<BookGenresEntity>
     ) {
         clearBooks()
-        clearBookGenres()
         books.forEach { book ->
             val bookGenres = genres.filter { it.bookId == book.id }
             upsertBookWithGenres(book, bookGenres)
