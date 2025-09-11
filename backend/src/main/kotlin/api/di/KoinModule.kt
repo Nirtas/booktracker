@@ -33,7 +33,7 @@ fun appModule(environment: ApplicationEnvironment) = module {
 
     single<GenresValidator> { GenresValidator(get()) }
 
-    single<BookMapper> { BookMapperImpl(getProperty(IMAGE_BASE_URL_PROPERTY)) }
+    single<BookMapper> { BookMapperImpl(getProperty(IMAGE_BASE_URL_PROPERTY), get()) }
     single<GenreMapper> { GenreMapperImpl() }
 
     single { MultipartParser() }

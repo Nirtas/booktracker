@@ -26,7 +26,7 @@ class BookController(
     suspend fun getAllBooks(call: ApplicationCall) {
         val language = call.request.language()
         val books = getBooksUseCase(language)
-        call.respond(HttpStatusCode.OK, bookMapper.toDto(books))
+        call.respond(HttpStatusCode.OK, bookMapper.mapBooksToDtos(books))
     }
 
     suspend fun addBook(call: ApplicationCall) {
@@ -35,7 +35,7 @@ class BookController(
         val bookCreationPayload = validator.validateCreation(request.bookCreationDto)
         try {
             val newBook = addBookUseCase(bookCreationPayload, request.coverPart, language)
-            call.respond(HttpStatusCode.Created, bookMapper.toDto(newBook))
+            call.respond(HttpStatusCode.Created, bookMapper.mapBookToDto(newBook))
         } finally {
             request.coverPart?.dispose?.let { it() }
         }
@@ -45,7 +45,7 @@ class BookController(
         val language = call.request.language()
         val id = validator.validateId(call.parameters["id"])
         val book = getBookByIdUseCase(id, language)
-        call.respond(HttpStatusCode.OK, bookMapper.toDto(book))
+        call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
     }
 
     suspend fun deleteBook(call: ApplicationCall) {
@@ -60,7 +60,7 @@ class BookController(
         val bookUpdateDto = call.receive<BookUpdateDto>()
         val bookDetailsUpdatePayload = validator.validateUpdate(bookUpdateDto)
         val book = updateBookDetailsUseCase(id, bookDetailsUpdatePayload, language)
-        call.respond(HttpStatusCode.OK, bookMapper.toDto(book))
+        call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
     }
 
     suspend fun updateBookCover(call: ApplicationCall) {
@@ -69,7 +69,7 @@ class BookController(
         val coverPart = multipartParser.parseBookCoverUpdate(call)
         try {
             val book = updateBookCoverUseCase(id, coverPart, language)
-            call.respond(HttpStatusCode.OK, bookMapper.toDto(book))
+            call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
         } finally {
             coverPart.dispose()
         }

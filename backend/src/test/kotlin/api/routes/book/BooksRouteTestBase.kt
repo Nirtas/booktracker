@@ -16,6 +16,7 @@ import org.koin.test.KoinTest
 import ru.jerael.booktracker.backend.api.controller.BookController
 import ru.jerael.booktracker.backend.api.controller.GenreController
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
+import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
 import ru.jerael.booktracker.backend.api.validation.BookValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.*
@@ -64,7 +65,7 @@ abstract class BooksRouteTestBase : KoinTest {
                         deleteBookUseCase,
                         bookValidator,
                         multipartParser,
-                        BookMapperImpl(imageBaseUrl)
+                        BookMapperImpl(imageBaseUrl, GenreMapperImpl())
                     )
                 }
                 single { mockk<GenreController>() }

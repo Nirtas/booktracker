@@ -8,8 +8,8 @@ import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 
 interface BookMapper {
-    fun toDto(book: Book): BookDto
-    fun toDto(books: List<Book>): List<BookDto>
-    fun toPayload(dto: BookCreationDto): BookCreationPayload
-    fun toPayload(dto: BookUpdateDto): BookDetailsUpdatePayload
+    fun mapBookToDto(book: Book): BookDto
+    fun mapBooksToDtos(books: List<Book>): List<BookDto>
+    fun mapCreationDtoToCreationPayload(dto: BookCreationDto): BookCreationPayload
+    fun mapUpdateDtoToDetailsUpdatePayload(dto: BookUpdateDto): BookDetailsUpdatePayload
 }
