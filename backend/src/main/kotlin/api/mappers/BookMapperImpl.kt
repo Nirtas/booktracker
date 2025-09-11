@@ -8,16 +8,27 @@ import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 
-class BookMapperImpl(private val imageBaseUrl: String) : BookMapper {
-    override fun toDto(book: Book): BookDto {
-        return book.toBookDto(imageBaseUrl)
+class BookMapperImpl(
+    private val imageBaseUrl: String,
+    private val genreMapper: GenreMapper
+) : BookMapper {
+    override fun mapBookToDto(book: Book): BookDto {
+        return BookDto(
+            id = book.id.toString(),
+            title = book.title,
+            author = book.author,
+            coverUrl = book.coverPath?.let { "$imageBaseUrl/$it" },
+            status = book.status.value,
+            createdAt = book.createdAt.toEpochMilli(),
+            genres = genreMapper.mapGenresToDtos(book.genres)
+        )
     }
 
-    override fun toDto(books: List<Book>): List<BookDto> {
-        return books.map { it.toBookDto(imageBaseUrl) }
+    override fun mapBooksToDtos(books: List<Book>): List<BookDto> {
+        return books.map { mapBookToDto(it) }
     }
 
-    override fun toPayload(dto: BookCreationDto): BookCreationPayload {
+    override fun mapCreationDtoToCreationPayload(dto: BookCreationDto): BookCreationPayload {
         return BookCreationPayload(
             title = dto.title,
             author = dto.author,
@@ -27,7 +38,7 @@ class BookMapperImpl(private val imageBaseUrl: String) : BookMapper {
         )
     }
 
-    override fun toPayload(dto: BookUpdateDto): BookDetailsUpdatePayload {
+    override fun mapUpdateDtoToDetailsUpdatePayload(dto: BookUpdateDto): BookDetailsUpdatePayload {
         return BookDetailsUpdatePayload(
             title = dto.title,
             author = dto.author,

@@ -17,6 +17,7 @@ tasks.test {
 
 sourceSets {
     getByName("test") {
+        kotlin.srcDir("src/test")
         resources {
             srcDir("../database-init")
         }

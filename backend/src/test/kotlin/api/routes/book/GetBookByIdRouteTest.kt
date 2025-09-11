@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.dto.book.BookDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
+import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
@@ -42,7 +43,7 @@ class GetBookByIdRouteTest : BooksRouteTestBase() {
 
     @Test
     fun `when a book is found, getBookById should return it and a 200 OK status`() = testApplication {
-        val expectedBookDto = BookMapperImpl(imageBaseUrl).toDto(expectedBook)
+        val expectedBookDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBookToDto(expectedBook)
         every { bookValidator.validateId(bookId.toString()) } returns bookId
         coEvery { getBookByIdUseCase.invoke(bookId, language) } returns expectedBook
 

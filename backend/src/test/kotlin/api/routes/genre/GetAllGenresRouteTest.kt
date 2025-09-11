@@ -28,7 +28,7 @@ class GetAllGenresRouteTest : GenresRouteTestBase() {
             Genre(2, "genre 2"),
             Genre(3, "genre 3")
         )
-        val genresDto = GenreMapperImpl().toDto(genres)
+        val genresDto = GenreMapperImpl().mapGenresToDtos(genres)
         coEvery { getGenresUseCase.invoke(any()) } returns genres
 
         application {

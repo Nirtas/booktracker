@@ -15,6 +15,7 @@ import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.dto.book.BookDto
 import ru.jerael.booktracker.backend.api.dto.book.BookUpdateDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
+import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
@@ -59,7 +60,7 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
                 status = BookStatus.READ,
                 genreIds = emptyList()
             )
-            val updatedBookDto = BookMapperImpl(imageBaseUrl).toDto(updatedBook)
+            val updatedBookDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBookToDto(updatedBook)
             every { bookValidator.validateId(bookId.toString()) } returns bookId
             every { bookValidator.validateUpdate(bookUpdateDto) } returns bookDetailsUpdatePayload
             coEvery { updateBookDetailsUseCase.invoke(bookId, bookDetailsUpdatePayload, language) } returns updatedBook

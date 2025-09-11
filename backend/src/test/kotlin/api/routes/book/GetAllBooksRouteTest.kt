@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.dto.book.BookDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
+import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
@@ -51,7 +52,7 @@ class GetAllBooksRouteTest : BooksRouteTestBase() {
                 )
             )
         )
-        val booksDto = BookMapperImpl(imageBaseUrl).toDto(books)
+        val booksDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBooksToDtos(books)
         coEvery { getBooksUseCase.invoke(any()) } returns books
 
         application {

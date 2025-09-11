@@ -15,6 +15,6 @@ class GenreController(
     suspend fun getAllGenres(call: ApplicationCall) {
         val language = call.request.language()
         val genres = getGenresUseCase(language)
-        call.respond(HttpStatusCode.OK, genreMapper.toDto(genres))
+        call.respond(HttpStatusCode.OK, genreMapper.mapGenresToDtos(genres))
     }
 }

@@ -15,6 +15,7 @@ import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.dto.book.BookCreationDto
 import ru.jerael.booktracker.backend.api.dto.book.BookDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
+import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.parsing.ParsedBookCreationRequest
 import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
@@ -42,7 +43,7 @@ class AddBookRouteTest : BooksRouteTestBase() {
         createdAt = Instant.now(),
         genres = emptyList()
     )
-    private val createdBookDto = BookMapperImpl(imageBaseUrl).toDto(createdBook)
+    private val createdBookDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBookToDto(createdBook)
     private val errorDto = ErrorDto(
         code = "INTERNAL_SERVER_ERROR",
         message = "An unexpected error occurred. Please try again later."
