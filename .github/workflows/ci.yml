@@ -41,8 +41,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-    env:
-      GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED: ${{ secrets.GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED }}
     steps:
       - uses: actions/checkout@v5
 
@@ -65,14 +63,13 @@ jobs:
         run: echo "STORAGE_BASE_URL=${{ secrets.STORAGE_BASE_URL }}" > .env
 
       - name: Run Backend Tests
-        run: ./gradlew :backend:clean :backend:test --scan
+        run: ./gradlew :backend:clean :backend:test
 
   android-test:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
     env:
-      GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED: ${{ secrets.GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED }}
       EMULATOR_API_LEVEL: 29
     steps:
       - uses: actions/checkout@v5
@@ -95,6 +92,12 @@ jobs:
             ~/.android/adb*
           key: avd-${{ env.EMULATOR_API_LEVEL }}
 
+      - name: Enable KVM group perms
+        run: |
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
@@ -105,10 +108,10 @@ jobs:
         run: echo "BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}" > secrets.properties
 
       - name: Run Android Unit Tests
-        run: ./gradlew :android:app:testDebugUnitTest --scan
+        run: ./gradlew :android:app:testDebugUnitTest
 
       - name: Run Android Instrumented Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ env.EMULATOR_API_LEVEL }}
-          script: ./gradlew :android:app:connectedDebugAndroidTest --scan
+          script: ./gradlew :android:app:connectedDebugAndroidTest
