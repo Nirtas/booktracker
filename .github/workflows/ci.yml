@@ -1,4 +1,4 @@
-name: Android and Backend tests
+name: Backend and Android tests
 
 on:
   push:
