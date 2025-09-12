@@ -1,8 +1,10 @@
 package data.storage
 
-import io.ktor.http.content.*
-import io.mockk.*
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,10 +21,10 @@ class CoverStorageImplTest {
     @MockK
     private lateinit var fileStorage: FileStorage
 
-    @MockK
-    private lateinit var filePart: PartData.FileItem
-
     private lateinit var coverStorage: CoverStorage
+
+    private val coverBytes: ByteArray = "file content".toByteArray()
+    private val coverFileName: String = "cover.jpg"
 
     @BeforeEach
     fun setUp() {
@@ -33,11 +35,9 @@ class CoverStorageImplTest {
     @Test
     fun `when save is called with valid jpg file, it should generate path and call fileStorage`() = runTest {
         val pathSlot = slot<String>()
-        every { filePart.originalFileName } returns "cover.jpg"
-        every { filePart.provider() } returns mockk()
         coEvery { fileStorage.saveFile(capture(pathSlot), any()) } returns ""
 
-        coverStorage.save(filePart)
+        coverStorage.save(coverBytes, coverFileName)
 
         coVerify(exactly = 1) { fileStorage.saveFile(any(), any()) }
         val capturedPath = pathSlot.captured
@@ -47,10 +47,8 @@ class CoverStorageImplTest {
 
     @Test
     fun `when save is called with blank originalFileName, a ValidationException should be thrown`() = runTest {
-        every { filePart.originalFileName } returns ""
-
         val exception = assertThrows<ValidationException> {
-            coverStorage.save(filePart)
+            coverStorage.save("".toByteArray(), "")
         }
 
         assertEquals("File name can`t be empty.", exception.message!!)
@@ -59,10 +57,8 @@ class CoverStorageImplTest {
 
     @Test
     fun `when save is called with unsupported file extension, a ValidationException should be thrown`() = runTest {
-        every { filePart.originalFileName } returns "cover.gif"
-
         val exception = assertThrows<ValidationException> {
-            coverStorage.save(filePart)
+            coverStorage.save("".toByteArray(), "cover.gif")
         }
 
         assertEquals("Invalid file type. Only JPG and PNG are allowed.", exception.message!!)
@@ -71,12 +67,10 @@ class CoverStorageImplTest {
 
     @Test
     fun `when fileStorage throws Exception, save should rethrow it without creating a record`() = runTest {
-        every { filePart.originalFileName } returns "cover.jpg"
-        every { filePart.provider() } returns mockk()
         coEvery { fileStorage.saveFile(any(), any()) } throws Exception("Error")
 
-        val exception = assertThrows<Exception> {
-            coverStorage.save(filePart)
+        assertThrows<Exception> {
+            coverStorage.save(coverBytes, coverFileName)
         }
     }
 }

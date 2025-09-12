@@ -4,7 +4,6 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -49,8 +48,8 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
     @Test
     fun `when request is valid with cover image, updateBookCover should return the updated book and a 200 OK status`() =
         testApplication {
-            val coverPartSlot = slot<PartData.FileItem>()
-            coEvery { updateBookCoverUseCase.invoke(any(), capture(coverPartSlot), any()) } returns updatedBook
+            val coverBytesSlot = slot<ByteArray>()
+            coEvery { updateBookCoverUseCase.invoke(any(), capture(coverBytesSlot), any(), any()) } returns updatedBook
 
             application {
                 configureStatusPages()
@@ -75,12 +74,12 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(updatedBookDto, Json.decodeFromString<BookDto>(response.bodyAsText()))
-            assertNotNull(coverPartSlot.captured)
+            assertNotNull(coverBytesSlot.captured)
         }
 
     @Test
     fun `when Accept-Language header is present, language() should correctly parse and return it`() = testApplication {
-        coEvery { updateBookCoverUseCase.invoke(any(), any(), any()) } returns updatedBook
+        coEvery { updateBookCoverUseCase.invoke(any(), any(), any(), any()) } returns updatedBook
 
         application {
             configureStatusPages()
@@ -91,7 +90,7 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
             header(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
         }
 
-        coVerify(exactly = 1) { updateBookCoverUseCase.invoke(any(), any(), "en") }
+        coVerify(exactly = 1) { updateBookCoverUseCase.invoke(any(), any(), any(), "en") }
     }
 
     @Test
@@ -121,7 +120,7 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
 
         Assertions.assertEquals(HttpStatusCode.InternalServerError, response.status)
         Assertions.assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-        coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any(), any(), any()) }
+        coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any(), any(), any(), any()) }
     }
 
     @Test
@@ -138,13 +137,13 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any(), any(), any()) }
+            coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any(), any(), any(), any()) }
         }
 
     @Test
     fun `when updateBookCoverUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
-            coEvery { updateBookCoverUseCase.invoke(any(), any(), any()) } throws Exception("Error")
+            coEvery { updateBookCoverUseCase.invoke(any(), any(), any(), any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()

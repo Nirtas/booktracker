@@ -1,6 +1,5 @@
 package domain.usecases.book
 
-import io.ktor.http.content.*
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.test.runTest
@@ -33,9 +32,6 @@ class AddBookUseCaseTest {
 
     private lateinit var useCase: AddBookUseCase
 
-    @MockK
-    private lateinit var filePart: PartData.FileItem
-
     private val language = "en"
     private val bookId = UUID.randomUUID()
     private val foundGenres = listOf(
@@ -61,6 +57,9 @@ class AddBookUseCaseTest {
         genreIds = genreIds
     )
 
+    private val coverBytes: ByteArray = "file content".toByteArray()
+    private val coverFileName: String = "cover.jpg"
+
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
@@ -75,13 +74,13 @@ class AddBookUseCaseTest {
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
             val expectedCoverPath = "covers/new_book.jpg"
             coEvery { genresValidator.invoke(requestedGenreIds, language) } just Runs
-            coEvery { coverStorage.save(filePart) } returns expectedCoverPath
+            coEvery { coverStorage.save(coverBytes, coverFileName) } returns expectedCoverPath
             coEvery { bookRepository.addBook(any(), language) } returns expectedBookWithGenres
 
-            val result = useCase.invoke(bookCreationPayload, filePart, language)
+            val result = useCase.invoke(bookCreationPayload, coverBytes, coverFileName, language)
 
             assertEquals(expectedBookWithGenres, result)
-            coVerify(exactly = 1) { coverStorage.save(filePart) }
+            coVerify(exactly = 1) { coverStorage.save(coverBytes, coverFileName) }
             coVerify(exactly = 1) { bookRepository.addBook(any(), language) }
         }
 
@@ -94,10 +93,10 @@ class AddBookUseCaseTest {
             coEvery { genresValidator.invoke(requestedGenreIds, language) } just Runs
             coEvery { bookRepository.addBook(bookCreationPayload, language) } returns expectedBookWithGenres
 
-            val result = useCase.invoke(bookCreationPayload, null, language)
+            val result = useCase.invoke(bookCreationPayload, null, null, language)
 
             assertEquals(expectedBookWithGenres, result)
-            coVerify(exactly = 0) { coverStorage.save(any()) }
+            coVerify(exactly = 0) { coverStorage.save(any(), any()) }
             coVerify(exactly = 1) { bookRepository.addBook(any(), language) }
         }
 
@@ -108,10 +107,10 @@ class AddBookUseCaseTest {
         coEvery { genresValidator.invoke(requestedGenreIds, language) } throws ValidationException("Error")
 
         assertThrows<ValidationException> {
-            useCase.invoke(bookCreationPayload, filePart, language)
+            useCase.invoke(bookCreationPayload, coverBytes, coverFileName, language)
         }
 
-        coVerify(exactly = 0) { coverStorage.save(any()) }
+        coVerify(exactly = 0) { coverStorage.save(any(), any()) }
         coVerify(exactly = 0) { bookRepository.addBook(any(), any()) }
     }
 }

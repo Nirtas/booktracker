@@ -3,19 +3,28 @@ package ru.jerael.booktracker.backend.api.parsing
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import io.ktor.utils.io.*
+import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
 import ru.jerael.booktracker.backend.api.dto.book.BookCreationDto
 import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 
 data class ParsedBookCreationRequest(
     val bookCreationDto: BookCreationDto,
-    val coverPart: PartData.FileItem?
+    val coverBytes: ByteArray?,
+    val coverFileName: String?
+)
+
+data class ParsedBookCoverUpdateRequest(
+    val coverBytes: ByteArray,
+    val coverFileName: String
 )
 
 class MultipartParser {
     suspend fun parseBookCreation(call: ApplicationCall): ParsedBookCreationRequest {
         var bookCreationDto: BookCreationDto? = null
-        var coverPart: PartData.FileItem? = null
+        var coverBytes: ByteArray? = null
+        var coverFileName: String? = null
 
         val multipartData = call.receiveMultipart()
         multipartData.forEachPart { part ->
@@ -28,8 +37,8 @@ class MultipartParser {
 
                 is PartData.FileItem -> {
                     if (part.name == "cover" && part.originalFileName?.isNotBlank() == true) {
-                        coverPart = part
-                        return@forEachPart
+                        coverFileName = part.originalFileName
+                        coverBytes = part.provider().readRemaining().readByteArray()
                     }
                 }
 
@@ -41,16 +50,22 @@ class MultipartParser {
         return ParsedBookCreationRequest(
             bookCreationDto = bookCreationDto
                 ?: throw ValidationException("Form item 'book' is missing or has invalid format."),
-            coverPart = coverPart
+            coverBytes = coverBytes,
+            coverFileName = coverFileName
         )
     }
 
-    suspend fun parseBookCoverUpdate(call: ApplicationCall): PartData.FileItem {
+    suspend fun parseBookCoverUpdate(call: ApplicationCall): ParsedBookCoverUpdateRequest {
         val part = call.receiveMultipart().readPart()
-        if (part !is PartData.FileItem || part.name != "cover" || part.originalFileName.isNullOrBlank()) {
+        try {
+            if (part !is PartData.FileItem || part.name != "cover" || part.originalFileName.isNullOrBlank()) {
+                throw ValidationException("File part 'cover' is missing or invalid")
+            }
+            val coverBytes: ByteArray = part.provider().readRemaining().readByteArray()
+            val coverFileName: String = part.originalFileName!!
+            return ParsedBookCoverUpdateRequest(coverBytes = coverBytes, coverFileName = coverFileName)
+        } finally {
             part?.dispose?.let { it() }
-            throw ValidationException("File part 'cover' is missing or invalid")
         }
-        return part
     }
 }

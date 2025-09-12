@@ -1,6 +1,5 @@
 package ru.jerael.booktracker.backend.domain.usecases.book
 
-import io.ktor.http.content.*
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
@@ -11,10 +10,15 @@ class UpdateBookCoverUseCase(
     private val coverStorage: CoverStorage,
     private val getBookByIdUseCase: GetBookByIdUseCase
 ) {
-    suspend operator fun invoke(id: UUID, coverPart: PartData.FileItem, language: String): Book {
+    suspend operator fun invoke(
+        id: UUID,
+        coverBytes: ByteArray,
+        coverFileName: String,
+        language: String
+    ): Book {
         val existingBook = getBookByIdUseCase(id, language)
         existingBook.coverPath?.let { coverStorage.delete(it) }
-        val newCoverPath = coverStorage.save(coverPart)
+        val newCoverPath = coverStorage.save(coverBytes, coverFileName)
         return bookRepository.updateBookCover(id, newCoverPath, language)
     }
 }
