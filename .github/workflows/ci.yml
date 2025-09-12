@@ -30,7 +30,7 @@ jobs:
               - 'gradle/**'
               - '.github/workflows/ci.yml'
             android:
-              - 'android/app/**'
+              - 'android/**'
               - 'build.gradle.kts'
               - 'settings.gradle.kts'
               - 'gradle.properties'
@@ -41,6 +41,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
+    env:
+      GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED: ${{ secrets.GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED }}
     steps:
       - uses: actions/checkout@v5
 
@@ -55,6 +57,9 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Create .env
+        run: echo "STORAGE_BASE_URL=${{ secrets.STORAGE_BASE_URL }}" > .env
 
       - name: Run Backend Tests
         run: ./gradlew :backend:clean :backend:test --scan
@@ -80,6 +85,9 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Create secrets.properties
+        run: echo "BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}" > secrets.properties
 
       - name: Run Android Unit Tests
         run: ./gradlew :android:app:testDebugUnitTest --scan
