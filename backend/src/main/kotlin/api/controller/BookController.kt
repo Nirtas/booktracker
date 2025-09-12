@@ -33,12 +33,8 @@ class BookController(
         val language = call.request.language()
         val request = multipartParser.parseBookCreation(call)
         val bookCreationPayload = validator.validateCreation(request.bookCreationDto)
-        try {
-            val newBook = addBookUseCase(bookCreationPayload, request.coverPart, language)
-            call.respond(HttpStatusCode.Created, bookMapper.mapBookToDto(newBook))
-        } finally {
-            request.coverPart?.dispose?.let { it() }
-        }
+        val newBook = addBookUseCase(bookCreationPayload, request.coverBytes, request.coverFileName, language)
+        call.respond(HttpStatusCode.Created, bookMapper.mapBookToDto(newBook))
     }
 
     suspend fun getBookById(call: ApplicationCall) {
@@ -66,12 +62,8 @@ class BookController(
     suspend fun updateBookCover(call: ApplicationCall) {
         val language = call.request.language()
         val id = validator.validateId(call.parameters["id"])
-        val coverPart = multipartParser.parseBookCoverUpdate(call)
-        try {
-            val book = updateBookCoverUseCase(id, coverPart, language)
-            call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
-        } finally {
-            coverPart.dispose()
-        }
+        val request = multipartParser.parseBookCoverUpdate(call)
+        val book = updateBookCoverUseCase(id, request.coverBytes, request.coverFileName, language)
+        call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
     }
 }

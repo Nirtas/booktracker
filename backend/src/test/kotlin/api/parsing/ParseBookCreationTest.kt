@@ -36,8 +36,8 @@ private fun Application.configureTestParserRouting(parser: MultipartParser) {
             val result = parser.parseBookCreation(call)
             val bookCreationResultDto = BookCreationResultDto(
                 bookCreationDto = result.bookCreationDto,
-                hasCover = result.coverPart != null,
-                coverFilename = result.coverPart?.originalFileName
+                hasCover = result.coverBytes != null,
+                coverFilename = result.coverFileName
             )
             call.respond(HttpStatusCode.OK, bookCreationResultDto)
         }

@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 @Serializable
 private data class BookCoverUpdateResultDto(
     val hasFile: Boolean,
-    val fileName: String?
+    val fileName: String
 )
 
 private const val COVER_UPDATE_URL = "/test-cover-update"
@@ -33,7 +33,7 @@ private fun Application.configureTestParserRouting(parser: MultipartParser) {
             val fileItem = parser.parseBookCoverUpdate(call)
             val bookCoverUpdateResultDto = BookCoverUpdateResultDto(
                 hasFile = true,
-                fileName = fileItem.originalFileName
+                fileName = fileItem.coverFileName
             )
             call.respond(HttpStatusCode.OK, bookCoverUpdateResultDto)
         }

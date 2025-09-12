@@ -4,7 +4,6 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.serialization.json.Json
@@ -53,8 +52,8 @@ class AddBookRouteTest : BooksRouteTestBase() {
     @Test
     fun `when request is valid with cover image, addBook should return the created book and a 201 Created status`() =
         testApplication {
-            val coverPartSlot = slot<PartData.FileItem?>()
-            coEvery { addBookUseCase.invoke(any(), captureNullable(coverPartSlot), any()) } returns createdBook
+            val coverBytesSlot = slot<ByteArray?>()
+            coEvery { addBookUseCase.invoke(any(), captureNullable(coverBytesSlot), any(), any()) } returns createdBook
 
             application {
                 configureStatusPages()
@@ -86,7 +85,7 @@ class AddBookRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(createdBookDto, Json.decodeFromString<BookDto>(response.bodyAsText()))
-            assertNotNull(coverPartSlot.captured)
+            assertNotNull(coverBytesSlot.captured)
         }
 
     @Test
@@ -94,11 +93,12 @@ class AddBookRouteTest : BooksRouteTestBase() {
         testApplication {
             val parsedBookCreationRequest = ParsedBookCreationRequest(
                 bookCreationDto = bookCreationDto,
-                coverPart = null
+                coverBytes = null,
+                coverFileName = null
             )
             coEvery { multipartParser.parseBookCreation(any()) } returns parsedBookCreationRequest
-            val coverPartSlot = slot<PartData.FileItem?>()
-            coEvery { addBookUseCase.invoke(any(), captureNullable(coverPartSlot), any()) } returns createdBook
+            val coverBytesSlot = slot<ByteArray?>()
+            coEvery { addBookUseCase.invoke(any(), captureNullable(coverBytesSlot), any(), any()) } returns createdBook
 
             application {
                 configureStatusPages()
@@ -122,12 +122,12 @@ class AddBookRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(createdBookDto, Json.decodeFromString<BookDto>(response.bodyAsText()))
-            assertNull(coverPartSlot.captured)
+            assertNull(coverBytesSlot.captured)
         }
 
     @Test
     fun `when Accept-Language header is present, language() should correctly parse and return it`() = testApplication {
-        coEvery { addBookUseCase.invoke(any(), any(), any()) } returns createdBook
+        coEvery { addBookUseCase.invoke(any(), any(), any(), any()) } returns createdBook
 
         application {
             configureStatusPages()
@@ -138,7 +138,7 @@ class AddBookRouteTest : BooksRouteTestBase() {
             header(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
         }
 
-        coVerify(exactly = 1) { addBookUseCase.invoke(any(), any(), "en") }
+        coVerify(exactly = 1) { addBookUseCase.invoke(any(), any(), any(), "en") }
     }
 
     @Test
@@ -156,7 +156,7 @@ class AddBookRouteTest : BooksRouteTestBase() {
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
             verify(exactly = 0) { bookValidator.validateCreation(any()) }
-            coVerify(exactly = 0) { addBookUseCase.invoke(any(), any(), any()) }
+            coVerify(exactly = 0) { addBookUseCase.invoke(any(), any(), any(), any()) }
         }
 
     @Test
@@ -173,13 +173,13 @@ class AddBookRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            coVerify(exactly = 0) { addBookUseCase.invoke(any(), any(), any()) }
+            coVerify(exactly = 0) { addBookUseCase.invoke(any(), any(), any(), any()) }
         }
 
     @Test
     fun `when addBookUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
-            coEvery { addBookUseCase.invoke(any(), any(), any()) } throws Exception("Error")
+            coEvery { addBookUseCase.invoke(any(), any(), any(), any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
