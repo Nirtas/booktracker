@@ -65,7 +65,35 @@ jobs:
       - name: Run Backend Tests
         run: ./gradlew :backend:clean :backend:test
 
-  android-test:
+  android-test-unit:
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create secrets.properties
+        run: echo "BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}" > secrets.properties
+
+      - name: Run Android Unit Tests
+        run: ./gradlew :android:app:testDebugUnitTest
+
+  android-test-instrumented:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
@@ -106,9 +134,6 @@ jobs:
 
       - name: Create secrets.properties
         run: echo "BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}" > secrets.properties
-
-      - name: Run Android Unit Tests
-        run: ./gradlew :android:app:testDebugUnitTest
 
       - name: Run Android Instrumented Tests
         uses: reactivecircus/android-emulator-runner@v2
