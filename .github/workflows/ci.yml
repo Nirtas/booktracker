@@ -54,7 +54,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Grant execute permission for gradlew
-        uses: chmod +x gradlew
+        run: chmod +x gradlew
 
       - name: Run Backend Tests
         run: ./gradlew :backend:clean :backend:test --scan
@@ -79,7 +79,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Grant execute permission for gradlew
-        uses: chmod +x gradlew
+        run: chmod +x gradlew
 
       - name: Run Android Unit Tests
         run: ./gradlew :android:app:testDebugUnitTest --scan
