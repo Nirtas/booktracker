@@ -58,6 +58,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Create secrets.properties
+        run: echo "BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}" > secrets.properties
+
       - name: Create .env
         run: echo "STORAGE_BASE_URL=${{ secrets.STORAGE_BASE_URL }}" > .env
 
@@ -68,6 +71,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
+    env:
+      GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED: ${{ secrets.GRADLE_DEVELOCITY_TERMS_OF_USE_AGREED }}
+      EMULATOR_API_LEVEL: 29
     steps:
       - uses: actions/checkout@v5
 
@@ -79,6 +85,15 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ env.EMULATOR_API_LEVEL }}
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -95,5 +110,5 @@ jobs:
       - name: Run Android Instrumented Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
           script: ./gradlew :android:app:connectedDebugAndroidTest --scan
