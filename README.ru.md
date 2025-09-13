@@ -5,6 +5,7 @@
 <br>
 
 [![GitHub Release](https://img.shields.io/github/v/release/Nirtas/booktracker)](https://github.com/Nirtas/booktracker/releases/latest)
+[![GitHub License](https://img.shields.io/badge/license-AGPL%20v3-blue)](https://www.gnu.org/licenses/agpl-3.0.ru.html)
 
 [English version](README.md)
 
