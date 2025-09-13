@@ -1,6 +1,23 @@
+/*
+ * BookTracker is a full-stack application for tracking your reading list.
+ * Copyright (C) 2025  Jerael (https://github.com/Nirtas)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.jerael.booktracker.android.presentation.ui.screens.book_list
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,6 +27,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -20,16 +38,30 @@ import ru.jerael.booktracker.android.domain.usecases.book.RefreshBooksUseCase
 import ru.jerael.booktracker.android.domain.usecases.genre.GetGenresUseCase
 import ru.jerael.booktracker.android.presentation.ui.model.SortBy
 import ru.jerael.booktracker.android.presentation.ui.model.SortOrder
+import ru.jerael.booktracker.android.presentation.ui.util.ErrorHandler
 import javax.inject.Inject
 
 @HiltViewModel
 class BookListViewModel @Inject constructor(
     getBooksUseCase: GetBooksUseCase,
     private val refreshBooksUseCase: RefreshBooksUseCase,
-    private val getGenresUseCase: GetGenresUseCase
+    private val getGenresUseCase: GetGenresUseCase,
+    private val errorHandler: ErrorHandler
 ) : ViewModel() {
 
-    private val _books: Flow<List<Book>> = getBooksUseCase()
+    private val _books: StateFlow<List<Book>> = getBooksUseCase()
+        .map { result ->
+            result.getOrElse { throwable ->
+                _userMessage.value = errorHandler.handleError(throwable)
+                uiState.value.books
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
+
     private val _userMessage: MutableStateFlow<String?> = MutableStateFlow(null)
     private val _isInitialLoading: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -107,9 +139,16 @@ class BookListViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            getGenresUseCase().collect { genres ->
-                _filterState.update { it.copy(allGenres = genres) }
-            }
+            getGenresUseCase()
+                .collect { result ->
+                    result
+                        .onSuccess { genres ->
+                            _filterState.update { it.copy(allGenres = genres) }
+                        }
+                        .onFailure { throwable ->
+                            _userMessage.value = errorHandler.handleError(throwable)
+                        }
+                }
         }
         refreshBooks(isPullToRefresh = false)
     }
@@ -125,12 +164,10 @@ class BookListViewModel @Inject constructor(
             } else {
                 _isInitialLoading.value = true
             }
-            val result = refreshBooksUseCase()
-            if (result.isFailure) {
-                val exception = result.exceptionOrNull()
-                _userMessage.value = "Ошибка при обновлении списка книг"
-                Log.e("BookListViewModel", "Ошибка при обновлении списка книг", exception)
-            }
+            refreshBooksUseCase()
+                .onFailure { throwable ->
+                    _userMessage.value = errorHandler.handleError(throwable)
+                }
             _isRefreshing.value = false
             _isInitialLoading.value = false
         }

@@ -1,20 +1,38 @@
+/*
+ * BookTracker is a full-stack application for tracking your reading list.
+ * Copyright (C) 2025  Jerael (https://github.com/Nirtas)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.jerael.booktracker.android.domain.usecases.book
 
-import android.util.Log
+import ru.jerael.booktracker.android.domain.mappers.ErrorMapper
+import ru.jerael.booktracker.android.domain.model.appFailure
 import ru.jerael.booktracker.android.domain.model.book.BookCreationParams
 import ru.jerael.booktracker.android.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.android.domain.repository.BookRepository
-import ru.jerael.booktracker.android.domain.storage.FileStorage
-import java.io.File
 import javax.inject.Inject
 
 class AddBookUseCase @Inject constructor(
     private val repository: BookRepository,
-    private val fileStorage: FileStorage
+    private val saveCoverFileUseCase: SaveCoverFileUseCase,
+    private val errorMapper: ErrorMapper
 ) {
     suspend operator fun invoke(bookCreationParams: BookCreationParams): Result<String> {
         return try {
-            val coverFile: File? = bookCreationParams.coverUri?.let { fileStorage.saveFile(it) }
+            val coverFile = saveCoverFileUseCase(bookCreationParams.coverUri).getOrThrow()
             val bookCreationPayload = BookCreationPayload(
                 title = bookCreationParams.title,
                 author = bookCreationParams.author,
@@ -24,8 +42,7 @@ class AddBookUseCase @Inject constructor(
             )
             repository.addBook(bookCreationPayload)
         } catch (e: Exception) {
-            Log.e("AddBookUseCase", "Ошибка при добавлении книги", e)
-            Result.failure(e)
+            appFailure(e, errorMapper)
         }
     }
 }

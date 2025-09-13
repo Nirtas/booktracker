@@ -1,6 +1,23 @@
+/*
+ * BookTracker is a full-stack application for tracking your reading list.
+ * Copyright (C) 2025  Jerael (https://github.com/Nirtas)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.jerael.booktracker.backend.domain.usecases.book
 
-import io.ktor.http.content.*
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
@@ -8,12 +25,18 @@ import java.util.*
 
 class UpdateBookCoverUseCase(
     private val bookRepository: BookRepository,
-    private val coverStorage: CoverStorage
+    private val coverStorage: CoverStorage,
+    private val getBookByIdUseCase: GetBookByIdUseCase
 ) {
-    suspend operator fun invoke(id: UUID, coverPart: PartData.FileItem): Book? {
-        val existingBook = bookRepository.getBookById(id) ?: return null
+    suspend operator fun invoke(
+        id: UUID,
+        coverBytes: ByteArray,
+        coverFileName: String,
+        language: String
+    ): Book {
+        val existingBook = getBookByIdUseCase(id, language)
         existingBook.coverPath?.let { coverStorage.delete(it) }
-        val newCoverPath = coverStorage.save(coverPart)
-        return bookRepository.updateBookCover(id, newCoverPath)
+        val newCoverPath = coverStorage.save(coverBytes, coverFileName)
+        return bookRepository.updateBookCover(id, newCoverPath, language)
     }
 }

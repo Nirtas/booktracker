@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-09-13
+
+### Added
+
+- **CI/CD:** Implemented a fully automated CI pipeline using GitHub Actions to run all Backend and Android tests on every pull request.
+- **Android App:** Implemented full test coverage for Android app.
+- **Backend Server:** Implemented full test coverage for Backend.
+- **Backend Server:** Added server-side localization for genres, now providing names in both English and Russian.
+- **Android App:** Implemented full client-side localization for English and Russian languages.
+
+### Changed
+
+- **Backend Server:** Refactored Backend error handling to use a `StatusPages` plugin, providing error responses.
+- **Android App:** Improved client-side error handling to correctly process and display localized error messages from Backend.
+
 ## [0.3.0] - 2025-08-20
 
 ### Added

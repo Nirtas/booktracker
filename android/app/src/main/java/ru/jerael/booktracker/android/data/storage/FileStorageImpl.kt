@@ -1,10 +1,29 @@
+/*
+ * BookTracker is a full-stack application for tracking your reading list.
+ * Copyright (C) 2025  Jerael (https://github.com/Nirtas)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.jerael.booktracker.android.data.storage
 
 import android.app.Application
 import android.net.Uri
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ru.jerael.booktracker.android.domain.model.AppError
+import ru.jerael.booktracker.android.domain.model.appFailure
 import ru.jerael.booktracker.android.domain.storage.FileStorage
 import java.io.File
 import javax.inject.Inject
@@ -12,7 +31,7 @@ import javax.inject.Inject
 class FileStorageImpl @Inject constructor(
     private val application: Application
 ) : FileStorage {
-    override suspend fun saveFile(uri: Uri): File? {
+    override suspend fun saveFile(uri: Uri): Result<File> {
         return withContext(Dispatchers.IO) {
             try {
                 val contentResolver = application.contentResolver
@@ -22,13 +41,11 @@ class FileStorageImpl @Inject constructor(
                     file.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
-                }
-                file
+                } ?: return@withContext appFailure(AppError.FileStorageError)
+                Result.success(file)
             } catch (e: Exception) {
-                Log.e("FileStorageImpl", "Ошибка при сохранении файла", e)
-                null
+                appFailure(AppError.FileStorageError)
             }
         }
     }
-
 }

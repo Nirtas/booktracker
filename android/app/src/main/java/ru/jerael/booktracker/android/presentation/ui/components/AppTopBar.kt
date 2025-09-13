@@ -1,3 +1,21 @@
+/*
+ * BookTracker is a full-stack application for tracking your reading list.
+ * Copyright (C) 2025  Jerael (https://github.com/Nirtas)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.jerael.booktracker.android.presentation.ui.components
 
 import androidx.compose.foundation.layout.RowScope
@@ -15,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarAction
 import ru.jerael.booktracker.android.presentation.ui.model.TopBarType
@@ -47,7 +66,14 @@ fun AppTopBar(
     when (type) {
         TopBarType.SMALL -> {
             TopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior
@@ -56,7 +82,14 @@ fun AppTopBar(
 
         TopBarType.LARGE -> {
             LargeTopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.headlineMedium) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior
@@ -65,7 +98,14 @@ fun AppTopBar(
 
         TopBarType.MEDIUM -> {
             MediumTopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior
@@ -74,7 +114,14 @@ fun AppTopBar(
 
         TopBarType.CENTER_ALIGNED -> {
             CenterAlignedTopAppBar(
-                title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = navigationIcon,
                 actions = actions,
                 scrollBehavior = scrollBehavior

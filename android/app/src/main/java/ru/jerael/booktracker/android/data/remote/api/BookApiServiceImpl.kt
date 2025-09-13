@@ -1,7 +1,26 @@
+/*
+ * BookTracker is a full-stack application for tracking your reading list.
+ * Copyright (C) 2025  Jerael (https://github.com/Nirtas)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.jerael.booktracker.android.data.remote.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -22,7 +41,7 @@ import java.io.File
 
 class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
     override suspend fun getBooks(): List<BookDto> {
-        return httpClient.get(HttpRoute.BOOKS).body<List<BookDto>>()
+        return httpClient.get(HttpRoute.BOOKS) { expectSuccess = true }.body<List<BookDto>>()
     }
 
     override suspend fun addBook(
@@ -31,6 +50,7 @@ class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
     ): BookDto {
         val bookJson = Json.encodeToString(bookDetailsCreationDto)
         return httpClient.post(HttpRoute.BOOKS) {
+            expectSuccess = true
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -49,39 +69,40 @@ class BookApiServiceImpl(private val httpClient: HttpClient) : BookApiService {
     }
 
     override suspend fun getBookById(id: String): BookDto {
-        return httpClient.get(HttpRoute.bookById(id)).body<BookDto>()
+        return httpClient.get(HttpRoute.bookById(id)) { expectSuccess = true }.body<BookDto>()
     }
 
-    override suspend fun updateBook(
+    override suspend fun updateBookDetails(
         id: String,
-        bookDetailsUpdateDto: BookDetailsUpdateDto,
-        coverFile: File?
+        bookDetailsUpdateDto: BookDetailsUpdateDto
     ): BookDto {
-        var bookDto = httpClient.put(HttpRoute.bookById(id)) {
+        return httpClient.put(HttpRoute.bookById(id)) {
+            expectSuccess = true
             contentType(ContentType.Application.Json)
             setBody(bookDetailsUpdateDto)
         }.body<BookDto>()
-        if (coverFile != null) {
-            bookDto = httpClient.post(HttpRoute.bookCover(id)) {
-                setBody(
-                    MultiPartFormDataContent(
-                        formData {
-                            append("cover", coverFile.readBytes(), Headers.build {
-                                append(HttpHeaders.ContentType, "image/jpeg")
-                                append(
-                                    HttpHeaders.ContentDisposition,
-                                    "filename=\"${coverFile.name}\""
-                                )
-                            })
-                        }
-                    )
+    }
+
+    override suspend fun updateBookCover(id: String, coverFile: File): BookDto {
+        return httpClient.post(HttpRoute.bookCover(id)) {
+            expectSuccess = true
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("cover", coverFile.readBytes(), Headers.build {
+                            append(HttpHeaders.ContentType, "image/jpeg")
+                            append(
+                                HttpHeaders.ContentDisposition,
+                                "filename=\"${coverFile.name}\""
+                            )
+                        })
+                    }
                 )
-            }.body<BookDto>()
-        }
-        return bookDto
+            )
+        }.body<BookDto>()
     }
 
     override suspend fun deleteBook(id: String) {
-        httpClient.delete(HttpRoute.bookById(id))
+        httpClient.delete(HttpRoute.bookById(id)) { expectSuccess = true }
     }
 }
