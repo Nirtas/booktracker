@@ -27,8 +27,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import kotlin.test.assertEquals

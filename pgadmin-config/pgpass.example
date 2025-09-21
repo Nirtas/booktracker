@@ -1,1 +1,1 @@
-db:5432:*:db_user:db_password
+db:5432:*:postgres:*

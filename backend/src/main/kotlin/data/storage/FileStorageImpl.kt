@@ -25,10 +25,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.jerael.booktracker.backend.domain.exceptions.AppException
 import ru.jerael.booktracker.backend.domain.exceptions.StorageException
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 
 class FileStorageImpl(private val environment: ApplicationEnvironment) : FileStorage {
 
@@ -47,7 +47,7 @@ class FileStorageImpl(private val environment: ApplicationEnvironment) : FileSto
                 }
                 if (bytesCopied == 0L) {
                     file.delete()
-                    throw ValidationException("Uploaded file can't be empty.")
+                    throw IOException("File can't be empty.")
                 }
             }
         } catch (e: Exception) {

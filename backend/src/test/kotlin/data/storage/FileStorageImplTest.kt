@@ -29,9 +29,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
+import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.data.storage.FileStorageImpl
 import ru.jerael.booktracker.backend.domain.exceptions.StorageException
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import java.io.File
 

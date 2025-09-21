@@ -18,7 +18,9 @@
 
 package ru.jerael.booktracker.backend.domain.usecases
 
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.api.validation.ValidationError
+import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.codes.GenreValidationErrorCode
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
 
 class GenresValidator(private val genreRepository: GenreRepository) {
@@ -29,8 +31,12 @@ class GenresValidator(private val genreRepository: GenreRepository) {
         }
         val foundGenres = genreRepository.getGenresByIds(uniqueGenres, language)
         if (foundGenres.size != uniqueGenres.size) {
-            val notFoundGenreIds = uniqueGenres.toSet() - foundGenres.map { it.id }.toSet()
-            throw ValidationException("One or more genres not found: ${notFoundGenreIds.joinToString()}")
+            val notFoundGenreIds = (uniqueGenres.toSet() - foundGenres.map { it.id }.toSet()).map { it.toString() }
+            val error = ValidationError(
+                code = GenreValidationErrorCode.NOT_FOUND,
+                params = mapOf("notFound" to notFoundGenreIds)
+            )
+            throw ValidationException(mapOf("genres" to listOf(error)))
         }
     }
 }

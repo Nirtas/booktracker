@@ -18,9 +18,32 @@
 
 package ru.jerael.booktracker.backend.api.util
 
+import io.ktor.server.application.*
 import io.ktor.server.request.*
+import ru.jerael.booktracker.backend.api.validation.ValidationError
+import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
+import java.util.*
 
 fun ApplicationRequest.language(): String {
     val languageTag = this.header("Accept-Language")?.substringBefore(",")
     return languageTag?.substringBefore("-")?.lowercase() ?: "en"
+}
+
+fun ApplicationCall.getUuidFromPath(parameter: String): UUID {
+    val parameterString = this.parameters[parameter]
+    if (parameterString.isNullOrBlank()) {
+        throw ValidationException(mapOf(parameter to listOf(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))))
+    }
+    return try {
+        UUID.fromString(parameterString)
+    } catch (e: Exception) {
+        throw ValidationException(mapOf(parameter to listOf(ValidationError(CommonValidationErrorCode.INVALID_UUID_FORMAT))))
+    }
+}
+
+fun MutableMap<String, List<ValidationError>>.putIfNotEmpty(key: String, value: List<ValidationError>) {
+    if (value.isNotEmpty()) {
+        this[key] = value
+    }
 }

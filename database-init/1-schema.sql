@@ -29,11 +29,31 @@ CREATE TABLE IF NOT EXISTS public.book_genres
     CONSTRAINT book_genres_book_id_fkey FOREIGN KEY (book_id)
         REFERENCES public.books (book_id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE CASCADE
-        NOT VALID,
+        ON DELETE CASCADE,
     CONSTRAINT book_genres_genre_id_fkey FOREIGN KEY (genre_id)
         REFERENCES public.genres (genre_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-        NOT VALID
+);
+
+CREATE TABLE IF NOT EXISTS public.users
+(
+    user_id uuid NOT NULL,
+    email text NOT NULL,
+    password_hash text NOT NULL,
+    is_verified boolean NOT NULL DEFAULT false,
+    CONSTRAINT users_pkey PRIMARY KEY (user_id),
+    CONSTRAINT users_email_key UNIQUE (email)
+);
+
+CREATE TABLE IF NOT EXISTS public.email_verifications
+(
+    user_id uuid NOT NULL,
+    code character varying(6) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    CONSTRAINT email_verifications_pkey PRIMARY KEY (user_id),
+    CONSTRAINT email_verifications_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES public.users (user_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
 );

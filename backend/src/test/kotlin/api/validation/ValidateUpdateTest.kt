@@ -21,8 +21,8 @@ package api.validation
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.book.BookUpdateDto
-import ru.jerael.booktracker.backend.api.validation.BookValidator
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import kotlin.test.assertEquals

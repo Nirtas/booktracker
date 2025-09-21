@@ -61,7 +61,7 @@ class BookRepositoryImpl : BookRepository {
                     }
                 }
                 findBooks(wherePredicate = { Books.id eq newBookId }, language = language).singleOrNull()
-                    ?: throw InternalException(message = "Book with ID $newBookId was updated but could not be found immediately after.")
+                    ?: throw InternalException(message = "Book with ID $newBookId was created but could not be found immediately after.")
             }
         }
     }

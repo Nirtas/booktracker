@@ -18,6 +18,7 @@
 
 package ru.jerael.booktracker.backend.domain.usecases.book
 
+import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.exceptions.ExternalServiceException
 import ru.jerael.booktracker.backend.domain.exceptions.StorageException
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
@@ -26,11 +27,10 @@ import java.util.*
 
 class DeleteBookUseCase(
     private val bookRepository: BookRepository,
-    private val fileStorage: FileStorage,
-    private val getBookByIdUseCase: GetBookByIdUseCase
+    private val fileStorage: FileStorage
 ) {
     suspend operator fun invoke(id: UUID) {
-        val bookToDelete = getBookByIdUseCase(id, "en")
+        val bookToDelete = bookRepository.getBookById(id, "en") ?: throw BookNotFoundException(id.toString())
         bookToDelete.coverPath?.let { coverPath ->
             try {
                 fileStorage.deleteFile(coverPath)

@@ -16,15 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.domain.exceptions
+package ru.jerael.booktracker.backend.domain.util
 
-import io.ktor.http.*
-
-class ValidationException(
-    userMessage: String
-) : AppException(
-    httpStatusCode = HttpStatusCode.BadRequest,
-    message = userMessage,
-    userMessage = userMessage,
-    errorCode = "VALIDATION_ERROR"
-)
+object AuthConstants {
+    const val OTP_CODE_LENGTH = 6
+    const val OTP_CODE_VALIDITY_MINUTES = 10L
+    const val MAX_EMAIL_LENGTH = 200
+    const val MIN_PASSWORD_LENGTH = 8
+    const val MAX_PASSWORD_LENGTH = 64
+    const val PASSWORD_ALLOWED_SPECIAL_CHARS = "!@#\$%^&*()-+"
+}

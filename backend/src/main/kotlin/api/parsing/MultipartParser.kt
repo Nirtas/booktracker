@@ -25,7 +25,9 @@ import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
 import ru.jerael.booktracker.backend.api.dto.book.BookCreationDto
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.api.validation.ValidationError
+import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
 
 data class ParsedBookCreationRequest(
     val bookCreationDto: BookCreationDto,
@@ -65,9 +67,17 @@ class MultipartParser {
             part.dispose()
         }
 
+        val errors = mutableMapOf<String, List<ValidationError>>()
+        if (bookCreationDto == null) {
+            val error = ValidationError(CommonValidationErrorCode.INVALID_FORM_ITEM)
+            errors["book"] = listOf(error)
+        }
+        if (errors.isNotEmpty()) {
+            throw ValidationException(errors)
+        }
+
         return ParsedBookCreationRequest(
-            bookCreationDto = bookCreationDto
-                ?: throw ValidationException("Form item 'book' is missing or has invalid format."),
+            bookCreationDto = bookCreationDto!!,
             coverBytes = coverBytes,
             coverFileName = coverFileName
         )
@@ -77,7 +87,8 @@ class MultipartParser {
         val part = call.receiveMultipart().readPart()
         try {
             if (part !is PartData.FileItem || part.name != "cover" || part.originalFileName.isNullOrBlank()) {
-                throw ValidationException("File part 'cover' is missing or invalid")
+                val error = mapOf("cover" to listOf(ValidationError(CommonValidationErrorCode.INVALID_FILE_PART)))
+                throw ValidationException(error)
             }
             val coverBytes: ByteArray = part.provider().readRemaining().readByteArray()
             val coverFileName: String = part.originalFileName!!

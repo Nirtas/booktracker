@@ -23,10 +23,12 @@ import org.koin.ktor.plugin.Koin
 import ru.jerael.booktracker.backend.api.di.appModule
 
 const val IMAGE_BASE_URL_PROPERTY = "imageBaseUrl"
+const val KTOR_APPLICATION_CONFIG_PROPERTY = "ktor.application.config"
 
 fun Application.configureDI() {
     install(Koin) {
         properties(mapOf(IMAGE_BASE_URL_PROPERTY to environment.config.property("ktor.storage.baseUrl").getString()))
+        properties(mapOf(KTOR_APPLICATION_CONFIG_PROPERTY to environment.config))
         modules(appModule(environment))
     }
 }

@@ -19,51 +19,90 @@
 package ru.jerael.booktracker.backend.api.di
 
 import io.ktor.server.application.*
+import io.ktor.server.config.*
 import org.koin.dsl.module
-import ru.jerael.booktracker.backend.api.controller.BookController
-import ru.jerael.booktracker.backend.api.controller.GenreController
-import ru.jerael.booktracker.backend.api.mappers.BookMapper
-import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
-import ru.jerael.booktracker.backend.api.mappers.GenreMapper
-import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
+import ru.jerael.booktracker.backend.api.config.SmtpConfig
+import ru.jerael.booktracker.backend.api.config.smtpConfig
+import ru.jerael.booktracker.backend.api.controller.*
+import ru.jerael.booktracker.backend.api.mappers.*
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
 import ru.jerael.booktracker.backend.api.plugins.IMAGE_BASE_URL_PROPERTY
-import ru.jerael.booktracker.backend.api.validation.BookValidator
+import ru.jerael.booktracker.backend.api.plugins.KTOR_APPLICATION_CONFIG_PROPERTY
+import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
+import ru.jerael.booktracker.backend.api.validation.validator.LoginValidator
+import ru.jerael.booktracker.backend.api.validation.validator.UserValidator
+import ru.jerael.booktracker.backend.api.validation.validator.VerificationValidator
 import ru.jerael.booktracker.backend.data.repository.BookRepositoryImpl
 import ru.jerael.booktracker.backend.data.repository.GenreRepositoryImpl
+import ru.jerael.booktracker.backend.data.repository.UserRepositoryImpl
+import ru.jerael.booktracker.backend.data.repository.VerificationRepositoryImpl
 import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
 import ru.jerael.booktracker.backend.data.storage.FileStorageImpl
+import ru.jerael.booktracker.backend.domain.hasher.Argon2PasswordHasher
+import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
+import ru.jerael.booktracker.backend.domain.repository.UserRepository
+import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
+import ru.jerael.booktracker.backend.domain.service.EmailVerificationService
+import ru.jerael.booktracker.backend.domain.service.TempTokenService
+import ru.jerael.booktracker.backend.domain.service.TokenService
+import ru.jerael.booktracker.backend.domain.service.VerificationService
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.*
 import ru.jerael.booktracker.backend.domain.usecases.genre.GetGenresUseCase
+import ru.jerael.booktracker.backend.domain.usecases.login.LoginUseCase
+import ru.jerael.booktracker.backend.domain.usecases.user.*
+import ru.jerael.booktracker.backend.domain.usecases.verification.ResendVerificationCodeUseCase
+import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
 
 fun appModule(environment: ApplicationEnvironment) = module {
     single { environment }
-    single<FileStorage> { FileStorageImpl(get()) }
-    single<CoverStorage> { CoverStorageImpl(get()) }
+    single<FileStorage> { FileStorageImpl(environment = get()) }
+    single<CoverStorage> { CoverStorageImpl(fileStorage = get()) }
 
     single<BookRepository> { BookRepositoryImpl() }
     single<GenreRepository> { GenreRepositoryImpl() }
+    single<UserRepository> { UserRepositoryImpl() }
+    single<VerificationRepository> { VerificationRepositoryImpl() }
 
-    single<GenresValidator> { GenresValidator(get()) }
+    single<GenresValidator> { GenresValidator(genreRepository = get()) }
 
-    single<BookMapper> { BookMapperImpl(getProperty(IMAGE_BASE_URL_PROPERTY), get()) }
+    single<BookMapper> { BookMapperImpl(imageBaseUrl = getProperty(IMAGE_BASE_URL_PROPERTY), genreMapper = get()) }
     single<GenreMapper> { GenreMapperImpl() }
+    single<UserMapper> { UserMapperImpl() }
+    single<VerificationMapper> { VerificationMapperImpl() }
+    single<LoginMapper> { LoginMapperImpl() }
+    single<TokenMapper> { TokenMapperImpl() }
 
     single { MultipartParser() }
     single { BookValidator() }
+    single { UserValidator() }
+    single { VerificationValidator() }
+    single { LoginValidator() }
 
-    single { GetBooksUseCase(get()) }
-    single { AddBookUseCase(get(), get(), get()) }
-    single { GetBookByIdUseCase(get()) }
-    single { UpdateBookDetailsUseCase(get(), get(), get()) }
-    single { UpdateBookCoverUseCase(get(), get(), get()) }
-    single { DeleteBookUseCase(get(), get(), get()) }
-    single { GetGenresUseCase(get()) }
+    single<PasswordHasher> { Argon2PasswordHasher() }
+    single<SmtpConfig> { getProperty<ApplicationConfig>(KTOR_APPLICATION_CONFIG_PROPERTY).smtpConfig() }
+    single<VerificationService> { EmailVerificationService(verificationRepository = get(), smtpConfig = get()) }
+    single<TokenService> { TempTokenService() }
+
+    single { GetBooksUseCase(bookRepository = get()) }
+    single { AddBookUseCase(bookRepository = get(), genresValidator = get(), coverStorage = get()) }
+    single { GetBookByIdUseCase(bookRepository = get()) }
+    single { UpdateBookDetailsUseCase(bookRepository = get(), genresValidator = get()) }
+    single { UpdateBookCoverUseCase(bookRepository = get(), coverStorage = get()) }
+    single { DeleteBookUseCase(bookRepository = get(), fileStorage = get()) }
+    single { GetGenresUseCase(genreRepository = get()) }
+    single { RegisterUserUseCase(userRepository = get(), passwordHasher = get(), verificationService = get()) }
+    single { GetUserByIdUseCase(userRepository = get()) }
+    single { UpdateUserEmailUseCase(userRepository = get(), passwordHasher = get(), verificationService = get()) }
+    single { UpdateUserPasswordUseCase(userRepository = get(), passwordHasher = get()) }
+    single { DeleteUserUseCase(userRepository = get(), passwordHasher = get()) }
+    single { VerifyCodeUseCase(userRepository = get(), verificationRepository = get()) }
+    single { LoginUseCase(userRepository = get(), passwordHasher = get(), tokenService = get()) }
+    single { ResendVerificationCodeUseCase(userRepository = get(), verificationService = get()) }
 
     single {
         BookController(
@@ -83,6 +122,34 @@ fun appModule(environment: ApplicationEnvironment) = module {
         GenreController(
             getGenresUseCase = get(),
             genreMapper = get()
+        )
+    }
+
+    single {
+        UserController(
+            registerUserUseCase = get(),
+            getUserByIdUseCase = get(),
+            updateUserEmailUseCase = get(),
+            updateUserPasswordUseCase = get(),
+            deleteUserUseCase = get(),
+            userValidator = get(),
+            userMapper = get()
+        )
+    }
+    single {
+        TokenController(
+            loginUseCase = get(),
+            loginValidator = get(),
+            loginMapper = get(),
+            tokenMapper = get()
+        )
+    }
+    single {
+        VerificationController(
+            verifyCodeUseCase = get(),
+            resendVerificationCodeUseCase = get(),
+            verificationValidator = get(),
+            verificationMapper = get()
         )
     }
 }

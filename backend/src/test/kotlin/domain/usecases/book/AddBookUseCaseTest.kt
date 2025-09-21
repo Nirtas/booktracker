@@ -24,7 +24,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus

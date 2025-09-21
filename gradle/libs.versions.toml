@@ -24,6 +24,9 @@ koin-ktor = "4.1.0"
 exposed = "1.0.0-beta-5"
 postgresql = "42.7.3"
 testcontainers = "1.21.3"
+validator = "1.10.0"
+argon2-jvm = "2.12"
+commons-email = "1.6.0"
 
 # SHARED
 kotlin = "2.0.0"
@@ -81,6 +84,9 @@ testcontainers-bom = { group = "org.testcontainers", name = "testcontainers-bom"
 testcontainers-postgresql = { group = "org.testcontainers", name = "postgresql" }
 testcontainers-junit-jupiter = { group = "org.testcontainers", name = "junit-jupiter" }
 ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
+commons-validator = { group = "commons-validator", name = "commons-validator", version.ref = "validator" }
+argon2-jvm = { group = "de.mkammerer", name = "argon2-jvm", version.ref = "argon2-jvm" }
+commons-email = { group = "org.apache.commons", name = "commons-email", version.ref = "commons-email" }
 
 # SHARED
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }

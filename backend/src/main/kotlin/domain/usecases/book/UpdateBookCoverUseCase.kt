@@ -18,6 +18,7 @@
 
 package ru.jerael.booktracker.backend.domain.usecases.book
 
+import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
@@ -25,8 +26,7 @@ import java.util.*
 
 class UpdateBookCoverUseCase(
     private val bookRepository: BookRepository,
-    private val coverStorage: CoverStorage,
-    private val getBookByIdUseCase: GetBookByIdUseCase
+    private val coverStorage: CoverStorage
 ) {
     suspend operator fun invoke(
         id: UUID,
@@ -34,7 +34,7 @@ class UpdateBookCoverUseCase(
         coverFileName: String,
         language: String
     ): Book {
-        val existingBook = getBookByIdUseCase(id, language)
+        val existingBook = bookRepository.getBookById(id, language) ?: throw BookNotFoundException(id.toString())
         existingBook.coverPath?.let { coverStorage.delete(it) }
         val newCoverPath = coverStorage.save(coverBytes, coverFileName)
         return bookRepository.updateBookCover(id, newCoverPath, language)

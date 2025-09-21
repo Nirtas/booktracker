@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
 import ru.jerael.booktracker.backend.domain.usecases.GenresValidator

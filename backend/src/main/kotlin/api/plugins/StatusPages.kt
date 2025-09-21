@@ -27,8 +27,10 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.SerializationException
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
+import ru.jerael.booktracker.backend.api.dto.validation.ValidationErrorDto
+import ru.jerael.booktracker.backend.api.dto.validation.ValidationErrorParams
+import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.domain.exceptions.AppException
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.configureStatusPages() {
@@ -41,14 +43,20 @@ fun Application.configureStatusPages() {
             call.respond(HttpStatusCode.UnsupportedMediaType, errorDto)
         }
 
-        exception<BadRequestException> { call, cause ->
-            val message = cause.cause?.message ?: cause.message ?: "Invalid request format"
-            val validationException = ValidationException(message)
-            val errorDto = ErrorDto(
-                code = validationException.errorCode,
-                message = validationException.userMessage
+        exception<ValidationException> { call, cause ->
+            val errorDetails = cause.errors.mapValues { entry ->
+                entry.value.map { validationError ->
+                    ValidationErrorParams(
+                        code = validationError.code.name,
+                        params = validationError.params
+                    )
+                }
+            }
+            val errorDto = ValidationErrorDto(
+                message = cause.userMessage,
+                details = errorDetails
             )
-            call.respond(validationException.httpStatusCode, errorDto)
+            call.respond(cause.httpStatusCode, errorDto)
         }
 
         exception<SerializationException> { call, cause ->
@@ -56,12 +64,19 @@ fun Application.configureStatusPages() {
                 is MissingFieldException -> "Request JSON is missing required field: '${cause.missingFields.joinToString()}'"
                 else -> cause.message ?: "Invalid JSON format"
             }
-            val validationException = ValidationException(message)
             val errorDto = ErrorDto(
-                code = validationException.errorCode,
-                message = validationException.userMessage
+                code = "BAD_REQUEST",
+                message = message
             )
-            call.respond(validationException.httpStatusCode, errorDto)
+            call.respond(HttpStatusCode.BadRequest, errorDto)
+        }
+
+        exception<BadRequestException> { call, _ ->
+            val errorDto = ErrorDto(
+                code = "BAD_REQUEST",
+                message = "Invalid request body or parameters."
+            )
+            call.respond(HttpStatusCode.BadRequest, errorDto)
         }
 
         exception<AppException> { call, cause ->

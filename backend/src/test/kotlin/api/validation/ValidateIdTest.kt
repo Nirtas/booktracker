@@ -20,8 +20,8 @@ package api.validation
 
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import ru.jerael.booktracker.backend.api.validation.BookValidator
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

@@ -12,3 +12,10 @@ ktor:
   storage:
     persistentPath: "$PERSISTENT_STORAGE_PATH:./storage"
     baseUrl: $STORAGE_BASE_URL
+  smtp:
+    host: $SMTP_HOST
+    port: $SMTP_PORT
+    user: $SMTP_USER
+    password: $SMTP_PASSWORD
+    from: $SMTP_FROM
+    ssl: $SMTP_SSL_ENABLED

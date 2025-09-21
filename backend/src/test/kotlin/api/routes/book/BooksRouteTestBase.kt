@@ -36,7 +36,7 @@ import ru.jerael.booktracker.backend.api.controller.GenreController
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
 import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
-import ru.jerael.booktracker.backend.api.validation.BookValidator
+import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
