@@ -31,14 +31,14 @@ import org.junit.jupiter.api.assertThrows
 import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
-import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
+import ru.jerael.booktracker.backend.domain.validation.GenreValidator
 
-class GenresValidatorTest {
+class GenreValidatorTest {
 
     @MockK
     private lateinit var genreRepository: GenreRepository
 
-    private lateinit var validator: GenresValidator
+    private lateinit var validator: GenreValidator
 
     private val language = "en"
     private val foundGenres = listOf(
@@ -50,7 +50,7 @@ class GenresValidatorTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        validator = GenresValidator(genreRepository)
+        validator = GenreValidator(genreRepository)
     }
 
     @Test

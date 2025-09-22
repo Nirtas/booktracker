@@ -34,9 +34,9 @@ import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.GetBookByIdUseCase
 import ru.jerael.booktracker.backend.domain.usecases.book.UpdateBookDetailsUseCase
+import ru.jerael.booktracker.backend.domain.validation.GenreValidator
 import java.time.Instant
 import java.util.*
 
@@ -46,7 +46,7 @@ class UpdateBookDetailsUseCaseTest {
     private lateinit var bookRepository: BookRepository
 
     @MockK
-    private lateinit var genresValidator: GenresValidator
+    private lateinit var genreValidator: GenreValidator
 
     @RelaxedMockK
     private lateinit var getBookByIdUseCase: GetBookByIdUseCase
@@ -80,7 +80,7 @@ class UpdateBookDetailsUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = UpdateBookDetailsUseCase(bookRepository, genresValidator, getBookByIdUseCase)
+        useCase = UpdateBookDetailsUseCase(bookRepository, genreValidator, getBookByIdUseCase)
     }
 
     @Test
@@ -88,7 +88,7 @@ class UpdateBookDetailsUseCaseTest {
         val requestedGenreIds = listOf(1, 2, 3)
         val bookDetailsUpdatePayload = createPayload(requestedGenreIds)
         val updatedBook = existingBook.copy(genres = foundGenres)
-        coEvery { genresValidator.invoke(requestedGenreIds, language) } just Runs
+        coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
         coEvery { bookRepository.updateBookDetails(bookId, bookDetailsUpdatePayload, language) } returns updatedBook
 
         val result = useCase.invoke(bookId, bookDetailsUpdatePayload, language)
@@ -101,7 +101,7 @@ class UpdateBookDetailsUseCaseTest {
     fun `when genre validation is failed, a ValidationException should be thrown`() = runTest {
         val requestedGenreIds = listOf(1, 2, 3)
         val bookDetailsUpdatePayload = createPayload(requestedGenreIds)
-        coEvery { genresValidator.invoke(requestedGenreIds, language) } throws ValidationException("Error")
+        coEvery { genreValidator.invoke(requestedGenreIds, language) } throws ValidationException("Error")
 
         assertThrows<ValidationException> {
             useCase.invoke(bookId, bookDetailsUpdatePayload, language)
@@ -125,7 +125,7 @@ class UpdateBookDetailsUseCaseTest {
     @Test
     fun `when repository fails to update book, it should propagate the exception`() = runTest {
         val bookDetailsUpdatePayload = createPayload()
-        coEvery { genresValidator.invoke(any(), any()) } just Runs
+        coEvery { genreValidator.invoke(any(), any()) } just Runs
         coEvery {
             bookRepository.updateBookDetails(
                 bookId,

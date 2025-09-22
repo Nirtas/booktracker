@@ -20,32 +20,29 @@ package ru.jerael.booktracker.backend.domain.exceptions
 
 import io.ktor.http.*
 
-abstract class NotFoundException(
+abstract class FileValidationException(
     userMessage: String,
-    errorCode: String = "RESOURCE_NOT_FOUND"
+    errorCode: String
 ) : AppException(
-    httpStatusCode = HttpStatusCode.NotFound,
+    httpStatusCode = HttpStatusCode.BadRequest,
     message = userMessage,
     userMessage = userMessage,
     errorCode = errorCode
 )
 
-class BookNotFoundException(bookId: String) : NotFoundException(
-    userMessage = "Book with ID '$bookId' was not found.",
-    errorCode = "BOOK_NOT_FOUND"
+class EmptyFileNameException : FileValidationException(
+    userMessage = "File name can't be empty.",
+    errorCode = "EMPTY_FILE_NAME"
 )
 
-class GenresNotFoundException(val genreIds: List<Int>) : NotFoundException(
-    userMessage = "One or more genres were not found: $genreIds",
-    errorCode = "GENRES_NOT_FOUND"
+class InvalidFileExtensionException(
+    val allowedExtensions: List<String>
+) : FileValidationException(
+    userMessage = "Invalid file extensions. Allowed types: ${allowedExtensions.joinToString()}",
+    errorCode = "INVALID_FILE_EXTENSION"
 )
 
-class UserByIdNotFoundException(userId: String) : NotFoundException(
-    userMessage = "User with ID '$userId' was not found.",
-    errorCode = "USER_WITH_ID_NOT_FOUND"
-)
-
-class UserByEmailNotFoundException(email: String) : NotFoundException(
-    userMessage = "User with email '$email' was not found.",
-    errorCode = "USER_WITH_EMAIL_NOT_FOUND"
+class EmptyFileContentException : FileValidationException(
+    userMessage = "File content can't be empty.",
+    errorCode = "EMPTY_FILE_CONTENT"
 )

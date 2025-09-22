@@ -16,28 +16,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.domain.service
+package ru.jerael.booktracker.backend.data.service
 
 import org.apache.commons.mail.DefaultAuthenticator
 import org.apache.commons.mail.SimpleEmail
+import ru.jerael.booktracker.backend.api.config.OtpConfig
 import ru.jerael.booktracker.backend.api.config.SmtpConfig
 import ru.jerael.booktracker.backend.domain.exceptions.InternalException
 import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
-import ru.jerael.booktracker.backend.domain.util.AuthConstants.OTP_CODE_LENGTH
-import ru.jerael.booktracker.backend.domain.util.AuthConstants.OTP_CODE_VALIDITY_MINUTES
+import ru.jerael.booktracker.backend.domain.service.VerificationService
 import java.security.SecureRandom
 import java.time.LocalDateTime
 
 class EmailVerificationService(
     private val verificationRepository: VerificationRepository,
-    private val smtpConfig: SmtpConfig
+    private val smtpConfig: SmtpConfig,
+    private val otpConfig: OtpConfig
 ) : VerificationService {
     private val secureRandom = SecureRandom()
 
     override suspend fun start(user: User) {
         val code = generateOTPCode()
-        val expiresAt = LocalDateTime.now().plusMinutes(OTP_CODE_VALIDITY_MINUTES)
+        val expiresAt = LocalDateTime.now().plusMinutes(otpConfig.validityMinutes)
         verificationRepository.saveCode(user.id, code, expiresAt)
         try {
             sendEmail(user.email, code)
@@ -47,7 +48,7 @@ class EmailVerificationService(
     }
 
     private fun generateOTPCode(): String {
-        return (1..OTP_CODE_LENGTH)
+        return (1..otpConfig.length)
             .map { secureRandom.nextInt(0, 10) }
             .joinToString("")
     }
@@ -73,7 +74,7 @@ class EmailVerificationService(
             Thank you for registering at BookTracker.
             Your verification code is: $code
 
-            This code will expire in $OTP_CODE_VALIDITY_MINUTES minutes.
+            This code will expire in ${otpConfig.validityMinutes} minutes.
 
             If you did not request this, please ignore this email.
         """.trimIndent()

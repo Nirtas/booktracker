@@ -22,16 +22,16 @@ import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
+import ru.jerael.booktracker.backend.domain.validation.GenreValidator
 import java.util.*
 
 class UpdateBookDetailsUseCase(
     private val bookRepository: BookRepository,
-    private val genresValidator: GenresValidator
+    private val genreValidator: GenreValidator
 ) {
     suspend operator fun invoke(id: UUID, payload: BookDetailsUpdatePayload, language: String): Book {
         bookRepository.getBookById(id, language) ?: throw BookNotFoundException(id.toString())
-        genresValidator.invoke(payload.genreIds, language)
+        genreValidator.invoke(payload.genreIds, language)
         return bookRepository.updateBookDetails(id, payload, language)
     }
 }

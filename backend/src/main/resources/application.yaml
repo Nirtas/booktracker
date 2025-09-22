@@ -19,3 +19,6 @@ ktor:
     password: $SMTP_PASSWORD
     from: $SMTP_FROM
     ssl: $SMTP_SSL_ENABLED
+  otp:
+    length: 6
+    validityMinutes: 10

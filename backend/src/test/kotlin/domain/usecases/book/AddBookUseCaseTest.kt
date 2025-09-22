@@ -31,8 +31,8 @@ import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
-import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.AddBookUseCase
+import ru.jerael.booktracker.backend.domain.validation.GenreValidator
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
@@ -43,7 +43,7 @@ class AddBookUseCaseTest {
     private lateinit var bookRepository: BookRepository
 
     @MockK
-    private lateinit var genresValidator: GenresValidator
+    private lateinit var genreValidator: GenreValidator
 
     @MockK
     private lateinit var coverStorage: CoverStorage
@@ -81,7 +81,7 @@ class AddBookUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = AddBookUseCase(bookRepository, genresValidator, coverStorage)
+        useCase = AddBookUseCase(bookRepository, genreValidator, coverStorage)
     }
 
     @Test
@@ -91,7 +91,7 @@ class AddBookUseCaseTest {
             val bookCreationPayload = createPayload(requestedGenreIds)
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
             val expectedCoverPath = "covers/new_book.jpg"
-            coEvery { genresValidator.invoke(requestedGenreIds, language) } just Runs
+            coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
             coEvery { coverStorage.save(coverBytes, coverFileName) } returns expectedCoverPath
             coEvery { bookRepository.addBook(any(), language) } returns expectedBookWithGenres
 
@@ -108,7 +108,7 @@ class AddBookUseCaseTest {
             val requestedGenreIds = listOf(1, 2, 3)
             val bookCreationPayload = createPayload(requestedGenreIds)
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
-            coEvery { genresValidator.invoke(requestedGenreIds, language) } just Runs
+            coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
             coEvery { bookRepository.addBook(bookCreationPayload, language) } returns expectedBookWithGenres
 
             val result = useCase.invoke(bookCreationPayload, null, null, language)
@@ -122,7 +122,7 @@ class AddBookUseCaseTest {
     fun `when genre validation is failed, a ValidationException should be thrown`() = runTest {
         val requestedGenreIds = listOf(1, 2, 3)
         val bookCreationPayload = createPayload(requestedGenreIds)
-        coEvery { genresValidator.invoke(requestedGenreIds, language) } throws ValidationException("Error")
+        coEvery { genreValidator.invoke(requestedGenreIds, language) } throws ValidationException("Error")
 
         assertThrows<ValidationException> {
             useCase.invoke(bookCreationPayload, coverBytes, coverFileName, language)

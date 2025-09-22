@@ -22,11 +22,13 @@ import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.validation.CoverValidator
 import java.util.*
 
 class UpdateBookCoverUseCase(
     private val bookRepository: BookRepository,
-    private val coverStorage: CoverStorage
+    private val coverStorage: CoverStorage,
+    private val coverValidator: CoverValidator
 ) {
     suspend operator fun invoke(
         id: UUID,
@@ -36,6 +38,7 @@ class UpdateBookCoverUseCase(
     ): Book {
         val existingBook = bookRepository.getBookById(id, language) ?: throw BookNotFoundException(id.toString())
         existingBook.coverPath?.let { coverStorage.delete(it) }
+        coverValidator(coverBytes, coverFileName)
         val newCoverPath = coverStorage.save(coverBytes, coverFileName)
         return bookRepository.updateBookCover(id, newCoverPath, language)
     }

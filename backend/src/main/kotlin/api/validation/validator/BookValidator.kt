@@ -23,16 +23,8 @@ import ru.jerael.booktracker.backend.api.dto.book.BookUpdateDto
 import ru.jerael.booktracker.backend.api.util.putIfNotEmpty
 import ru.jerael.booktracker.backend.api.validation.ValidationError
 import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.codes.BookValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
-import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 
 class BookValidator {
-    companion object {
-        private const val MAX_TITLE_LENGTH = 500
-        private const val MAX_AUTHOR_LENGTH = 500
-    }
-
     fun validateCreation(dto: BookCreationDto) {
         val errors = mutableMapOf<String, List<ValidationError>>()
         errors.putIfNotEmpty("title", validateTitle(dto.title))
@@ -51,52 +43,5 @@ class BookValidator {
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
         }
-    }
-
-    private fun validateTitle(title: String): List<ValidationError> {
-        val errors = mutableListOf<ValidationError>()
-        if (title.isBlank()) {
-            errors.add(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))
-        } else {
-            if (title.length > MAX_TITLE_LENGTH) {
-                errors.add(
-                    ValidationError(
-                        code = CommonValidationErrorCode.FIELD_TOO_LONG,
-                        params = mapOf("max" to listOf(MAX_TITLE_LENGTH.toString()))
-                    )
-                )
-            }
-        }
-        return errors
-    }
-
-    private fun validateAuthor(author: String): List<ValidationError> {
-        val errors = mutableListOf<ValidationError>()
-        if (author.isBlank()) {
-            errors.add(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))
-        } else {
-            if (author.length > MAX_AUTHOR_LENGTH) {
-                errors.add(
-                    ValidationError(
-                        code = CommonValidationErrorCode.FIELD_TOO_LONG,
-                        params = mapOf("max" to listOf(MAX_AUTHOR_LENGTH.toString()))
-                    )
-                )
-            }
-        }
-        return errors
-    }
-
-    private fun validateStatus(status: String): List<ValidationError> {
-        val errors = mutableListOf<ValidationError>()
-        if (BookStatus.fromString(status) == null) {
-            val allowedStatuses = BookStatus.entries.map { it.value }
-            val error = ValidationError(
-                code = BookValidationErrorCode.INVALID_STATUS,
-                params = mapOf("allowed" to allowedStatuses)
-            )
-            errors.add(error)
-        }
-        return errors
     }
 }

@@ -16,10 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.domain.hasher
+package ru.jerael.booktracker.backend.data.hasher
 
 import de.mkammerer.argon2.Argon2Factory
 import de.mkammerer.argon2.Argon2Helper
+import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 
 class Argon2PasswordHasher : PasswordHasher {
     private val saltLength = 16

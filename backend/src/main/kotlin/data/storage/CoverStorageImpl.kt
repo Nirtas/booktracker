@@ -18,12 +18,9 @@
 
 package ru.jerael.booktracker.backend.data.storage
 
-import io.ktor.utils.io.*
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.codes.FileValidationErrorCode
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.*
 
@@ -33,31 +30,10 @@ class CoverStorageImpl(
     private val fileStorage: FileStorage
 ) : CoverStorage {
     override suspend fun save(content: ByteArray, fileName: String): String {
-        val errors = mutableMapOf<String, List<ValidationError>>()
-        if (fileName.isBlank()) {
-            errors["fileName"] = listOf(ValidationError(FileValidationErrorCode.EMPTY_NAME))
-        } else {
-            val fileExtension = File(fileName).extension
-            val allowedExtensions = listOf("jpg", "jpeg", "png")
-            if (fileExtension !in allowedExtensions) {
-                val error = ValidationError(
-                    code = FileValidationErrorCode.INVALID_EXTENSION,
-                    params = mapOf("allowed" to allowedExtensions)
-                )
-                errors["fileName"] = listOf(error)
-            }
-        }
-        if (content.isEmpty()) {
-            errors["fileContent"] = listOf(ValidationError(FileValidationErrorCode.EMPTY_CONTENT))
-        }
-        if (errors.isNotEmpty()) {
-            throw ValidationException(errors)
-        }
-
         val fileExtension = File(fileName).extension
         val path = "$COVERS_PATH_PREFIX/${UUID.randomUUID()}.$fileExtension"
-        val channel = ByteReadChannel(content)
-        fileStorage.saveFile(path, channel)
+        val inputStream = ByteArrayInputStream(content)
+        fileStorage.saveFile(path, inputStream)
         return path
     }
 

@@ -18,7 +18,7 @@
 
 package ru.jerael.booktracker.backend.api.validation.validator
 
-import org.apache.commons.validator.routines.EmailValidator
+import ru.jerael.booktracker.backend.api.config.OtpConfig
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationResendCodeDto
 import ru.jerael.booktracker.backend.api.util.putIfNotEmpty
@@ -26,12 +26,8 @@ import ru.jerael.booktracker.backend.api.validation.ValidationError
 import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.api.validation.codes.CodeValidationErrorCode
 import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.codes.EmailValidationErrorCode
-import ru.jerael.booktracker.backend.domain.util.AuthConstants.MAX_EMAIL_LENGTH
-import ru.jerael.booktracker.backend.domain.util.AuthConstants.OTP_CODE_LENGTH
-import java.util.*
 
-class VerificationValidator {
+class VerificationValidator(private val otpConfig: OtpConfig) {
     fun validateVerification(dto: VerificationDto) {
         val errors = mutableMapOf<String, List<ValidationError>>()
         errors.putIfNotEmpty("userId", validateUserId(dto.userId))
@@ -49,50 +45,16 @@ class VerificationValidator {
         }
     }
 
-    private fun validateEmail(email: String): List<ValidationError> {
-        val errors = mutableListOf<ValidationError>()
-        if (email.isBlank()) {
-            errors.add(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))
-        } else {
-            if (email.length > MAX_EMAIL_LENGTH) {
-                errors.add(
-                    ValidationError(
-                        code = CommonValidationErrorCode.FIELD_TOO_LONG,
-                        params = mapOf("max" to listOf(MAX_EMAIL_LENGTH.toString()))
-                    )
-                )
-            }
-        }
-        if (!EmailValidator.getInstance().isValid(email)) {
-            errors.add(ValidationError(EmailValidationErrorCode.INVALID_FORMAT))
-        }
-        return errors
-    }
-
-    private fun validateUserId(userId: String): List<ValidationError> {
-        val errors = mutableListOf<ValidationError>()
-        if (userId.isBlank()) {
-            errors.add(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))
-        } else {
-            try {
-                UUID.fromString(userId)
-            } catch (e: Exception) {
-                errors.add(ValidationError(CommonValidationErrorCode.INVALID_UUID_FORMAT))
-            }
-        }
-        return errors
-    }
-
     private fun validateCode(code: String): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
         if (code.isBlank()) {
             errors.add(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))
         } else {
-            if (code.length != OTP_CODE_LENGTH) {
+            if (code.length != otpConfig.length) {
                 errors.add(
                     ValidationError(
                         code = CodeValidationErrorCode.LENGTH_INVALID,
-                        params = mapOf("length" to listOf(OTP_CODE_LENGTH.toString()))
+                        params = mapOf("length" to listOf(otpConfig.length.toString()))
                     )
                 )
             }

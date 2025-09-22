@@ -24,7 +24,7 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import ru.jerael.booktracker.backend.data.db.tables.Genres
 import ru.jerael.booktracker.backend.data.mappers.toGenre
-import ru.jerael.booktracker.backend.domain.exceptions.GenreNotFoundException
+import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
 
@@ -47,7 +47,7 @@ class GenreRepositoryImpl : GenreRepository {
                     .where { Genres.id eq id }
                     .orderBy(nameColumn)
                     .map { it.toGenre(nameColumn) }
-                    .singleOrNull() ?: throw GenreNotFoundException(id)
+                    .singleOrNull() ?: throw GenresNotFoundException(listOf(id))
             }
         }
     }

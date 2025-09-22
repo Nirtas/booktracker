@@ -16,10 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.domain.service
+package ru.jerael.booktracker.backend.data.service
 
 import ru.jerael.booktracker.backend.domain.model.token.Token
 import ru.jerael.booktracker.backend.domain.model.user.User
+import ru.jerael.booktracker.backend.domain.service.TokenService
 import java.util.*
 
 class TempTokenService : TokenService {

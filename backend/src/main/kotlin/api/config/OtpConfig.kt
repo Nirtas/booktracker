@@ -16,20 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.validator
+package ru.jerael.booktracker.backend.api.config
 
-import ru.jerael.booktracker.backend.api.dto.login.LoginRequestDto
-import ru.jerael.booktracker.backend.api.util.putIfNotEmpty
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
+import io.ktor.server.config.*
 
-class LoginValidator {
-    fun validateLogin(dto: LoginRequestDto) {
-        val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("email", validateEmail(dto.email))
-        errors.putIfNotEmpty("password", validatePassword(dto.password))
-        if (errors.isNotEmpty()) {
-            throw ValidationException(errors)
-        }
-    }
+data class OtpConfig(
+    val length: Int,
+    val validityMinutes: Long
+)
+
+fun ApplicationConfig.otpConfig(): OtpConfig {
+    val config = this.config("ktor.otp")
+    return OtpConfig(
+        length = config.property("length").getString().toInt(),
+        validityMinutes = config.property("validityMinutes").getString().toLong()
+    )
 }
