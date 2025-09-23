@@ -19,6 +19,7 @@
 package ru.jerael.booktracker.backend.api.di
 
 import org.koin.dsl.module
+import ru.jerael.booktracker.backend.api.config.OtpConfig
 import ru.jerael.booktracker.backend.api.controller.*
 import ru.jerael.booktracker.backend.api.mappers.*
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
@@ -38,7 +39,7 @@ val apiModule = module {
     single<MultipartParser> { MultipartParser() }
     single<BookValidator> { BookValidator() }
     single<UserValidator> { UserValidator() }
-    single<VerificationValidator> { VerificationValidator(otpConfig = get()) }
+    single<VerificationValidator> { VerificationValidator(otpCodeLength = get<OtpConfig>().length) }
     single<LoginValidator> { LoginValidator() }
 
     single<BookController> {

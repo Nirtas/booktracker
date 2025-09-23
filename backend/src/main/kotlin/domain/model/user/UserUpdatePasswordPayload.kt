@@ -22,7 +22,6 @@ import java.util.*
 
 data class UserUpdatePasswordPayload(
     val id: UUID,
-    val email: String,
     val currentPassword: String,
     val newPassword: String
 )

@@ -24,7 +24,6 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -53,16 +52,11 @@ class GetBookByIdRouteTest : BooksRouteTestBase() {
         createdAt = Instant.now(),
         genres = emptyList()
     )
-    private val errorDto = ErrorDto(
-        code = "INTERNAL_SERVER_ERROR",
-        message = "An unexpected error occurred. Please try again later."
-    )
     private val url = "/api/books/$bookId"
 
     @Test
     fun `when a book is found, getBookById should return it and a 200 OK status`() = testApplication {
         val expectedBookDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBookToDto(expectedBook)
-        every { bookValidator.validateId(bookId.toString()) } returns bookId
         coEvery { getBookByIdUseCase.invoke(bookId, language) } returns expectedBook
 
         application {
@@ -90,22 +84,6 @@ class GetBookByIdRouteTest : BooksRouteTestBase() {
         }
 
         coVerify(exactly = 1) { getBookByIdUseCase.invoke(any(), any()) }
-    }
-
-    @Test
-    fun `when validateId is failed, an Exception should be thrown with 500 InternalServerError`() = testApplication {
-        every { bookValidator.validateId(any()) } throws Exception("Error")
-
-        application {
-            configureStatusPages()
-            configureSerialization()
-            configureRouting()
-        }
-        val response = client.get(url)
-
-        assertEquals(HttpStatusCode.InternalServerError, response.status)
-        assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-        coVerify(exactly = 0) { getBookByIdUseCase.invoke(any(), any()) }
     }
 
     @Test

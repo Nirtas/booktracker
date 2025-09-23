@@ -25,9 +25,7 @@ import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.verify
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.dto.book.BookDto
@@ -79,8 +77,6 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
                 genreIds = emptyList()
             )
             val updatedBookDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBookToDto(updatedBook)
-            every { bookValidator.validateId(bookId.toString()) } returns bookId
-            every { bookValidator.validateUpdate(bookUpdateDto) } returns bookDetailsUpdatePayload
             coEvery { updateBookDetailsUseCase.invoke(bookId, bookDetailsUpdatePayload, language) } returns updatedBook
 
             application {
@@ -115,27 +111,6 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
         }
 
         coVerify(exactly = 1) { updateBookDetailsUseCase.invoke(any(), any(), "en") }
-    }
-
-    @Test
-    fun `when validateId is failed, an Exception should be thrown with 500 InternalServerError`() = testApplication {
-        every { bookValidator.validateId(any()) } throws Exception("Error")
-
-        application {
-            configureStatusPages()
-            configureSerialization()
-            configureRouting()
-        }
-        val response = client.put(url) {
-            contentType(ContentType.Application.Json)
-            val json = Json.encodeToString(bookUpdateDto)
-            setBody(json)
-        }
-
-        Assertions.assertEquals(HttpStatusCode.InternalServerError, response.status)
-        Assertions.assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-        verify(exactly = 0) { bookValidator.validateUpdate(any()) }
-        coVerify(exactly = 0) { updateBookDetailsUseCase.invoke(any(), any(), any()) }
     }
 
     @Test

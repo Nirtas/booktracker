@@ -70,7 +70,13 @@ class AddBookRouteTest : BooksRouteTestBase() {
     @Test
     fun `when request is valid with cover image, addBook should return the created book and a 201 Created status`() =
         testApplication {
+            val parsedBookCreationRequest = ParsedBookCreationRequest(
+                bookCreationDto = bookCreationDto,
+                coverBytes = byteArrayOf(),
+                coverFileName = null
+            )
             val coverBytesSlot = slot<ByteArray?>()
+            coEvery { multipartParser.parseBookCreation(any()) } returns parsedBookCreationRequest
             coEvery { addBookUseCase.invoke(any(), captureNullable(coverBytesSlot), any(), any()) } returns createdBook
 
             application {
@@ -114,8 +120,8 @@ class AddBookRouteTest : BooksRouteTestBase() {
                 coverBytes = null,
                 coverFileName = null
             )
-            coEvery { multipartParser.parseBookCreation(any()) } returns parsedBookCreationRequest
             val coverBytesSlot = slot<ByteArray?>()
+            coEvery { multipartParser.parseBookCreation(any()) } returns parsedBookCreationRequest
             coEvery { addBookUseCase.invoke(any(), captureNullable(coverBytesSlot), any(), any()) } returns createdBook
 
             application {
@@ -145,6 +151,12 @@ class AddBookRouteTest : BooksRouteTestBase() {
 
     @Test
     fun `when Accept-Language header is present, language() should correctly parse and return it`() = testApplication {
+        val parsedBookCreationRequest = ParsedBookCreationRequest(
+            bookCreationDto = bookCreationDto,
+            coverBytes = null,
+            coverFileName = null
+        )
+        coEvery { multipartParser.parseBookCreation(any()) } returns parsedBookCreationRequest
         coEvery { addBookUseCase.invoke(any(), any(), any(), any()) } returns createdBook
 
         application {

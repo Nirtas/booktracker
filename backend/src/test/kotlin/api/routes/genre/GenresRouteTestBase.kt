@@ -30,8 +30,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import ru.jerael.booktracker.backend.api.controller.BookController
-import ru.jerael.booktracker.backend.api.controller.GenreController
+import ru.jerael.booktracker.backend.api.controller.*
 import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.domain.usecases.genre.GetGenresUseCase
 
@@ -48,6 +47,9 @@ abstract class GenresRouteTestBase : KoinTest {
             val testModule = module {
                 single { GenreController(getGenresUseCase, GenreMapperImpl()) }
                 single { mockk<BookController>() }
+                single { mockk<TokenController>() }
+                single { mockk<UserController>() }
+                single { mockk<VerificationController>() }
             }
             modules(testModule)
         }

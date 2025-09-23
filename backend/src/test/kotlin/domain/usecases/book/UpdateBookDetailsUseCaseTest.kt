@@ -20,21 +20,21 @@ package domain.usecases.book
 
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import ru.jerael.booktracker.backend.api.validation.ValidationError
 import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.codes.ValidationErrorCode
 import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.usecases.book.GetBookByIdUseCase
 import ru.jerael.booktracker.backend.domain.usecases.book.UpdateBookDetailsUseCase
 import ru.jerael.booktracker.backend.domain.validation.GenreValidator
 import java.time.Instant
@@ -47,9 +47,6 @@ class UpdateBookDetailsUseCaseTest {
 
     @MockK
     private lateinit var genreValidator: GenreValidator
-
-    @RelaxedMockK
-    private lateinit var getBookByIdUseCase: GetBookByIdUseCase
 
     private lateinit var useCase: UpdateBookDetailsUseCase
 
@@ -80,7 +77,7 @@ class UpdateBookDetailsUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = UpdateBookDetailsUseCase(bookRepository, genreValidator, getBookByIdUseCase)
+        useCase = UpdateBookDetailsUseCase(bookRepository, genreValidator)
     }
 
     @Test
@@ -88,6 +85,7 @@ class UpdateBookDetailsUseCaseTest {
         val requestedGenreIds = listOf(1, 2, 3)
         val bookDetailsUpdatePayload = createPayload(requestedGenreIds)
         val updatedBook = existingBook.copy(genres = foundGenres)
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBook
         coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
         coEvery { bookRepository.updateBookDetails(bookId, bookDetailsUpdatePayload, language) } returns updatedBook
 
@@ -101,7 +99,11 @@ class UpdateBookDetailsUseCaseTest {
     fun `when genre validation is failed, a ValidationException should be thrown`() = runTest {
         val requestedGenreIds = listOf(1, 2, 3)
         val bookDetailsUpdatePayload = createPayload(requestedGenreIds)
-        coEvery { genreValidator.invoke(requestedGenreIds, language) } throws ValidationException("Error")
+        val mockkCode = mockk<ValidationErrorCode>()
+        val errors = mapOf("genreIds" to listOf(ValidationError(mockkCode)))
+        val exception = ValidationException(errors)
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBook
+        coEvery { genreValidator.invoke(requestedGenreIds, language) } throws exception
 
         assertThrows<ValidationException> {
             useCase.invoke(bookId, bookDetailsUpdatePayload, language)
@@ -113,7 +115,7 @@ class UpdateBookDetailsUseCaseTest {
     @Test
     fun `when a book is not found, a BookNotFoundException should be thrown`() = runTest {
         val bookDetailsUpdatePayload = createPayload()
-        coEvery { getBookByIdUseCase.invoke(bookId, language) } throws BookNotFoundException(bookId.toString())
+        coEvery { bookRepository.getBookById(bookId, language) } throws BookNotFoundException(bookId.toString())
 
         assertThrows<BookNotFoundException> {
             useCase.invoke(bookId, bookDetailsUpdatePayload, language)
@@ -125,6 +127,7 @@ class UpdateBookDetailsUseCaseTest {
     @Test
     fun `when repository fails to update book, it should propagate the exception`() = runTest {
         val bookDetailsUpdatePayload = createPayload()
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBook
         coEvery { genreValidator.invoke(any(), any()) } just Runs
         coEvery {
             bookRepository.updateBookDetails(

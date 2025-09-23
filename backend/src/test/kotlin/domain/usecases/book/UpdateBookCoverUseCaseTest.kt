@@ -31,8 +31,8 @@ import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
-import ru.jerael.booktracker.backend.domain.usecases.book.GetBookByIdUseCase
 import ru.jerael.booktracker.backend.domain.usecases.book.UpdateBookCoverUseCase
+import ru.jerael.booktracker.backend.domain.validation.CoverValidator
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
@@ -45,8 +45,7 @@ class UpdateBookCoverUseCaseTest {
     @MockK
     private lateinit var coverStorage: CoverStorage
 
-    @MockK
-    private lateinit var getBookByIdUseCase: GetBookByIdUseCase
+    private val coverValidator: CoverValidator = CoverValidator()
 
     private lateinit var useCase: UpdateBookCoverUseCase
 
@@ -72,12 +71,12 @@ class UpdateBookCoverUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = UpdateBookCoverUseCase(bookRepository, coverStorage, getBookByIdUseCase)
+        useCase = UpdateBookCoverUseCase(bookRepository, coverStorage, coverValidator)
     }
 
     @Test
     fun `when everything is fine, the cover is successfully updated`() = runTest {
-        coEvery { getBookByIdUseCase.invoke(bookId, language) } returns existingBookWithCover
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
         coEvery { coverStorage.delete(oldCoverPath) } just Runs
         coEvery { coverStorage.save(coverBytes, coverFileName) } returns newCoverPath
         coEvery { bookRepository.updateBookCover(bookId, newCoverPath, language) } returns updatedBook
@@ -85,7 +84,7 @@ class UpdateBookCoverUseCaseTest {
         val result = useCase.invoke(bookId, coverBytes, coverFileName, language)
 
         assertEquals(updatedBook, result)
-        coVerify(exactly = 1) { getBookByIdUseCase.invoke(bookId, language) }
+        coVerify(exactly = 1) { bookRepository.getBookById(bookId, language) }
         coVerify(exactly = 1) { coverStorage.delete(oldCoverPath) }
         coVerify(exactly = 1) { coverStorage.save(coverBytes, coverFileName) }
         coVerify(exactly = 1) { bookRepository.updateBookCover(bookId, newCoverPath, language) }
@@ -93,7 +92,7 @@ class UpdateBookCoverUseCaseTest {
 
     @Test
     fun `when a book is not found, a BookNotFoundException should be thrown`() = runTest {
-        coEvery { getBookByIdUseCase.invoke(bookId, language) } throws BookNotFoundException(bookId.toString())
+        coEvery { bookRepository.getBookById(bookId, language) } throws BookNotFoundException(bookId.toString())
 
         assertThrows<BookNotFoundException> {
             useCase.invoke(bookId, coverBytes, coverFileName, language)
@@ -106,7 +105,7 @@ class UpdateBookCoverUseCaseTest {
 
     @Test
     fun `when it is not possible to remove a cover from storage, a StorageException should be thrown`() = runTest {
-        coEvery { getBookByIdUseCase.invoke(bookId, language) } returns existingBookWithCover
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
         coEvery { coverStorage.delete(oldCoverPath) } throws StorageException(message = "Error")
 
         assertThrows<StorageException> {
@@ -119,7 +118,7 @@ class UpdateBookCoverUseCaseTest {
 
     @Test
     fun `when it is not possible to save a new cover to storage, a StorageException should be thrown`() = runTest {
-        coEvery { getBookByIdUseCase.invoke(bookId, language) } returns existingBookWithCover
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
         coEvery { coverStorage.delete(oldCoverPath) } just Runs
         coEvery { coverStorage.save(coverBytes, coverFileName) } throws StorageException(message = "Error")
 
@@ -132,7 +131,7 @@ class UpdateBookCoverUseCaseTest {
 
     @Test
     fun `when repository fails to update book, it should propagate the exception`() = runTest {
-        coEvery { getBookByIdUseCase.invoke(bookId, language) } returns existingBookWithCover
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
         coEvery { coverStorage.delete(oldCoverPath) } just Runs
         coEvery { coverStorage.save(coverBytes, coverFileName) } returns newCoverPath
         coEvery {
@@ -152,7 +151,7 @@ class UpdateBookCoverUseCaseTest {
 
     @Test
     fun `when the book does not have a cover, it is not deleted`() = runTest {
-        coEvery { getBookByIdUseCase.invoke(bookId, language) } returns existingBookWithoutCover
+        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithoutCover
         coEvery { coverStorage.save(coverBytes, coverFileName) } returns newCoverPath
         coEvery { bookRepository.updateBookCover(bookId, newCoverPath, language) } returns updatedBook
 

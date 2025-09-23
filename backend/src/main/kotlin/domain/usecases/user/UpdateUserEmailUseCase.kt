@@ -43,8 +43,7 @@ class UpdateUserEmailUseCase(
         }
         val updatedUser = userRepository.updateUserEmail(
             userId = userUpdateEmailPayload.id,
-            newEmail = userUpdateEmailPayload.newEmail,
-            isVerified = false
+            newEmail = userUpdateEmailPayload.newEmail
         )
         verificationService.start(updatedUser)
     }

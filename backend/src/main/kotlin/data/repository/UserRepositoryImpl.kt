@@ -74,12 +74,12 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
-    override suspend fun updateUserEmail(userId: UUID, newEmail: String, isVerified: Boolean): User {
+    override suspend fun updateUserEmail(userId: UUID, newEmail: String): User {
         return withContext(Dispatchers.IO) {
             transaction {
                 val updatedRows = Users.update({ Users.id eq userId }) {
                     it[Users.email] = newEmail
-                    it[Users.isVerified] = isVerified
+                    it[Users.isVerified] = false
                 }
                 if (updatedRows == 0) {
                     throw UserByIdNotFoundException(userId.toString())

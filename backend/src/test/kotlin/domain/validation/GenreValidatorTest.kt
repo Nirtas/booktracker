@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package domain.usecases
+package domain.validation
 
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
 import ru.jerael.booktracker.backend.domain.validation.GenreValidator
@@ -79,16 +79,16 @@ class GenreValidatorTest {
     }
 
     @Test
-    fun `when one or more genres are not found, a ValidationException should be thrown`() = runTest {
+    fun `when one or more genres are not found, a GenresNotFoundException should be thrown`() = runTest {
         val genreIds: List<Int> = listOf(1, 2, 3, 2, 4)
         val distinctIds: List<Int> = genreIds.distinct()
         coEvery { genreRepository.getGenresByIds(distinctIds, language) } returns foundGenres
 
-        val exception = assertThrows<ValidationException> {
+        val exception = assertThrows<GenresNotFoundException> {
             validator.invoke(genreIds, language)
         }
 
-        assertTrue(exception.message!!.contains("4"))
+        assertTrue(exception.genreIds.contains(4))
         coVerify(exactly = 1) { genreRepository.getGenresByIds(distinctIds, language) }
     }
 }

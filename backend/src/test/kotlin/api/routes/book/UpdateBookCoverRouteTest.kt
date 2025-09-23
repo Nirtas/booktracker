@@ -25,10 +25,8 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.slot
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
@@ -109,36 +107,6 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
         }
 
         coVerify(exactly = 1) { updateBookCoverUseCase.invoke(any(), any(), any(), "en") }
-    }
-
-    @Test
-    fun `when validateId is failed, an Exception should be thrown with 500 InternalServerError`() = testApplication {
-        every { bookValidator.validateId(any()) } throws Exception("Error")
-
-        application {
-            configureStatusPages()
-            configureSerialization()
-            configureRouting()
-        }
-        val response = client.post(url) {
-            val multipartBody = MultiPartFormDataContent(
-                parts = formData {
-                    append(
-                        "cover",
-                        "image content".toByteArray(),
-                        Headers.build {
-                            append(HttpHeaders.ContentType, "image/jpeg")
-                            append(HttpHeaders.ContentDisposition, "filename=\"cover.jpg\"")
-                        }
-                    )
-                }
-            )
-            setBody(multipartBody)
-        }
-
-        Assertions.assertEquals(HttpStatusCode.InternalServerError, response.status)
-        Assertions.assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-        coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any(), any(), any(), any()) }
     }
 
     @Test

@@ -20,10 +20,7 @@ package ru.jerael.booktracker.backend.api.validation.validator
 
 import org.apache.commons.validator.routines.EmailValidator
 import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.codes.BookValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.codes.EmailValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.codes.PasswordValidationErrorCode
+import ru.jerael.booktracker.backend.api.validation.codes.*
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import java.util.*
 
@@ -94,9 +91,9 @@ fun validateEmail(email: String): List<ValidationError> {
                 )
             )
         }
-    }
-    if (!EmailValidator.getInstance().isValid(email)) {
-        errors.add(ValidationError(EmailValidationErrorCode.INVALID_FORMAT))
+        if (!EmailValidator.getInstance().isValid(email)) {
+            errors.add(ValidationError(EmailValidationErrorCode.INVALID_FORMAT))
+        }
     }
     return errors
 }
@@ -136,6 +133,26 @@ fun validateUserId(userId: String): List<ValidationError> {
             UUID.fromString(userId)
         } catch (e: Exception) {
             errors.add(ValidationError(CommonValidationErrorCode.INVALID_UUID_FORMAT))
+        }
+    }
+    return errors
+}
+
+fun validateCode(code: String, length: Int): List<ValidationError> {
+    val errors = mutableListOf<ValidationError>()
+    if (code.isBlank()) {
+        errors.add(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))
+    } else {
+        if (code.length != length) {
+            errors.add(
+                ValidationError(
+                    code = CodeValidationErrorCode.LENGTH_INVALID,
+                    params = mapOf("length" to listOf(length.toString()))
+                )
+            )
+        }
+        if (!code.all { it.isDigit() }) {
+            errors.add(ValidationError(CodeValidationErrorCode.MUST_BE_DIGITS))
         }
     }
     return errors

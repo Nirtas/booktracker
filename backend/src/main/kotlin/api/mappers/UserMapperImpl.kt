@@ -56,7 +56,6 @@ class UserMapperImpl : UserMapper {
     ): UserUpdatePasswordPayload {
         return UserUpdatePasswordPayload(
             id = userId,
-            email = dto.email,
             currentPassword = dto.currentPassword,
             newPassword = dto.newPassword
         )

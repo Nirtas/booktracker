@@ -26,7 +26,7 @@ interface UserRepository {
     suspend fun getUserByEmail(email: String): User?
     suspend fun createUser(email: String, passwordHash: String): User
     suspend fun updateUserVerificationStatus(id: UUID, isVerified: Boolean)
-    suspend fun updateUserEmail(userId: UUID, newEmail: String, isVerified: Boolean): User
+    suspend fun updateUserEmail(userId: UUID, newEmail: String): User
     suspend fun updateUserPassword(userId: UUID, newPasswordHash: String)
     suspend fun deleteUser(id: UUID)
 }

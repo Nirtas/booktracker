@@ -19,12 +19,14 @@
 package ru.jerael.booktracker.backend.api.di
 
 import org.koin.dsl.module
+import ru.jerael.booktracker.backend.api.config.OtpConfig
 import ru.jerael.booktracker.backend.data.hasher.Argon2PasswordHasher
 import ru.jerael.booktracker.backend.data.repository.BookRepositoryImpl
 import ru.jerael.booktracker.backend.data.repository.GenreRepositoryImpl
 import ru.jerael.booktracker.backend.data.repository.UserRepositoryImpl
 import ru.jerael.booktracker.backend.data.repository.VerificationRepositoryImpl
 import ru.jerael.booktracker.backend.data.service.EmailVerificationService
+import ru.jerael.booktracker.backend.data.service.OtpGeneratorImpl
 import ru.jerael.booktracker.backend.data.service.TempTokenService
 import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
 import ru.jerael.booktracker.backend.data.storage.FileStorageImpl
@@ -33,6 +35,7 @@ import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
+import ru.jerael.booktracker.backend.domain.service.OtpGenerator
 import ru.jerael.booktracker.backend.domain.service.TokenService
 import ru.jerael.booktracker.backend.domain.service.VerificationService
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
@@ -53,8 +56,10 @@ val dataModule = module {
     single<VerificationService> {
         EmailVerificationService(
             verificationRepository = get(),
+            otpGenerator = get(),
             smtpConfig = get(),
-            otpConfig = get()
+            otpValidityMinutes = get<OtpConfig>().validityMinutes
         )
     }
+    single<OtpGenerator> { OtpGeneratorImpl(otpCodeLength = get<OtpConfig>().length) }
 }

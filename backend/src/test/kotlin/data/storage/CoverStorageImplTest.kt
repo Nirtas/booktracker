@@ -18,16 +18,12 @@
 
 package data.storage
 
-import io.mockk.MockKAnnotations
-import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.*
 import io.mockk.impl.annotations.MockK
-import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
@@ -55,32 +51,23 @@ class CoverStorageImplTest {
         val pathSlot = slot<String>()
         coEvery { fileStorage.saveFile(capture(pathSlot), any()) } returns ""
 
-        coverStorage.save(coverBytes, coverFileName)
+        val path = coverStorage.save(coverBytes, coverFileName)
 
         coVerify(exactly = 1) { fileStorage.saveFile(any(), any()) }
         val capturedPath = pathSlot.captured
         assertTrue(capturedPath.startsWith("covers/"))
         assertTrue(capturedPath.endsWith(".jpg"))
+        assertEquals(capturedPath, path)
     }
 
     @Test
-    fun `when save is called with blank originalFileName, a ValidationException should be thrown`() = runTest {
-        val exception = assertThrows<ValidationException> {
-            coverStorage.save("".toByteArray(), "")
-        }
+    fun `when delete is called, it should call fileStorage with the correct path`() = runTest {
+        val coverPath = "covers/$coverFileName"
+        coEvery { fileStorage.deleteFile(any()) } just Runs
 
-        assertEquals("File name can`t be empty.", exception.message!!)
-        coVerify(exactly = 0) { fileStorage.saveFile(any(), any()) }
-    }
+        coverStorage.delete(coverPath)
 
-    @Test
-    fun `when save is called with unsupported file extension, a ValidationException should be thrown`() = runTest {
-        val exception = assertThrows<ValidationException> {
-            coverStorage.save("".toByteArray(), "cover.gif")
-        }
-
-        assertEquals("Invalid file type. Only JPG and PNG are allowed.", exception.message!!)
-        coVerify(exactly = 0) { fileStorage.saveFile(any(), any()) }
+        coVerify(exactly = 1) { fileStorage.deleteFile(coverPath) }
     }
 
     @Test
