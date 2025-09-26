@@ -30,6 +30,7 @@ private const val MAX_EMAIL_LENGTH = 200
 private const val MIN_PASSWORD_LENGTH = 8
 private const val MAX_PASSWORD_LENGTH = 64
 private const val PASSWORD_ALLOWED_SPECIAL_CHARS = "!@#\$%^&*()-+"
+private const val REFRESH_TOKEN_LENGTH = 64
 
 fun validateTitle(title: String): List<ValidationError> {
     val errors = mutableListOf<ValidationError>()
@@ -153,6 +154,27 @@ fun validateCode(code: String, length: Int): List<ValidationError> {
         }
         if (!code.all { it.isDigit() }) {
             errors.add(ValidationError(CodeValidationErrorCode.MUST_BE_DIGITS))
+        }
+    }
+    return errors
+}
+
+fun validateRefreshToken(token: String): List<ValidationError> {
+    val errors = mutableListOf<ValidationError>()
+    if (token.isBlank()) {
+        errors.add(ValidationError(CommonValidationErrorCode.FIELD_CANNOT_BE_EMPTY))
+    } else {
+        if (token.length != REFRESH_TOKEN_LENGTH) {
+            errors.add(
+                ValidationError(
+                    code = RefreshTokenValidationErrorCode.LENGTH_INVALID,
+                    params = mapOf("length" to listOf(REFRESH_TOKEN_LENGTH.toString()))
+                )
+            )
+        }
+        val refreshTokenRegex = Regex("^[a-zA-Z0-9]+$")
+        if (!token.matches(refreshTokenRegex)) {
+            errors.add(ValidationError(RefreshTokenValidationErrorCode.INVALID_FORMAT))
         }
     }
     return errors

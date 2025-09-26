@@ -16,17 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.data.service
+package ru.jerael.booktracker.backend.api.config
 
-import ru.jerael.booktracker.backend.domain.model.token.Token
-import ru.jerael.booktracker.backend.domain.model.user.User
-import ru.jerael.booktracker.backend.domain.service.TokenService
-import java.util.*
+import io.ktor.server.config.*
+import ru.jerael.booktracker.backend.domain.config.JwtConfig
 
-class TempTokenService : TokenService {
-    override fun generateToken(user: User): Token {
-        val token = UUID.randomUUID().toString()
-        val expiresIn = 3600L
-        return Token(token = token, expiresIn = expiresIn)
-    }
+fun ApplicationConfig.jwtConfig(): JwtConfig {
+    val config = this.config("ktor.jwt")
+    return JwtConfig(
+        secret = config.property("secret").getString(),
+        issuer = config.property("issuer").getString(),
+        audience = config.property("audience").getString(),
+        realm = config.property("realm").getString(),
+        accessExpiresInMinutes = config.property("accessExpiresInMinutes").getString().toLong(),
+        refreshExpiresInDays = config.property("refreshExpiresInDays").getString().toLong()
+    )
 }

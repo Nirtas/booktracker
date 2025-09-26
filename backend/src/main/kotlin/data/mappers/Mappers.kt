@@ -22,8 +22,10 @@ import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
 import ru.jerael.booktracker.backend.data.db.tables.EmailVerifications
 import ru.jerael.booktracker.backend.data.db.tables.Genres
+import ru.jerael.booktracker.backend.data.db.tables.RefreshTokens
 import ru.jerael.booktracker.backend.data.db.tables.Users
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
+import ru.jerael.booktracker.backend.domain.model.token.RefreshToken
 import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationCode
 
@@ -48,5 +50,13 @@ fun ResultRow.toVerificationCode(): VerificationCode {
         userId = this[EmailVerifications.userId],
         code = this[EmailVerifications.code],
         expiresAt = this[EmailVerifications.expiresAt]
+    )
+}
+
+fun ResultRow.toRefreshToken(): RefreshToken {
+    return RefreshToken(
+        userId = this[RefreshTokens.userId],
+        token = this[RefreshTokens.token],
+        expiresAt = this[RefreshTokens.expiresAt]
     )
 }

@@ -58,7 +58,7 @@ class VerificationRepositoryImpl : VerificationRepository {
     }
 
     override suspend fun deleteCode(userId: UUID) {
-        return withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             transaction {
                 EmailVerifications.deleteWhere { EmailVerifications.userId eq userId }
             }

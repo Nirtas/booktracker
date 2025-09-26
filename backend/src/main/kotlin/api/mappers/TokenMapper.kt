@@ -19,8 +19,8 @@
 package ru.jerael.booktracker.backend.api.mappers
 
 import ru.jerael.booktracker.backend.api.dto.login.LoginResponseDto
-import ru.jerael.booktracker.backend.domain.model.token.Token
+import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 
 interface TokenMapper {
-    fun mapTokenToResponseDto(token: Token): LoginResponseDto
+    fun mapTokenToResponseDto(pair: TokenPair): LoginResponseDto
 }

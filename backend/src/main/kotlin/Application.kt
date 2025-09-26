@@ -30,5 +30,6 @@ fun Application.module() {
     configureDI()
     configureSerialization()
     configureDatabases()
+    configureAuthentication()
     configureRouting()
 }

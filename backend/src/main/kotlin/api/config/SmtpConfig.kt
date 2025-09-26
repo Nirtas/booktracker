@@ -19,15 +19,7 @@
 package ru.jerael.booktracker.backend.api.config
 
 import io.ktor.server.config.*
-
-data class SmtpConfig(
-    val host: String,
-    val port: Int,
-    val user: String,
-    val password: String,
-    val from: String,
-    val ssl: Boolean
-)
+import ru.jerael.booktracker.backend.domain.config.SmtpConfig
 
 fun ApplicationConfig.smtpConfig(): SmtpConfig {
     val config = this.config("ktor.smtp")

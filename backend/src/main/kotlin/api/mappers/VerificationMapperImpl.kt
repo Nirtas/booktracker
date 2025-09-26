@@ -20,12 +20,11 @@ package ru.jerael.booktracker.backend.api.mappers
 
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
-import java.util.*
 
 class VerificationMapperImpl : VerificationMapper {
     override fun mapDtoToPayload(dto: VerificationDto): VerificationPayload {
         return VerificationPayload(
-            userId = UUID.fromString(dto.userId),
+            email = dto.email,
             code = dto.code
         )
     }

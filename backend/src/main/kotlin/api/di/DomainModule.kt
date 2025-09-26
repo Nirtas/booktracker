@@ -22,6 +22,7 @@ import org.koin.dsl.module
 import ru.jerael.booktracker.backend.domain.usecases.book.*
 import ru.jerael.booktracker.backend.domain.usecases.genre.GetGenresUseCase
 import ru.jerael.booktracker.backend.domain.usecases.login.LoginUseCase
+import ru.jerael.booktracker.backend.domain.usecases.token.RefreshTokenUseCase
 import ru.jerael.booktracker.backend.domain.usecases.user.*
 import ru.jerael.booktracker.backend.domain.usecases.verification.ResendVerificationCodeUseCase
 import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
@@ -79,6 +80,14 @@ val domainModule = module {
         ResendVerificationCodeUseCase(
             userRepository = get(),
             verificationService = get()
+        )
+    }
+
+    single<RefreshTokenUseCase> {
+        RefreshTokenUseCase(
+            userRepository = get(),
+            refreshTokenRepository = get(),
+            tokenService = get()
         )
     }
 }

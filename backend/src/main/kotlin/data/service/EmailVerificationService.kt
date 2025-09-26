@@ -20,7 +20,7 @@ package ru.jerael.booktracker.backend.data.service
 
 import org.apache.commons.mail.DefaultAuthenticator
 import org.apache.commons.mail.SimpleEmail
-import ru.jerael.booktracker.backend.api.config.SmtpConfig
+import ru.jerael.booktracker.backend.domain.config.SmtpConfig
 import ru.jerael.booktracker.backend.domain.exceptions.InternalException
 import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository

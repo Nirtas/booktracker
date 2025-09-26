@@ -35,7 +35,7 @@ import kotlin.test.assertEquals
 class VerifyCodeRouteTest : VerificationsRouteTestBase() {
 
     private val url = "/api/verifications"
-    private val json = Json.encodeToString(VerificationDto("661d6c9d-c4e9-4921-93c5-8b3dd4e57bf3", "123456"))
+    private val json = Json.encodeToString(VerificationDto("test@example.com", "123456"))
     private val errorDto = ErrorDto(
         code = "INTERNAL_SERVER_ERROR",
         message = "An unexpected error occurred. Please try again later."

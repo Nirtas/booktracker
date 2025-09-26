@@ -19,7 +19,7 @@
 package ru.jerael.booktracker.backend.domain.usecases.verification
 
 import ru.jerael.booktracker.backend.domain.exceptions.InvalidVerificationException
-import ru.jerael.booktracker.backend.domain.exceptions.UserByIdNotFoundException
+import ru.jerael.booktracker.backend.domain.exceptions.UserByEmailNotFoundException
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
@@ -30,8 +30,8 @@ class VerifyCodeUseCase(
     private val verificationRepository: VerificationRepository
 ) {
     suspend operator fun invoke(verificationPayload: VerificationPayload) {
-        val user = userRepository.getUserById(verificationPayload.userId) ?: throw UserByIdNotFoundException(
-            verificationPayload.userId.toString()
+        val user = userRepository.getUserByEmail(verificationPayload.email) ?: throw UserByEmailNotFoundException(
+            verificationPayload.email
         )
         val foundCode = verificationRepository.getCode(user.id) ?: throw InvalidVerificationException()
         val isCodeValid = foundCode.code == verificationPayload.code

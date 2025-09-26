@@ -57,3 +57,15 @@ CREATE TABLE IF NOT EXISTS public.email_verifications
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS public.refresh_tokens
+(
+    user_id uuid NOT NULL,
+    token character varying(256) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    CONSTRAINT refresh_tokens_pkey PRIMARY KEY (user_id),
+    CONSTRAINT refresh_tokens_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES public.users (user_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);

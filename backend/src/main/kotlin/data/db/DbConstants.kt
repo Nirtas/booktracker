@@ -24,6 +24,7 @@ object DbConstants {
     const val TABLE_BOOK_GENRES = "book_genres"
     const val TABLE_USERS = "users"
     const val TABLE_EMAIL_VERIFICATIONS = "email_verifications"
+    const val TABLE_REFRESH_TOKENS = "refresh_tokens"
 
     const val ENUM_BOOK_STATUS = "book_status_enum"
 }

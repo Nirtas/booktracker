@@ -18,9 +18,9 @@
 
 package ru.jerael.booktracker.backend.domain.service
 
-import ru.jerael.booktracker.backend.domain.model.token.Token
+import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 import ru.jerael.booktracker.backend.domain.model.user.User
 
 interface TokenService {
-    fun generateToken(user: User): Token
+    suspend fun generateTokenPair(user: User): TokenPair
 }

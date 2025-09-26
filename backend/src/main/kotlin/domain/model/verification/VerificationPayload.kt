@@ -18,9 +18,7 @@
 
 package ru.jerael.booktracker.backend.domain.model.verification
 
-import java.util.*
-
 data class VerificationPayload(
-    val userId: UUID,
+    val email: String,
     val code: String
 )

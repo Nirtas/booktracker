@@ -22,10 +22,12 @@ import io.ktor.server.application.*
 import io.ktor.util.logging.*
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import ru.jerael.booktracker.backend.api.config.OtpConfig
-import ru.jerael.booktracker.backend.api.config.SmtpConfig
+import ru.jerael.booktracker.backend.api.config.jwtConfig
 import ru.jerael.booktracker.backend.api.config.otpConfig
 import ru.jerael.booktracker.backend.api.config.smtpConfig
+import ru.jerael.booktracker.backend.domain.config.JwtConfig
+import ru.jerael.booktracker.backend.domain.config.OtpConfig
+import ru.jerael.booktracker.backend.domain.config.SmtpConfig
 
 object Qualifiers {
     val imageBaseUrl = named("imageBaseUrl")
@@ -42,4 +44,5 @@ fun coreModule(application: Application) = module {
     }
     single<SmtpConfig> { application.environment.config.smtpConfig() }
     single<OtpConfig> { application.environment.config.otpConfig() }
+    single<JwtConfig> { application.environment.config.jwtConfig() }
 }

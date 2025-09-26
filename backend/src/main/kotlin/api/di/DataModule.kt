@@ -19,22 +19,17 @@
 package ru.jerael.booktracker.backend.api.di
 
 import org.koin.dsl.module
-import ru.jerael.booktracker.backend.api.config.OtpConfig
 import ru.jerael.booktracker.backend.data.hasher.Argon2PasswordHasher
-import ru.jerael.booktracker.backend.data.repository.BookRepositoryImpl
-import ru.jerael.booktracker.backend.data.repository.GenreRepositoryImpl
-import ru.jerael.booktracker.backend.data.repository.UserRepositoryImpl
-import ru.jerael.booktracker.backend.data.repository.VerificationRepositoryImpl
+import ru.jerael.booktracker.backend.data.repository.*
 import ru.jerael.booktracker.backend.data.service.EmailVerificationService
+import ru.jerael.booktracker.backend.data.service.JwtService
 import ru.jerael.booktracker.backend.data.service.OtpGeneratorImpl
-import ru.jerael.booktracker.backend.data.service.TempTokenService
 import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
 import ru.jerael.booktracker.backend.data.storage.FileStorageImpl
+import ru.jerael.booktracker.backend.domain.config.JwtConfig
+import ru.jerael.booktracker.backend.domain.config.OtpConfig
 import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
-import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.repository.GenreRepository
-import ru.jerael.booktracker.backend.domain.repository.UserRepository
-import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
+import ru.jerael.booktracker.backend.domain.repository.*
 import ru.jerael.booktracker.backend.domain.service.OtpGenerator
 import ru.jerael.booktracker.backend.domain.service.TokenService
 import ru.jerael.booktracker.backend.domain.service.VerificationService
@@ -49,10 +44,10 @@ val dataModule = module {
     single<GenreRepository> { GenreRepositoryImpl() }
     single<UserRepository> { UserRepositoryImpl() }
     single<VerificationRepository> { VerificationRepositoryImpl() }
+    single<RefreshTokenRepository> { RefreshTokenRepositoryImpl() }
 
     single<PasswordHasher> { Argon2PasswordHasher() }
 
-    single<TokenService> { TempTokenService() }
     single<VerificationService> {
         EmailVerificationService(
             verificationRepository = get(),
@@ -62,4 +57,5 @@ val dataModule = module {
         )
     }
     single<OtpGenerator> { OtpGeneratorImpl(otpCodeLength = get<OtpConfig>().length) }
+    single<TokenService> { JwtService(jwtConfig = get<JwtConfig>(), refreshTokenRepository = get()) }
 }

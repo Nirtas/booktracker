@@ -27,7 +27,7 @@ import ru.jerael.booktracker.backend.api.validation.ValidationException
 class VerificationValidator(private val otpCodeLength: Int) {
     fun validateVerification(dto: VerificationDto) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("userId", validateUserId(dto.userId))
+        errors.putIfNotEmpty("email", validateEmail(dto.email))
         errors.putIfNotEmpty("code", validateCode(dto.code, otpCodeLength))
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)

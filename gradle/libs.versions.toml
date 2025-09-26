@@ -87,6 +87,8 @@ ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref =
 commons-validator = { group = "commons-validator", name = "commons-validator", version.ref = "validator" }
 argon2-jvm = { group = "de.mkammerer", name = "argon2-jvm", version.ref = "argon2-jvm" }
 commons-email = { group = "org.apache.commons", name = "commons-email", version.ref = "commons-email" }
+ktor-server-auth = { group = "io.ktor", name = "ktor-server-auth", version.ref = "ktor" }
+ktor-server-auth-jwt = { group = "io.ktor", name = "ktor-server-auth-jwt", version.ref = "ktor" }
 
 # SHARED
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }

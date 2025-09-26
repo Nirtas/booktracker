@@ -19,14 +19,11 @@
 package ru.jerael.booktracker.backend.api.di
 
 import org.koin.dsl.module
-import ru.jerael.booktracker.backend.api.config.OtpConfig
 import ru.jerael.booktracker.backend.api.controller.*
 import ru.jerael.booktracker.backend.api.mappers.*
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
-import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
-import ru.jerael.booktracker.backend.api.validation.validator.LoginValidator
-import ru.jerael.booktracker.backend.api.validation.validator.UserValidator
-import ru.jerael.booktracker.backend.api.validation.validator.VerificationValidator
+import ru.jerael.booktracker.backend.api.validation.validator.*
+import ru.jerael.booktracker.backend.domain.config.OtpConfig
 
 val apiModule = module {
     single<BookMapper> { BookMapperImpl(imageBaseUrl = get(qualifier = Qualifiers.imageBaseUrl), genreMapper = get()) }
@@ -41,6 +38,7 @@ val apiModule = module {
     single<UserValidator> { UserValidator() }
     single<VerificationValidator> { VerificationValidator(otpCodeLength = get<OtpConfig>().length) }
     single<LoginValidator> { LoginValidator() }
+    single<TokenValidator> { TokenValidator() }
 
     single<BookController> {
         BookController(
@@ -75,7 +73,9 @@ val apiModule = module {
     single<TokenController> {
         TokenController(
             loginUseCase = get(),
+            refreshTokenUseCase = get(),
             loginValidator = get(),
+            tokenValidator = get(),
             loginMapper = get(),
             tokenMapper = get()
         )

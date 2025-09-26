@@ -19,11 +19,7 @@
 package ru.jerael.booktracker.backend.api.config
 
 import io.ktor.server.config.*
-
-data class OtpConfig(
-    val length: Int,
-    val validityMinutes: Long
-)
+import ru.jerael.booktracker.backend.domain.config.OtpConfig
 
 fun ApplicationConfig.otpConfig(): OtpConfig {
     val config = this.config("ktor.otp")

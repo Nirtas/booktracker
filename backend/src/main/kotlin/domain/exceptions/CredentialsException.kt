@@ -42,3 +42,15 @@ class InvalidCredentialsException : CredentialsException(
     userMessage = "Invalid email or password provided.",
     errorCode = "INVALID_CREDENTIALS"
 )
+
+class InvalidRefreshTokenException : CredentialsException(
+    httpStatusCode = HttpStatusCode.Forbidden,
+    userMessage = "Invalid refresh token.",
+    errorCode = "INVALID_REFRESH_TOKEN"
+)
+
+class ExpiredRefreshTokenException : CredentialsException(
+    httpStatusCode = HttpStatusCode.Forbidden,
+    userMessage = "Refresh token expired.",
+    errorCode = "EXPIRED_REFRESH_TOKEN"
+)

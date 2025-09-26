@@ -28,5 +28,8 @@ fun Route.tokens(
         post {
             tokenController.login(call)
         }
+        post("/refresh") {
+            tokenController.refreshToken(call)
+        }
     }
 }

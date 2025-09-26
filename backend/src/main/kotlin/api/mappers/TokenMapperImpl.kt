@@ -19,13 +19,13 @@
 package ru.jerael.booktracker.backend.api.mappers
 
 import ru.jerael.booktracker.backend.api.dto.login.LoginResponseDto
-import ru.jerael.booktracker.backend.domain.model.token.Token
+import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 
 class TokenMapperImpl : TokenMapper {
-    override fun mapTokenToResponseDto(token: Token): LoginResponseDto {
+    override fun mapTokenToResponseDto(pair: TokenPair): LoginResponseDto {
         return LoginResponseDto(
-            token = token.token,
-            expiresIn = token.expiresIn
+            accessToken = pair.accessToken,
+            refreshToken = pair.refreshToken
         )
     }
 }

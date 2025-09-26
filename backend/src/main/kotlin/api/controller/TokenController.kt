@@ -23,14 +23,19 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import ru.jerael.booktracker.backend.api.dto.login.LoginRequestDto
+import ru.jerael.booktracker.backend.api.dto.token.RefreshTokenDto
 import ru.jerael.booktracker.backend.api.mappers.LoginMapper
 import ru.jerael.booktracker.backend.api.mappers.TokenMapper
 import ru.jerael.booktracker.backend.api.validation.validator.LoginValidator
+import ru.jerael.booktracker.backend.api.validation.validator.TokenValidator
 import ru.jerael.booktracker.backend.domain.usecases.login.LoginUseCase
+import ru.jerael.booktracker.backend.domain.usecases.token.RefreshTokenUseCase
 
 class TokenController(
     private val loginUseCase: LoginUseCase,
+    private val refreshTokenUseCase: RefreshTokenUseCase,
     private val loginValidator: LoginValidator,
+    private val tokenValidator: TokenValidator,
     private val loginMapper: LoginMapper,
     private val tokenMapper: TokenMapper
 ) {
@@ -40,5 +45,12 @@ class TokenController(
         val loginPayload = loginMapper.mapDtoToPayload(loginRequestDto)
         val token = loginUseCase(loginPayload)
         call.respond(HttpStatusCode.OK, tokenMapper.mapTokenToResponseDto(token))
+    }
+
+    suspend fun refreshToken(call: ApplicationCall) {
+        val refreshTokenDto = call.receive<RefreshTokenDto>()
+        tokenValidator.validateRefresh(refreshTokenDto)
+        val newTokenPair = refreshTokenUseCase(refreshTokenDto.refreshToken)
+        call.respond(HttpStatusCode.OK, tokenMapper.mapTokenToResponseDto(newTokenPair))
     }
 }

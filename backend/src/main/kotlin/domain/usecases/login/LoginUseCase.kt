@@ -22,7 +22,7 @@ import ru.jerael.booktracker.backend.domain.exceptions.ForbiddenException
 import ru.jerael.booktracker.backend.domain.exceptions.InvalidCredentialsException
 import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 import ru.jerael.booktracker.backend.domain.model.login.LoginPayload
-import ru.jerael.booktracker.backend.domain.model.token.Token
+import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
 
@@ -31,7 +31,7 @@ class LoginUseCase(
     private val passwordHasher: PasswordHasher,
     private val tokenService: TokenService
 ) {
-    suspend operator fun invoke(loginPayload: LoginPayload): Token {
+    suspend operator fun invoke(loginPayload: LoginPayload): TokenPair {
         val user = userRepository.getUserByEmail(loginPayload.email) ?: throw InvalidCredentialsException()
         if (!passwordHasher.verify(loginPayload.password, user.passwordHash)) {
             throw InvalidCredentialsException()
@@ -42,6 +42,6 @@ class LoginUseCase(
                 errorCode = "ACCOUNT_NOT_VERIFIED"
             )
         }
-        return tokenService.generateToken(user)
+        return tokenService.generateTokenPair(user)
     }
 }

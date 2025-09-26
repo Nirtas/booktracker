@@ -22,3 +22,10 @@ ktor:
   otp:
     length: 6
     validityMinutes: 10
+  jwt:
+    secret: $JWT_SECRET
+    issuer: $JWT_ISSUER
+    audience: $JWT_AUDIENCE
+    realm: $JWT_REALM
+    accessExpiresInMinutes: 15
+    refreshExpiresInDays: 30
