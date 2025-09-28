@@ -27,8 +27,15 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.SerializationException
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
+import ru.jerael.booktracker.backend.api.dto.validation.ValidationErrorDto
+import ru.jerael.booktracker.backend.api.dto.validation.ValidationErrorParams
+import ru.jerael.booktracker.backend.api.validation.ValidationError
+import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.codes.FileValidationErrorCode
+import ru.jerael.booktracker.backend.api.validation.codes.GenreValidationErrorCode
 import ru.jerael.booktracker.backend.domain.exceptions.AppException
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
+import ru.jerael.booktracker.backend.domain.exceptions.InvalidFileExtensionException
 
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.configureStatusPages() {
@@ -41,14 +48,29 @@ fun Application.configureStatusPages() {
             call.respond(HttpStatusCode.UnsupportedMediaType, errorDto)
         }
 
-        exception<BadRequestException> { call, cause ->
-            val message = cause.cause?.message ?: cause.message ?: "Invalid request format"
-            val validationException = ValidationException(message)
-            val errorDto = ErrorDto(
-                code = validationException.errorCode,
-                message = validationException.userMessage
+        exception<InvalidFileExtensionException> { call, cause ->
+            val error = ValidationError(
+                code = FileValidationErrorCode.INVALID_EXTENSION,
+                params = mapOf("allowed" to cause.allowedExtensions)
             )
-            call.respond(validationException.httpStatusCode, errorDto)
+            val validationException = ValidationException(mapOf("fileName" to listOf(error)))
+            call.respond(validationException.httpStatusCode, validationException.errors)
+        }
+
+        exception<ValidationException> { call, cause ->
+            val errorDetails = cause.errors.mapValues { entry ->
+                entry.value.map { validationError ->
+                    ValidationErrorParams(
+                        code = validationError.code.name,
+                        params = validationError.params
+                    )
+                }
+            }
+            val errorDto = ValidationErrorDto(
+                message = cause.userMessage,
+                details = errorDetails
+            )
+            call.respond(cause.httpStatusCode, errorDto)
         }
 
         exception<SerializationException> { call, cause ->
@@ -56,12 +78,29 @@ fun Application.configureStatusPages() {
                 is MissingFieldException -> "Request JSON is missing required field: '${cause.missingFields.joinToString()}'"
                 else -> cause.message ?: "Invalid JSON format"
             }
-            val validationException = ValidationException(message)
             val errorDto = ErrorDto(
-                code = validationException.errorCode,
-                message = validationException.userMessage
+                code = "BAD_REQUEST",
+                message = message
             )
-            call.respond(validationException.httpStatusCode, errorDto)
+            call.respond(HttpStatusCode.BadRequest, errorDto)
+        }
+
+        exception<BadRequestException> { call, _ ->
+            val errorDto = ErrorDto(
+                code = "BAD_REQUEST",
+                message = "Invalid request body or parameters."
+            )
+            call.respond(HttpStatusCode.BadRequest, errorDto)
+        }
+
+        exception<GenresNotFoundException> { call, cause ->
+            val notFoundGenreIds = cause.genreIds.map { it.toString() }
+            val error = ValidationError(
+                code = GenreValidationErrorCode.NOT_FOUND,
+                params = mapOf("notFound" to notFoundGenreIds)
+            )
+            val validationException = ValidationException(mapOf("genres" to listOf(error)))
+            call.respond(validationException.httpStatusCode, validationException.errors)
         }
 
         exception<AppException> { call, cause ->

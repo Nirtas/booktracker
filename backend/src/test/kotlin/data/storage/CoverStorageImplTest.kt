@@ -18,21 +18,16 @@
 
 package data.storage
 
-import io.mockk.MockKAnnotations
-import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.*
 import io.mockk.impl.annotations.MockK
-import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class CoverStorageImplTest {
 
@@ -42,45 +37,33 @@ class CoverStorageImplTest {
     private lateinit var coverStorage: CoverStorage
 
     private val coverBytes: ByteArray = "file content".toByteArray()
-    private val coverFileName: String = "cover.jpg"
+    private val imageBaseUrl = "http://storage.com"
+    private val coverPath = "covers/cover.jpg"
 
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        coverStorage = CoverStorageImpl(fileStorage)
+        coverStorage = CoverStorageImpl(fileStorage, imageBaseUrl)
     }
 
     @Test
-    fun `when save is called with valid jpg file, it should generate path and call fileStorage`() = runTest {
-        val pathSlot = slot<String>()
-        coEvery { fileStorage.saveFile(capture(pathSlot), any()) } returns ""
+    fun `when save is called, it should save the file via fileStorage and return the full URL`() = runTest {
+        coEvery { fileStorage.saveFile(any(), any()) } returns ""
 
-        coverStorage.save(coverBytes, coverFileName)
+        val url = coverStorage.save(coverPath, coverBytes)
 
-        coVerify(exactly = 1) { fileStorage.saveFile(any(), any()) }
-        val capturedPath = pathSlot.captured
-        assertTrue(capturedPath.startsWith("covers/"))
-        assertTrue(capturedPath.endsWith(".jpg"))
+        coVerify(exactly = 1) { fileStorage.saveFile(coverPath, any()) }
+        val expectedUrl = "$imageBaseUrl/$coverPath"
+        assertEquals(expectedUrl, url)
     }
 
     @Test
-    fun `when save is called with blank originalFileName, a ValidationException should be thrown`() = runTest {
-        val exception = assertThrows<ValidationException> {
-            coverStorage.save("".toByteArray(), "")
-        }
+    fun `when delete is called, it should call fileStorage with the correct path`() = runTest {
+        coEvery { fileStorage.deleteFile(any()) } just Runs
 
-        assertEquals("File name can`t be empty.", exception.message!!)
-        coVerify(exactly = 0) { fileStorage.saveFile(any(), any()) }
-    }
+        coverStorage.delete(coverPath)
 
-    @Test
-    fun `when save is called with unsupported file extension, a ValidationException should be thrown`() = runTest {
-        val exception = assertThrows<ValidationException> {
-            coverStorage.save("".toByteArray(), "cover.gif")
-        }
-
-        assertEquals("Invalid file type. Only JPG and PNG are allowed.", exception.message!!)
-        coVerify(exactly = 0) { fileStorage.saveFile(any(), any()) }
+        coVerify(exactly = 1) { fileStorage.deleteFile(coverPath) }
     }
 
     @Test
@@ -88,7 +71,7 @@ class CoverStorageImplTest {
         coEvery { fileStorage.saveFile(any(), any()) } throws Exception("Error")
 
         assertThrows<Exception> {
-            coverStorage.save(coverBytes, coverFileName)
+            coverStorage.save(coverPath, coverBytes)
         }
     }
 }

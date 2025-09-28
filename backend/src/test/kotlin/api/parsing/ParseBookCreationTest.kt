@@ -34,6 +34,7 @@ import ru.jerael.booktracker.backend.api.dto.book.BookCreationDto
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
+import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -138,7 +139,7 @@ class ParseBookCreationTest {
             }
 
             assertEquals(HttpStatusCode.BadRequest, response.status)
-            assertTrue(response.bodyAsText().contains("Form item 'book' is missing or has invalid format."))
+            assertTrue(response.bodyAsText().contains(CommonValidationErrorCode.INVALID_FORM_ITEM.name))
         }
 
     @Test

@@ -26,8 +26,13 @@ import ru.jerael.booktracker.backend.api.dto.book.BookUpdateDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapper
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
 import ru.jerael.booktracker.backend.api.util.language
-import ru.jerael.booktracker.backend.api.validation.BookValidator
+import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
+import ru.jerael.booktracker.backend.domain.model.book.BookCoverUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.usecases.book.*
+import java.util.*
 
 class BookController(
     private val getBooksUseCase: GetBooksUseCase,
@@ -40,48 +45,69 @@ class BookController(
     private val multipartParser: MultipartParser,
     private val bookMapper: BookMapper
 ) {
-
-    suspend fun getAllBooks(call: ApplicationCall) {
+    suspend fun getAllBooks(call: ApplicationCall, userId: UUID) {
         val language = call.request.language()
-        val books = getBooksUseCase(language)
+        val books = getBooksUseCase(userId, language)
         call.respond(HttpStatusCode.OK, bookMapper.mapBooksToDtos(books))
     }
 
-    suspend fun addBook(call: ApplicationCall) {
+    suspend fun addBook(call: ApplicationCall, userId: UUID) {
         val language = call.request.language()
         val request = multipartParser.parseBookCreation(call)
-        val bookCreationPayload = validator.validateCreation(request.bookCreationDto)
-        val newBook = addBookUseCase(bookCreationPayload, request.coverBytes, request.coverFileName, language)
+        validator.validateCreation(request.bookCreationDto)
+        val bookCreationPayload = BookCreationPayload(
+            userId = userId,
+            language = language,
+            title = request.bookCreationDto.title,
+            author = request.bookCreationDto.author,
+            coverBytes = request.coverBytes,
+            coverFileName = request.coverFileName,
+            status = BookStatus.fromString(request.bookCreationDto.status)!!,
+            genreIds = request.bookCreationDto.genreIds
+        )
+        val newBook = addBookUseCase(bookCreationPayload)
         call.respond(HttpStatusCode.Created, bookMapper.mapBookToDto(newBook))
     }
 
-    suspend fun getBookById(call: ApplicationCall) {
+    suspend fun getBookById(call: ApplicationCall, userId: UUID, bookId: UUID) {
         val language = call.request.language()
-        val id = validator.validateId(call.parameters["id"])
-        val book = getBookByIdUseCase(id, language)
+        val book = getBookByIdUseCase(userId, bookId, language)
         call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
     }
 
-    suspend fun deleteBook(call: ApplicationCall) {
-        val id = validator.validateId(call.parameters["id"])
-        deleteBookUseCase(id)
+    suspend fun deleteBook(call: ApplicationCall, userId: UUID, bookId: UUID) {
+        deleteBookUseCase(userId, bookId)
         call.respond(HttpStatusCode.NoContent)
     }
 
-    suspend fun updateBookDetails(call: ApplicationCall) {
+    suspend fun updateBookDetails(call: ApplicationCall, userId: UUID, bookId: UUID) {
         val language = call.request.language()
-        val id = validator.validateId(call.parameters["id"])
         val bookUpdateDto = call.receive<BookUpdateDto>()
-        val bookDetailsUpdatePayload = validator.validateUpdate(bookUpdateDto)
-        val book = updateBookDetailsUseCase(id, bookDetailsUpdatePayload, language)
+        validator.validateUpdate(bookUpdateDto)
+        val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            title = bookUpdateDto.title,
+            author = bookUpdateDto.author,
+            status = BookStatus.fromString(bookUpdateDto.status)!!,
+            genreIds = bookUpdateDto.genreIds
+        )
+        val book = updateBookDetailsUseCase(bookDetailsUpdatePayload)
         call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
     }
 
-    suspend fun updateBookCover(call: ApplicationCall) {
+    suspend fun updateBookCover(call: ApplicationCall, userId: UUID, bookId: UUID) {
         val language = call.request.language()
-        val id = validator.validateId(call.parameters["id"])
         val request = multipartParser.parseBookCoverUpdate(call)
-        val book = updateBookCoverUseCase(id, request.coverBytes, request.coverFileName, language)
+        val bookCoverUpdatePayload = BookCoverUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            coverBytes = request.coverBytes,
+            coverFileName = request.coverFileName
+        )
+        val book = updateBookCoverUseCase(bookCoverUpdatePayload)
         call.respond(HttpStatusCode.OK, bookMapper.mapBookToDto(book))
     }
 }

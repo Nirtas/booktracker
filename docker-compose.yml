@@ -52,6 +52,16 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       PERSISTENT_STORAGE_PATH: /persistent_data
       STORAGE_BASE_URL: ${STORAGE_BASE_URL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_SSL_ENABLED: ${SMTP_SSL_ENABLED}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+      JWT_REALM: ${JWT_REALM}
     volumes:
       - storage_data:/persistent_data
     networks:
@@ -75,6 +85,16 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       PERSISTENT_STORAGE_PATH: /persistent_data
       STORAGE_BASE_URL: ${STORAGE_BASE_URL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_SSL_ENABLED: ${SMTP_SSL_ENABLED}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+      JWT_REALM: ${JWT_REALM}
     volumes:
       - storage_data:/persistent_data
     networks:

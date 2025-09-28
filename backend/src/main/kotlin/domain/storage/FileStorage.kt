@@ -18,9 +18,9 @@
 
 package ru.jerael.booktracker.backend.domain.storage
 
-import io.ktor.utils.io.*
+import java.io.InputStream
 
 interface FileStorage {
-    suspend fun saveFile(path: String, channel: ByteReadChannel): String
+    suspend fun saveFile(path: String, inputStream: InputStream): String
     suspend fun deleteFile(path: String)
 }

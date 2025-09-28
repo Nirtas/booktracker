@@ -22,20 +22,19 @@ import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.assertFalse
 import ru.jerael.booktracker.backend.data.db.tables.BookGenres
 import ru.jerael.booktracker.backend.data.db.tables.Books
 import ru.jerael.booktracker.backend.data.db.tables.Genres
+import ru.jerael.booktracker.backend.data.db.tables.Users
 import ru.jerael.booktracker.backend.data.repository.BookRepositoryImpl
 import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
-import ru.jerael.booktracker.backend.domain.model.book.Book
-import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
-import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
-import ru.jerael.booktracker.backend.domain.model.book.BookStatus
+import ru.jerael.booktracker.backend.domain.model.book.*
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
+import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import java.util.*
 import kotlin.test.assertEquals
@@ -47,18 +46,30 @@ class BookRepositoryImplTest : RepositoryTestBase() {
 
     private data class BookItem(
         val id: UUID,
+        val userId: UUID,
         val title: String,
         val author: String,
         val status: BookStatus,
         val genreIds: List<Int>
     )
 
-    private fun Book.toBookItem(): BookItem = BookItem(
+    private fun Book.toBookItem(userId: UUID): BookItem = BookItem(
         id = this.id,
+        userId = userId,
         title = this.title,
         author = this.author,
         status = this.status,
         genreIds = this.genres.map { it.id }.sorted()
+    )
+
+    private val userId = UUID.fromString("02b3d528-a93f-470a-8fb8-7fb622a086fe")
+    private val nonExistentUserId = UUID.fromString("344d9af4-075e-491f-9caa-19069bb3789e")
+
+    private val user = User(
+        id = userId,
+        email = "test@example.com",
+        passwordHash = "hash",
+        isVerified = true
     )
 
     private val firstBookId = UUID.fromString("fa9e70f9-ef19-4830-8180-9d185ca0e326")
@@ -70,6 +81,7 @@ class BookRepositoryImplTest : RepositoryTestBase() {
     private val books = listOf(
         BookItem(
             id = firstBookId,
+            userId = userId,
             title = "Title 1",
             author = "Author 1",
             status = BookStatus.WANT_TO_READ,
@@ -77,6 +89,7 @@ class BookRepositoryImplTest : RepositoryTestBase() {
         ),
         BookItem(
             id = secondBookId,
+            userId = userId,
             title = "Title 2",
             author = "Author 2",
             status = BookStatus.READING,
@@ -84,6 +97,7 @@ class BookRepositoryImplTest : RepositoryTestBase() {
         ),
         BookItem(
             id = thirdBookId,
+            userId = userId,
             title = "Title 3",
             author = "Author 3",
             status = BookStatus.READ,
@@ -103,12 +117,21 @@ class BookRepositoryImplTest : RepositoryTestBase() {
         GenreItem(id = 3, nameEn = "science fiction", nameRu = "научная фантастика")
     )
 
+    private val imageBaseUrl = "http://storage.com"
+
     @BeforeEach
     fun setUp() {
         transaction {
             BookGenres.deleteAll()
             Books.deleteAll()
             Genres.deleteAll()
+            Users.deleteAll()
+            Users.insert {
+                it[Users.id] = user.id
+                it[Users.email] = user.email
+                it[Users.passwordHash] = user.passwordHash
+                it[Users.isVerified] = user.isVerified
+            }
             Genres.batchInsert(genres) { genre ->
                 this[Genres.id] = genre.id
                 this[Genres.nameEn] = genre.nameEn
@@ -116,6 +139,7 @@ class BookRepositoryImplTest : RepositoryTestBase() {
             }
             Books.batchInsert(books) { book ->
                 this[Books.id] = book.id
+                this[Books.userId] = book.userId
                 this[Books.title] = book.title
                 this[Books.author] = book.author
                 this[Books.status] = book.status
@@ -133,31 +157,32 @@ class BookRepositoryImplTest : RepositoryTestBase() {
     }
 
     @Test
-    fun `when getBooks is called, it should return a list of all books with their genres`() = runTest {
-        val result = bookRepository.getBooks("en")
+    fun `when getBooks is called, it should return a list of all user's books with their genres`() = runTest {
+        val result = bookRepository.getBooks(userId, "en")
         assertEquals(books.size, result.size)
 
         val expectedBookItems = books.map { it.copy(genreIds = it.genreIds.sorted()) }.toSet()
-        val actualBookItems = result.map { it.toBookItem() }.toSet()
+        val actualBookItems = result.map { it.toBookItem(userId) }.toSet()
         assertEquals(expectedBookItems, actualBookItems)
     }
 
     @Test
     fun `when addBook is called with valid data and genres, it should create a book and the link in BookGenres table`() =
         runTest {
-            val bookCreationPayload = BookCreationPayload(
+            val addBookData = AddBookData(
+                userId = userId,
                 title = "Title 4",
                 author = "Author 4",
-                coverPath = null,
+                coverUrl = null,
                 status = BookStatus.READ,
                 genreIds = listOf(1)
             )
 
-            val createdBook = bookRepository.addBook(bookCreationPayload, "en")
+            val createdBook = bookRepository.addBook(addBookData, "en")
 
             assertNotNull(createdBook.id)
 
-            val expectedGenres = bookCreationPayload.genreIds
+            val expectedGenres = addBookData.genreIds
                 .map { genreId ->
                     val genreData = genres.first { it.id == genreId }
                     Genre(id = genreData.id, name = genreData.nameEn)
@@ -166,66 +191,68 @@ class BookRepositoryImplTest : RepositoryTestBase() {
 
             val expectedBook = Book(
                 id = createdBook.id,
-                title = bookCreationPayload.title,
-                author = bookCreationPayload.author,
-                coverPath = bookCreationPayload.coverPath,
-                status = bookCreationPayload.status,
+                title = addBookData.title,
+                author = addBookData.author,
+                coverUrl = addBookData.coverUrl,
+                status = addBookData.status,
                 createdAt = createdBook.createdAt,
                 genres = expectedGenres
             )
 
             assertEquals(expectedBook, createdBook)
-            val allBooks = bookRepository.getBooks("en")
+            val allBooks = bookRepository.getBooks(userId, "en")
             assertEquals(books.size + 1, allBooks.size)
         }
 
     @Test
     fun `when addBook is called with valid data and zero genres, it should create a book with an empty genre list`() =
         runTest {
-            val bookCreationPayload = BookCreationPayload(
+            val addBookData = AddBookData(
+                userId = userId,
                 title = "Title 4",
                 author = "Author 4",
-                coverPath = null,
+                coverUrl = null,
                 status = BookStatus.READ,
                 genreIds = emptyList()
             )
 
-            val createdBook = bookRepository.addBook(bookCreationPayload, "en")
+            val createdBook = bookRepository.addBook(addBookData, "en")
 
             assertNotNull(createdBook.id)
 
             val expectedBook = Book(
                 id = createdBook.id,
-                title = bookCreationPayload.title,
-                author = bookCreationPayload.author,
-                coverPath = bookCreationPayload.coverPath,
-                status = bookCreationPayload.status,
+                title = addBookData.title,
+                author = addBookData.author,
+                coverUrl = addBookData.coverUrl,
+                status = addBookData.status,
                 createdAt = createdBook.createdAt,
                 genres = emptyList()
             )
 
             assertEquals(expectedBook, createdBook)
-            val allBooks = bookRepository.getBooks("en")
+            val allBooks = bookRepository.getBooks(userId, "en")
             assertEquals(books.size + 1, allBooks.size)
         }
 
     @Test
     fun `when addBook is called with a non-existent genre ID, an ExposedSQLException for foreign key violation should be thrown`() =
         runTest {
-            val bookCreationPayload = BookCreationPayload(
+            val addBookData = AddBookData(
+                userId = userId,
                 title = "Title 4",
                 author = "Author 4",
-                coverPath = null,
+                coverUrl = null,
                 status = BookStatus.READ,
                 genreIds = listOf(5)
             )
 
             val exception = assertThrows<ExposedSQLException> {
-                bookRepository.addBook(bookCreationPayload, "en")
+                bookRepository.addBook(addBookData, "en")
             }
 
             assertTrue(exception.message?.contains("violates foreign key constraint") == true)
-            val allBooks = bookRepository.getBooks("en")
+            val allBooks = bookRepository.getBooks(userId, "en")
             assertEquals(books.size, allBooks.size)
         }
 
@@ -238,9 +265,9 @@ class BookRepositoryImplTest : RepositoryTestBase() {
                 .map { Genre(id = it.id, name = it.nameEn) }
                 .sortedBy { it.name }
 
-            val result = bookRepository.getBookById(secondBookId, "en")
+            val result = bookRepository.getBookById(userId, secondBookId, "en")
             assertNotNull(result)
-            val resultAsBookItem = result.toBookItem()
+            val resultAsBookItem = result.toBookItem(userId)
             assertEquals(expectedBookItem.copy(genreIds = expectedBookItem.genreIds.sorted()), resultAsBookItem)
             val resultGenres = result.genres.sortedBy { it.name }
             assertEquals(expectedBookGenres, resultGenres)
@@ -255,10 +282,10 @@ class BookRepositoryImplTest : RepositoryTestBase() {
                 .map { Genre(id = it.id, name = it.nameRu) }
                 .sortedBy { it.name }
 
-            val result = bookRepository.getBookById(secondBookId, "ru")
+            val result = bookRepository.getBookById(userId, secondBookId, "ru")
 
             assertNotNull(result)
-            val resultAsBookItem = result.toBookItem()
+            val resultAsBookItem = result.toBookItem(userId)
             assertEquals(expectedBookItem.copy(genreIds = expectedBookItem.genreIds.sorted()), resultAsBookItem)
             val resultGenres = result.genres.sortedBy { it.name }
             assertEquals(expectedBookGenres, resultGenres)
@@ -269,16 +296,16 @@ class BookRepositoryImplTest : RepositoryTestBase() {
         runTest {
             val expectedBookItem = books.find { it.id == thirdBookId }!!
 
-            val result = bookRepository.getBookById(thirdBookId, "en")
+            val result = bookRepository.getBookById(userId, thirdBookId, "en")
 
             assertNotNull(result)
-            val resultAsBookItem = result.toBookItem()
+            val resultAsBookItem = result.toBookItem(userId)
             assertEquals(expectedBookItem.copy(genreIds = expectedBookItem.genreIds.sorted()), resultAsBookItem)
         }
 
     @Test
     fun `when getBookById is called with a non-existent ID, it should return null`() = runTest {
-        val result = bookRepository.getBookById(nonExistentBookId, "en")
+        val result = bookRepository.getBookById(userId, nonExistentBookId, "en")
 
         assertNull(result)
     }
@@ -286,30 +313,32 @@ class BookRepositoryImplTest : RepositoryTestBase() {
     @Test
     fun `when updateBookDetails is called with new text fields and a new set of genres, it should update the book and correctly replace all genre links`() =
         runTest {
-            val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+            val updateBookDetailsData = UpdateBookDetailsData(
+                userId = userId,
+                bookId = firstBookId,
                 title = "Title 4",
                 author = "Author 4",
                 status = BookStatus.READ,
                 genreIds = listOf(2)
             )
 
-            val updatedBook = bookRepository.updateBookDetails(firstBookId, bookDetailsUpdatePayload, "en")
+            val updatedBook = bookRepository.updateBookDetails(updateBookDetailsData, "en")
 
             val book = Book(
                 id = firstBookId,
-                title = bookDetailsUpdatePayload.title,
-                author = bookDetailsUpdatePayload.author,
-                coverPath = null,
-                status = bookDetailsUpdatePayload.status,
+                title = updateBookDetailsData.title,
+                author = updateBookDetailsData.author,
+                coverUrl = null,
+                status = updateBookDetailsData.status,
                 createdAt = updatedBook.createdAt,
                 genres = genres
-                    .filter { it.id in bookDetailsUpdatePayload.genreIds }
+                    .filter { it.id in updateBookDetailsData.genreIds }
                     .map { Genre(id = it.id, name = it.nameEn) }
                     .sortedBy { it.name }
             )
 
             assertEquals(book, updatedBook)
-            val bookFromDb = bookRepository.getBookById(updatedBook.id, "en")
+            val bookFromDb = bookRepository.getBookById(userId, updatedBook.id, "en")
             assertNotNull(bookFromDb)
             assertEquals(book, bookFromDb)
         }
@@ -317,27 +346,29 @@ class BookRepositoryImplTest : RepositoryTestBase() {
     @Test
     fun `when updateBookDetails is called with an empty genre list, it should update the book and remove all its genre links`() =
         runTest {
-            val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+            val updateBookDetailsData = UpdateBookDetailsData(
+                userId = userId,
+                bookId = firstBookId,
                 title = "Title 4",
                 author = "Author 4",
                 status = BookStatus.READ,
                 genreIds = emptyList()
             )
 
-            val updatedBook = bookRepository.updateBookDetails(firstBookId, bookDetailsUpdatePayload, "en")
+            val updatedBook = bookRepository.updateBookDetails(updateBookDetailsData, "en")
 
             val book = Book(
                 id = firstBookId,
-                title = bookDetailsUpdatePayload.title,
-                author = bookDetailsUpdatePayload.author,
-                coverPath = null,
-                status = bookDetailsUpdatePayload.status,
+                title = updateBookDetailsData.title,
+                author = updateBookDetailsData.author,
+                coverUrl = null,
+                status = updateBookDetailsData.status,
                 createdAt = updatedBook.createdAt,
                 genres = emptyList()
             )
 
             assertEquals(book, updatedBook)
-            val bookFromDb = bookRepository.getBookById(updatedBook.id, "en")
+            val bookFromDb = bookRepository.getBookById(userId, updatedBook.id, "en")
             assertNotNull(bookFromDb)
             assertEquals(book, bookFromDb)
         }
@@ -345,30 +376,32 @@ class BookRepositoryImplTest : RepositoryTestBase() {
     @Test
     fun `when updateBookDetails is called to add genres to a book that had none, it should update the book and create new genre links`() =
         runTest {
-            val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+            val updateBookDetailsData = UpdateBookDetailsData(
+                userId = userId,
+                bookId = thirdBookId,
                 title = "Title 4",
                 author = "Author 4",
                 status = BookStatus.READ,
                 genreIds = listOf(2)
             )
 
-            val updatedBook = bookRepository.updateBookDetails(thirdBookId, bookDetailsUpdatePayload, "en")
+            val updatedBook = bookRepository.updateBookDetails(updateBookDetailsData, "en")
 
             val book = Book(
                 id = thirdBookId,
-                title = bookDetailsUpdatePayload.title,
-                author = bookDetailsUpdatePayload.author,
-                coverPath = null,
-                status = bookDetailsUpdatePayload.status,
+                title = updateBookDetailsData.title,
+                author = updateBookDetailsData.author,
+                coverUrl = null,
+                status = updateBookDetailsData.status,
                 createdAt = updatedBook.createdAt,
                 genres = genres
-                    .filter { it.id in bookDetailsUpdatePayload.genreIds }
+                    .filter { it.id in updateBookDetailsData.genreIds }
                     .map { Genre(id = it.id, name = it.nameEn) }
                     .sortedBy { it.name }
             )
 
             assertEquals(book, updatedBook)
-            val bookFromDb = bookRepository.getBookById(updatedBook.id, "en")
+            val bookFromDb = bookRepository.getBookById(userId, updatedBook.id, "en")
             assertNotNull(bookFromDb)
             assertEquals(book, bookFromDb)
         }
@@ -376,7 +409,9 @@ class BookRepositoryImplTest : RepositoryTestBase() {
     @Test
     fun `when updateBookDetails is called for a non-existent book ID, a BookNotFoundException should be thrown`() =
         runTest {
-            val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+            val updateBookDetailsData = UpdateBookDetailsData(
+                userId = nonExistentUserId,
+                bookId = firstBookId,
                 title = "Title 4",
                 author = "Author 4",
                 status = BookStatus.READ,
@@ -384,16 +419,18 @@ class BookRepositoryImplTest : RepositoryTestBase() {
             )
 
             val exception = assertThrows<BookNotFoundException> {
-                bookRepository.updateBookDetails(nonExistentBookId, bookDetailsUpdatePayload, "en")
+                bookRepository.updateBookDetails(updateBookDetailsData, "en")
             }
 
-            assertTrue(exception.message!!.contains("$nonExistentBookId"))
+            assertTrue(exception.message!!.contains(firstBookId.toString()))
         }
 
     @Test
     fun `when updateBookDetails is called with a non-existent genre ID, an ExposedSQLException for foreign key violation should be thrown`() =
         runTest {
-            val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+            val updateBookDetailsData = UpdateBookDetailsData(
+                userId = userId,
+                bookId = firstBookId,
                 title = "Title 4",
                 author = "Author 4",
                 status = BookStatus.READ,
@@ -401,7 +438,7 @@ class BookRepositoryImplTest : RepositoryTestBase() {
             )
 
             val exception = assertThrows<ExposedSQLException> {
-                bookRepository.updateBookDetails(firstBookId, bookDetailsUpdatePayload, "en")
+                bookRepository.updateBookDetails(updateBookDetailsData, "en")
             }
 
             assertTrue(exception.message?.contains("violates foreign key constraint") == true)
@@ -410,41 +447,52 @@ class BookRepositoryImplTest : RepositoryTestBase() {
     @Test
     fun `when updateBookCover is called with a valid book ID and a new path, it should update only the coverPath field of the book`() =
         runTest {
-            val newCoverPath = "covers/book.jpg"
+            val newCoverPath = "$imageBaseUrl/$userId/covers/book.jpg"
 
-            val bookBeforeUpdate = bookRepository.getBookById(firstBookId, "en")
+            val bookBeforeUpdate = bookRepository.getBookById(userId, firstBookId, "en")
 
             assertNotNull(bookBeforeUpdate)
-            assertNull(bookBeforeUpdate.coverPath)
+            assertNull(bookBeforeUpdate.coverUrl)
 
-            val updatedBook = bookRepository.updateBookCover(firstBookId, newCoverPath, "en")
+            val updateBookCoverData = UpdateBookCoverData(
+                userId = userId,
+                bookId = firstBookId,
+                coverUrl = newCoverPath
+            )
+            val updatedBook = bookRepository.updateBookCover(updateBookCoverData, "en")
 
-            assertEquals(newCoverPath, updatedBook.coverPath)
-            val expectedBook = bookBeforeUpdate.copy(coverPath = newCoverPath)
+            assertEquals(newCoverPath, updatedBook.coverUrl)
+            val expectedBook = bookBeforeUpdate.copy(coverUrl = newCoverPath)
             assertEquals(updatedBook, expectedBook)
-            val bookFromDb = bookRepository.getBookById(updatedBook.id, "en")
+            val bookFromDb = bookRepository.getBookById(userId, updatedBook.id, "en")
             assertEquals(expectedBook, bookFromDb)
         }
 
     @Test
     fun `when updateBookCover is called for a non-existent book ID, a BookNotFoundException should be thrown`() =
         runTest {
-            val newCoverPath = "covers/book.jpg"
+            val newCoverPath = "$imageBaseUrl/$nonExistentBookId/covers/book.jpg"
+            val updateBookCoverData = UpdateBookCoverData(
+                userId = nonExistentUserId,
+                bookId = firstBookId,
+                coverUrl = newCoverPath
+            )
 
             val exception = assertThrows<BookNotFoundException> {
-                bookRepository.updateBookCover(nonExistentBookId, newCoverPath, "en")
+                bookRepository.updateBookCover(updateBookCoverData, "en")
             }
 
-            assertTrue(exception.message!!.contains("$nonExistentBookId"))
+            assertTrue(exception.message!!.contains(firstBookId.toString()))
         }
 
     @Test
     fun `when deleteBook is called with an existing book ID, it should delete the book and its links from BookGenres table and return true`() =
         runTest {
-            val wasDeleted = bookRepository.deleteBook(firstBookId)
-            assertTrue(wasDeleted)
+            assertDoesNotThrow {
+                bookRepository.deleteBook(userId, firstBookId)
+            }
 
-            val result = bookRepository.getBookById(firstBookId, "en")
+            val result = bookRepository.getBookById(userId, firstBookId, "en")
             assertNull(result)
 
             val linksCount = transaction { BookGenres.selectAll().where { BookGenres.bookId eq firstBookId }.count() }
@@ -452,9 +500,9 @@ class BookRepositoryImplTest : RepositoryTestBase() {
         }
 
     @Test
-    fun `when deleteBook is called with a non-existent book ID, it should do nothing and return false`() = runTest {
-        val wasDeleted = bookRepository.deleteBook(nonExistentBookId)
-
-        assertFalse(wasDeleted)
+    fun `when deleteBook is called with a non-existent book ID, a BookNotFoundException should be thrown`() = runTest {
+        assertThrows<BookNotFoundException> {
+            bookRepository.deleteBook(userId, nonExistentBookId)
+        }
     }
 }

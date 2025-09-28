@@ -18,20 +18,29 @@
 
 package ru.jerael.booktracker.backend.domain.usecases.book
 
+import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.UpdateBookDetailsData
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
-import java.util.*
+import ru.jerael.booktracker.backend.domain.validation.GenreValidator
 
 class UpdateBookDetailsUseCase(
     private val bookRepository: BookRepository,
-    private val genresValidator: GenresValidator,
-    private val getBookByIdUseCase: GetBookByIdUseCase
+    private val genreValidator: GenreValidator
 ) {
-    suspend operator fun invoke(id: UUID, payload: BookDetailsUpdatePayload, language: String): Book {
-        getBookByIdUseCase(id, language)
-        genresValidator.invoke(payload.genreIds, language)
-        return bookRepository.updateBookDetails(id, payload, language)
+    suspend operator fun invoke(payload: BookDetailsUpdatePayload): Book {
+        bookRepository.getBookById(payload.userId, payload.bookId, payload.language)
+            ?: throw BookNotFoundException(payload.bookId.toString())
+        genreValidator.invoke(payload.genreIds, payload.language)
+        val updateBookDetailsData = UpdateBookDetailsData(
+            userId = payload.userId,
+            bookId = payload.bookId,
+            title = payload.title,
+            author = payload.author,
+            status = payload.status,
+            genreIds = payload.genreIds
+        )
+        return bookRepository.updateBookDetails(updateBookDetailsData, payload.language)
     }
 }

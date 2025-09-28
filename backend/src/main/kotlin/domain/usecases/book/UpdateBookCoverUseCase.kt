@@ -18,25 +18,33 @@
 
 package ru.jerael.booktracker.backend.domain.usecases.book
 
+import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.model.book.Book
+import ru.jerael.booktracker.backend.domain.model.book.BookCoverUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.UpdateBookCoverData
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.validation.CoverValidator
 import java.util.*
 
 class UpdateBookCoverUseCase(
     private val bookRepository: BookRepository,
     private val coverStorage: CoverStorage,
-    private val getBookByIdUseCase: GetBookByIdUseCase
+    private val coverValidator: CoverValidator
 ) {
-    suspend operator fun invoke(
-        id: UUID,
-        coverBytes: ByteArray,
-        coverFileName: String,
-        language: String
-    ): Book {
-        val existingBook = getBookByIdUseCase(id, language)
-        existingBook.coverPath?.let { coverStorage.delete(it) }
-        val newCoverPath = coverStorage.save(coverBytes, coverFileName)
-        return bookRepository.updateBookCover(id, newCoverPath, language)
+    suspend operator fun invoke(payload: BookCoverUpdatePayload): Book {
+        val existingBook = bookRepository.getBookById(payload.userId, payload.bookId, payload.language)
+            ?: throw BookNotFoundException(payload.bookId.toString())
+        existingBook.coverUrl?.let { coverStorage.delete(it) }
+        coverValidator(payload.coverBytes, payload.coverFileName)
+        val fileExtension = payload.coverFileName.substringAfterLast('.', "")
+        val path = "${payload.userId}/covers/${UUID.randomUUID()}.$fileExtension"
+        val newCoverUrl = coverStorage.save(path, payload.coverBytes)
+        val bookCoverUpdateData = UpdateBookCoverData(
+            userId = payload.userId,
+            bookId = payload.bookId,
+            coverUrl = newCoverUrl
+        )
+        return bookRepository.updateBookCover(bookCoverUpdateData, payload.language)
     }
 }

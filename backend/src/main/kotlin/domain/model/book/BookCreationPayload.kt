@@ -18,10 +18,15 @@
 
 package ru.jerael.booktracker.backend.domain.model.book
 
+import java.util.*
+
 data class BookCreationPayload(
+    val userId: UUID,
+    val language: String,
     val title: String,
     val author: String,
-    val coverPath: String?,
+    val coverBytes: ByteArray?,
+    val coverFileName: String?,
     val status: BookStatus,
     val genreIds: List<Int>
 )

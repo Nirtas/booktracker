@@ -18,10 +18,6 @@
 
 package data.storage
 
-import io.ktor.server.application.*
-import io.ktor.server.config.*
-import io.ktor.utils.io.*
-import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
@@ -31,8 +27,8 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import ru.jerael.booktracker.backend.data.storage.FileStorageImpl
 import ru.jerael.booktracker.backend.domain.exceptions.StorageException
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
+import java.io.ByteArrayInputStream
 import java.io.File
 
 class FileStorageImplTest {
@@ -44,21 +40,19 @@ class FileStorageImplTest {
 
     @BeforeEach
     fun setUp() {
-        val mockkConfig = mockk<ApplicationConfig>()
-        coEvery { mockkConfig.property("ktor.storage.persistentPath").getString() } returns tempDir.absolutePath
-        val mockkEnvironment = mockk<ApplicationEnvironment>()
-        coEvery { mockkEnvironment.config } returns mockkConfig
-        coEvery { mockkEnvironment.log } returns mockk(relaxed = true)
-        fileStorage = FileStorageImpl(mockkEnvironment)
+        fileStorage = FileStorageImpl(
+            storagePath = tempDir.absolutePath,
+            logger = mockk(relaxed = true)
+        )
     }
 
     @Test
     fun `when saveFile is called with valid data, it should create file and write content to it`() = runTest {
         val path = "test/file.txt"
         val content = "file content"
-        val channel = ByteReadChannel(content)
+        val inputStream = ByteArrayInputStream(content.toByteArray())
 
-        val result = fileStorage.saveFile(path, channel)
+        val result = fileStorage.saveFile(path, inputStream)
 
         assertEquals(path, result)
         val file = File(tempDir, path)
@@ -67,13 +61,13 @@ class FileStorageImplTest {
     }
 
     @Test
-    fun `when saveFile is called with an empty ByteReadChannel, a ValidationException should be thrown`() = runTest {
+    fun `when saveFile is called with an empty InputStream, a StorageException should be thrown`() = runTest {
         val path = "test/file.txt"
         val content = ""
-        val channel = ByteReadChannel(content)
+        val inputStream = ByteArrayInputStream(content.toByteArray())
 
-        assertThrows<ValidationException> {
-            fileStorage.saveFile(path, channel)
+        assertThrows<StorageException> {
+            fileStorage.saveFile(path, inputStream)
         }
 
         val file = File(tempDir, path)
@@ -84,14 +78,14 @@ class FileStorageImplTest {
     fun `when saveFile is called and disk write fails, a StorageException should be thrown`() = runTest {
         val parentPath = "test"
         val fullPath = "$parentPath/file.txt"
-        val channel = ByteReadChannel("file content")
+        val inputStream = ByteArrayInputStream("file content".toByteArray())
 
         val parentAsFile = File(tempDir, parentPath)
         parentAsFile.writeText("")
         assertTrue(parentAsFile.isFile)
 
         assertThrows<StorageException> {
-            fileStorage.saveFile(fullPath, channel)
+            fileStorage.saveFile(fullPath, inputStream)
         }
 
         val attemptedFile = File(tempDir, fullPath)

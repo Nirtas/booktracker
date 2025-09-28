@@ -18,6 +18,8 @@
 
 package api.routes.book
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -25,10 +27,8 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.slot
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
@@ -39,6 +39,7 @@ import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
 import ru.jerael.booktracker.backend.domain.model.book.Book
+import ru.jerael.booktracker.backend.domain.model.book.BookCoverUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import java.time.Instant
 import java.util.*
@@ -51,30 +52,36 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
         id = bookId,
         title = "Title",
         author = "Author",
-        coverPath = null,
+        coverUrl = null,
         status = BookStatus.READ,
         createdAt = Instant.now(),
         genres = emptyList()
     )
-    private val updatedBookDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBookToDto(updatedBook)
+    private val updatedBookDto = BookMapperImpl(GenreMapperImpl()).mapBookToDto(updatedBook)
     private val errorDto = ErrorDto(
         code = "INTERNAL_SERVER_ERROR",
         message = "An unexpected error occurred. Please try again later."
     )
     private val url = "/api/books/$bookId/cover"
+    private val userId = UUID.randomUUID()
 
     @Test
     fun `when request is valid with cover image, updateBookCover should return the updated book and a 200 OK status`() =
         testApplication {
-            val coverBytesSlot = slot<ByteArray>()
-            coEvery { updateBookCoverUseCase.invoke(any(), capture(coverBytesSlot), any(), any()) } returns updatedBook
+            val token = generateTestToken(userId)
+            val payloadSlot = slot<BookCoverUpdatePayload>()
+            coEvery { updateBookCoverUseCase.invoke(capture(payloadSlot)) } returns updatedBook
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
                 val multipartBody = MultiPartFormDataContent(
                     parts = formData {
                         append(
@@ -92,85 +99,123 @@ class UpdateBookCoverRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(updatedBookDto, Json.decodeFromString<BookDto>(response.bodyAsText()))
-            assertNotNull(coverBytesSlot.captured)
+            assertNotNull(payloadSlot.captured.coverBytes)
         }
 
     @Test
     fun `when Accept-Language header is present, language() should correctly parse and return it`() = testApplication {
-        coEvery { updateBookCoverUseCase.invoke(any(), any(), any(), any()) } returns updatedBook
+        val token = generateTestToken(userId)
+        val payloadSlot = slot<BookCoverUpdatePayload>()
+        coEvery { updateBookCoverUseCase.invoke(capture(payloadSlot)) } returns updatedBook
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         client.post(url) {
-            header(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+                append(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
+            }
         }
 
-        coVerify(exactly = 1) { updateBookCoverUseCase.invoke(any(), any(), any(), "en") }
-    }
-
-    @Test
-    fun `when validateId is failed, an Exception should be thrown with 500 InternalServerError`() = testApplication {
-        every { bookValidator.validateId(any()) } throws Exception("Error")
-
-        application {
-            configureStatusPages()
-            configureSerialization()
-            configureRouting()
-        }
-        val response = client.post(url) {
-            val multipartBody = MultiPartFormDataContent(
-                parts = formData {
-                    append(
-                        "cover",
-                        "image content".toByteArray(),
-                        Headers.build {
-                            append(HttpHeaders.ContentType, "image/jpeg")
-                            append(HttpHeaders.ContentDisposition, "filename=\"cover.jpg\"")
-                        }
-                    )
-                }
-            )
-            setBody(multipartBody)
-        }
-
-        Assertions.assertEquals(HttpStatusCode.InternalServerError, response.status)
-        Assertions.assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-        coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any(), any(), any(), any()) }
+        assertEquals("en", payloadSlot.captured.language)
+        coVerify(exactly = 1) { updateBookCoverUseCase.invoke(any()) }
     }
 
     @Test
     fun `when multipart parsing is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
+            val token = generateTestToken(userId)
             coEvery { multipartParser.parseBookCoverUpdate(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
-            val response = client.post(url)
+            val response = client.post(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any()) }
         }
 
     @Test
     fun `when updateBookCoverUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
-            coEvery { updateBookCoverUseCase.invoke(any(), any(), any(), any()) } throws Exception("Error")
+            val token = generateTestToken(userId)
+            coEvery { updateBookCoverUseCase.invoke(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
-            val response = client.post(url)
+            val response = client.post(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
         }
+
+    @Test
+    fun `when Authorization header is missing, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.post(url)
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any()) }
+    }
+
+    @Test
+    fun `when token is missing userId claim, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+        val invalidToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withExpiresAt(Date(System.currentTimeMillis() + 15L * 60 * 1000))
+            .sign(Algorithm.HMAC256(secret))
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.post(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $invalidToken")
+            }
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { updateBookCoverUseCase.invoke(any()) }
+    }
 }

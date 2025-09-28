@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.jerael.booktracker.backend.data.db.tables.Genres
 import ru.jerael.booktracker.backend.data.repository.GenreRepositoryImpl
-import ru.jerael.booktracker.backend.domain.exceptions.GenreNotFoundException
+import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -109,7 +109,7 @@ class GenreRepositoryImplTest : RepositoryTestBase() {
         runTest {
             val genreId = 5
 
-            val exception = assertThrows<GenreNotFoundException> {
+            val exception = assertThrows<GenresNotFoundException> {
                 genreRepository.getGenreById(genreId, "ru")
             }
 

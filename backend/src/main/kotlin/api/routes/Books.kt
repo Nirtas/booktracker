@@ -18,31 +18,46 @@
 
 package ru.jerael.booktracker.backend.api.routes
 
+import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import ru.jerael.booktracker.backend.api.controller.BookController
+import ru.jerael.booktracker.backend.api.util.getUserId
+import ru.jerael.booktracker.backend.api.util.getUuidFromPath
 
 fun Route.books(
     bookController: BookController
 ) {
-    route("/books") {
-        get {
-            bookController.getAllBooks(call)
-        }
-        post {
-            bookController.addBook(call)
-        }
-        route("/{id}") {
+    authenticate("auth-jwt") {
+        route("/books") {
             get {
-                bookController.getBookById(call)
+                val userId = call.getUserId()
+                bookController.getAllBooks(call, userId)
             }
-            delete {
-                bookController.deleteBook(call)
+            post {
+                val userId = call.getUserId()
+                bookController.addBook(call, userId)
             }
-            put {
-                bookController.updateBookDetails(call)
-            }
-            post("/cover") {
-                bookController.updateBookCover(call)
+            route("/{id}") {
+                get {
+                    val userId = call.getUserId()
+                    val bookId = call.getUuidFromPath("id")
+                    bookController.getBookById(call, userId, bookId)
+                }
+                delete {
+                    val userId = call.getUserId()
+                    val bookId = call.getUuidFromPath("id")
+                    bookController.deleteBook(call, userId, bookId)
+                }
+                put {
+                    val userId = call.getUserId()
+                    val bookId = call.getUuidFromPath("id")
+                    bookController.updateBookDetails(call, userId, bookId)
+                }
+                post("/cover") {
+                    val userId = call.getUserId()
+                    val bookId = call.getUuidFromPath("id")
+                    bookController.updateBookCover(call, userId, bookId)
+                }
             }
         }
     }

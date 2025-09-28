@@ -18,36 +18,35 @@
 
 package ru.jerael.booktracker.backend.data.storage
 
-import io.ktor.server.application.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
+import io.ktor.util.logging.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.jerael.booktracker.backend.domain.exceptions.AppException
 import ru.jerael.booktracker.backend.domain.exceptions.StorageException
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
 
-class FileStorageImpl(private val environment: ApplicationEnvironment) : FileStorage {
-
-    private val storagePath = environment.config.property("ktor.storage.persistentPath").getString()
-
-    override suspend fun saveFile(path: String, channel: ByteReadChannel): String {
+class FileStorageImpl(
+    private val storagePath: String,
+    private val logger: Logger
+) : FileStorage {
+    override suspend fun saveFile(path: String, inputStream: InputStream): String {
         val file = File(storagePath, path)
         try {
             withContext(Dispatchers.IO) {
                 file.parentFile.mkdirs()
-                var bytesCopied = 0L
-                channel.toInputStream().use { inputStream ->
-                    FileOutputStream(file).use { outputStream ->
-                        bytesCopied = inputStream.copyTo(outputStream)
+                var bytesCopied: Long
+                inputStream.use { input ->
+                    FileOutputStream(file).use { output ->
+                        bytesCopied = input.copyTo(output)
                     }
                 }
                 if (bytesCopied == 0L) {
                     file.delete()
-                    throw ValidationException("Uploaded file can't be empty.")
+                    throw IOException("File content can't be empty.")
                 }
             }
         } catch (e: Exception) {
@@ -55,7 +54,7 @@ class FileStorageImpl(private val environment: ApplicationEnvironment) : FileSto
                 file.delete()
             }
             if (e is AppException) throw e
-            environment.log.error("Failed to save file to path: $path", e)
+            logger.error("Failed to save file to path: $path", e)
             throw StorageException(message = "Failed to save file to '$path'. Reason: ${e.message}")
         }
         return path
@@ -74,8 +73,11 @@ class FileStorageImpl(private val environment: ApplicationEnvironment) : FileSto
             }
         } catch (e: Exception) {
             if (e is AppException) throw e
-            environment.log.error("Failed to delete file at path: $path", e)
-            throw StorageException(message = "Failed to delete file '$path'. Reason: ${e.message}")
+            logger.error("Failed to delete file at path: $path", e)
+            throw StorageException(
+                userMessage = "Couldn't delete file. Please try again later.",
+                message = "Failed to delete file '$path'. Reason: ${e.message}"
+            )
         }
     }
 }

@@ -21,21 +21,24 @@ package domain.usecases.book
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.domain.exceptions.ValidationException
+import org.junit.jupiter.api.*
+import ru.jerael.booktracker.backend.api.validation.ValidationError
+import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.api.validation.codes.ValidationErrorCode
+import ru.jerael.booktracker.backend.domain.model.book.AddBookData
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
-import ru.jerael.booktracker.backend.domain.usecases.GenresValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.AddBookUseCase
+import ru.jerael.booktracker.backend.domain.validation.CoverValidator
+import ru.jerael.booktracker.backend.domain.validation.GenreValidator
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class AddBookUseCaseTest {
 
@@ -43,10 +46,12 @@ class AddBookUseCaseTest {
     private lateinit var bookRepository: BookRepository
 
     @MockK
-    private lateinit var genresValidator: GenresValidator
+    private lateinit var genreValidator: GenreValidator
 
     @MockK
     private lateinit var coverStorage: CoverStorage
+
+    private val coverValidator: CoverValidator = CoverValidator()
 
     private lateinit var useCase: AddBookUseCase
 
@@ -61,45 +66,65 @@ class AddBookUseCaseTest {
         id = bookId,
         title = "Title",
         author = "Author",
-        coverPath = null,
+        coverUrl = null,
         status = BookStatus.READ,
         createdAt = Instant.now(),
         genres = emptyList()
     )
 
-    private fun createPayload(genreIds: List<Int> = emptyList()) = BookCreationPayload(
+    private val coverBytes: ByteArray = "file content".toByteArray()
+    private val coverFileName: String = "cover.jpg"
+    private val imageBaseUrl = "http://example.com"
+
+    private val userId = UUID.randomUUID()
+
+    private fun createPayload(
+        genreIds: List<Int> = emptyList(),
+        coverBytes: ByteArray? = null,
+        coverFileName: String? = null
+    ) = BookCreationPayload(
+        userId = userId,
+        language = "en",
         title = "Title",
         author = "Author",
-        coverPath = null,
+        coverBytes = coverBytes,
+        coverFileName = coverFileName,
         status = BookStatus.READ,
         genreIds = genreIds
     )
 
-    private val coverBytes: ByteArray = "file content".toByteArray()
-    private val coverFileName: String = "cover.jpg"
-
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = AddBookUseCase(bookRepository, genresValidator, coverStorage)
+        useCase = AddBookUseCase(bookRepository, genreValidator, coverStorage, coverValidator)
     }
 
     @Test
     fun `when genre validation is passed and the cover is present, the book must be successfully created with the cover`() =
         runTest {
             val requestedGenreIds = listOf(1, 2, 3)
-            val bookCreationPayload = createPayload(requestedGenreIds)
+            val bookCreationPayload = createPayload(requestedGenreIds, coverBytes, coverFileName)
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
-            val expectedCoverPath = "covers/new_book.jpg"
-            coEvery { genresValidator.invoke(requestedGenreIds, language) } just Runs
-            coEvery { coverStorage.save(coverBytes, coverFileName) } returns expectedCoverPath
-            coEvery { bookRepository.addBook(any(), language) } returns expectedBookWithGenres
+            val pathSlot = slot<String>()
+            val addBookDataSlot = slot<AddBookData>()
+            coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
+            coEvery { coverStorage.save(capture(pathSlot), coverBytes) } answers {
+                "$imageBaseUrl/${pathSlot.captured}"
+            }
+            coEvery { bookRepository.addBook(capture(addBookDataSlot), language) } returns expectedBookWithGenres
 
-            val result = useCase.invoke(bookCreationPayload, coverBytes, coverFileName, language)
+            val result = useCase.invoke(bookCreationPayload)
 
             assertEquals(expectedBookWithGenres, result)
-            coVerify(exactly = 1) { coverStorage.save(coverBytes, coverFileName) }
+            coVerify(exactly = 1) { coverStorage.save(any(), coverBytes) }
             coVerify(exactly = 1) { bookRepository.addBook(any(), language) }
+
+            val capturedPath = pathSlot.captured
+            assertTrue(capturedPath.startsWith("$userId/covers/"))
+            assertTrue(capturedPath.endsWith(".jpg"))
+            val capturedAddBookData = addBookDataSlot.captured
+            assertNotNull(capturedAddBookData.coverUrl)
+            assertEquals("$imageBaseUrl/$capturedPath", capturedAddBookData.coverUrl)
         }
 
     @Test
@@ -108,24 +133,31 @@ class AddBookUseCaseTest {
             val requestedGenreIds = listOf(1, 2, 3)
             val bookCreationPayload = createPayload(requestedGenreIds)
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
-            coEvery { genresValidator.invoke(requestedGenreIds, language) } just Runs
-            coEvery { bookRepository.addBook(bookCreationPayload, language) } returns expectedBookWithGenres
+            val addBookDataSlot = slot<AddBookData>()
+            coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
+            coEvery { bookRepository.addBook(capture(addBookDataSlot), language) } returns expectedBookWithGenres
 
-            val result = useCase.invoke(bookCreationPayload, null, null, language)
+            val result = useCase.invoke(bookCreationPayload)
 
             assertEquals(expectedBookWithGenres, result)
             coVerify(exactly = 0) { coverStorage.save(any(), any()) }
             coVerify(exactly = 1) { bookRepository.addBook(any(), language) }
+
+            val capturedAddBookData = addBookDataSlot.captured
+            assertNull(capturedAddBookData.coverUrl)
         }
 
     @Test
     fun `when genre validation is failed, a ValidationException should be thrown`() = runTest {
         val requestedGenreIds = listOf(1, 2, 3)
         val bookCreationPayload = createPayload(requestedGenreIds)
-        coEvery { genresValidator.invoke(requestedGenreIds, language) } throws ValidationException("Error")
+        val mockkCode = mockk<ValidationErrorCode>()
+        val errors = mapOf("genreIds" to listOf(ValidationError(mockkCode)))
+        val exception = ValidationException(errors)
+        coEvery { genreValidator.invoke(requestedGenreIds, language) } throws exception
 
         assertThrows<ValidationException> {
-            useCase.invoke(bookCreationPayload, coverBytes, coverFileName, language)
+            useCase.invoke(bookCreationPayload)
         }
 
         coVerify(exactly = 0) { coverStorage.save(any(), any()) }

@@ -18,6 +18,13 @@
 
 package api.routes.book
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
 import io.mockk.MockKAnnotations
 import io.mockk.clearAllMocks
 import io.mockk.impl.annotations.MockK
@@ -31,13 +38,14 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import ru.jerael.booktracker.backend.api.controller.BookController
-import ru.jerael.booktracker.backend.api.controller.GenreController
+import ru.jerael.booktracker.backend.api.controller.*
+import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
 import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
-import ru.jerael.booktracker.backend.api.validation.BookValidator
+import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.*
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BooksRouteTestBase : KoinTest {
@@ -66,7 +74,49 @@ abstract class BooksRouteTestBase : KoinTest {
     @RelaxedMockK
     protected lateinit var bookValidator: BookValidator
 
-    protected val imageBaseUrl = ""
+    protected val secret = "secret"
+    protected val issuer = "issuer"
+    protected val audience = "audience"
+    protected val testRealm = "realm"
+
+    protected fun generateTestToken(userId: UUID): String {
+        return JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withClaim("userId", userId.toString())
+            .withExpiresAt(Date(System.currentTimeMillis() + 15L * 60 * 1000))
+            .sign(Algorithm.HMAC256(secret))
+    }
+
+    protected fun Application.configureTestAuthentication() {
+        install(Authentication) {
+            jwt("auth-jwt") {
+                this.realm = testRealm
+                verifier(
+                    JWT
+                        .require(Algorithm.HMAC256(secret))
+                        .withAudience(audience)
+                        .withIssuer(issuer)
+                        .build()
+                )
+                validate { credential ->
+                    val userId = credential.payload.getClaim("userId").asString()
+                    if (userId != null && userId.isNotBlank()) {
+                        UserIdPrincipal(userId)
+                    } else {
+                        null
+                    }
+                }
+                challenge { _, _ ->
+                    val errorDto = ErrorDto(
+                        code = "INVALID_TOKEN",
+                        message = "Token is not valid or has expired."
+                    )
+                    call.respond(HttpStatusCode.Unauthorized, errorDto)
+                }
+            }
+        }
+    }
 
     @BeforeAll
     fun setUpKoin() {
@@ -83,10 +133,13 @@ abstract class BooksRouteTestBase : KoinTest {
                         deleteBookUseCase,
                         bookValidator,
                         multipartParser,
-                        BookMapperImpl(imageBaseUrl, GenreMapperImpl())
+                        BookMapperImpl(GenreMapperImpl())
                     )
                 }
                 single { mockk<GenreController>() }
+                single { mockk<TokenController>() }
+                single { mockk<UserController>() }
+                single { mockk<VerificationController>() }
             }
             modules(testModule)
         }

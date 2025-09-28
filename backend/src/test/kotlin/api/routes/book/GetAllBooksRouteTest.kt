@@ -18,6 +18,8 @@
 
 package api.routes.book
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -43,15 +45,17 @@ import java.util.*
 class GetAllBooksRouteTest : BooksRouteTestBase() {
 
     private val url = "/api/books"
+    private val userId = UUID.randomUUID()
 
     @Test
     fun `when books exist, getAllBooks should return a list of books and a 200 OK status`() = testApplication {
+        val token = generateTestToken(userId)
         val books = listOf(
             Book(
                 id = UUID.randomUUID(),
                 title = "Title",
                 author = "Author",
-                coverPath = null,
+                coverUrl = null,
                 status = BookStatus.READ,
                 createdAt = Instant.now(),
                 genres = emptyList()
@@ -60,7 +64,7 @@ class GetAllBooksRouteTest : BooksRouteTestBase() {
                 id = UUID.randomUUID(),
                 title = "Title 2",
                 author = "Author 2",
-                coverPath = null,
+                coverUrl = null,
                 status = BookStatus.READ,
                 createdAt = Instant.now(),
                 genres = listOf(
@@ -70,15 +74,20 @@ class GetAllBooksRouteTest : BooksRouteTestBase() {
                 )
             )
         )
-        val booksDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBooksToDtos(books)
-        coEvery { getBooksUseCase.invoke(any()) } returns books
+        val booksDto = BookMapperImpl(GenreMapperImpl()).mapBooksToDtos(books)
+        coEvery { getBooksUseCase.invoke(any(), any()) } returns books
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
-        val response = client.get(url)
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+            }
+        }
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(booksDto, Json.decodeFromString<List<BookDto>>(response.bodyAsText()))
@@ -86,14 +95,20 @@ class GetAllBooksRouteTest : BooksRouteTestBase() {
 
     @Test
     fun `when books not exist, getAllBooks should return an empty list and a 200 OK status`() = testApplication {
-        coEvery { getBooksUseCase.invoke(any()) } returns emptyList()
+        val token = generateTestToken(userId)
+        coEvery { getBooksUseCase.invoke(any(), any()) } returns emptyList()
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
-        val response = client.get(url)
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+            }
+        }
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(emptyList<BookDto>(), Json.decodeFromString<List<BookDto>>(response.bodyAsText()))
@@ -101,31 +116,42 @@ class GetAllBooksRouteTest : BooksRouteTestBase() {
 
     @Test
     fun `when Accept-Language header is present, language() should correctly parse and return it`() = testApplication {
-        coEvery { getBooksUseCase.invoke(any()) } returns emptyList()
+        val token = generateTestToken(userId)
+        coEvery { getBooksUseCase.invoke(any(), any()) } returns emptyList()
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         client.get(url) {
-            header(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+                append(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
+            }
         }
 
-        coVerify(exactly = 1) { getBooksUseCase.invoke("en") }
+        coVerify(exactly = 1) { getBooksUseCase.invoke(any(), "en") }
     }
 
     @Test
     fun `when getBooksUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
-            coEvery { getBooksUseCase.invoke(any()) } throws Exception("Error")
+            val token = generateTestToken(userId)
+            coEvery { getBooksUseCase.invoke(any(), any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
-            val response = client.get(url)
+            val response = client.get(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             val errorDto = ErrorDto(
@@ -134,4 +160,53 @@ class GetAllBooksRouteTest : BooksRouteTestBase() {
             )
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
         }
+
+    @Test
+    fun `when Authorization header is missing, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.get(url)
+
+        kotlin.test.assertEquals(HttpStatusCode.Unauthorized, response.status)
+        kotlin.test.assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { getBooksUseCase.invoke(any(), any()) }
+    }
+
+    @Test
+    fun `when token is missing userId claim, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+        val invalidToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withExpiresAt(Date(System.currentTimeMillis() + 15L * 60 * 1000))
+            .sign(Algorithm.HMAC256(secret))
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $invalidToken")
+            }
+        }
+
+        kotlin.test.assertEquals(HttpStatusCode.Unauthorized, response.status)
+        kotlin.test.assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { getBooksUseCase.invoke(any(), any()) }
+    }
 }

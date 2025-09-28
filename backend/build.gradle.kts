@@ -55,6 +55,11 @@ dependencies {
     implementation(libs.exposed.java.time)
     implementation(libs.postgresql)
     implementation(libs.ktor.status.pages)
+    implementation(libs.commons.validator)
+    implementation(libs.argon2.jvm)
+    implementation(libs.commons.email)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit5)

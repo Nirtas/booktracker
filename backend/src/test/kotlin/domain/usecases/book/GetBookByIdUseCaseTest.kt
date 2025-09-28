@@ -43,12 +43,13 @@ class GetBookByIdUseCaseTest {
     private lateinit var useCase: GetBookByIdUseCase
 
     private val language = "en"
+    private val userId = UUID.randomUUID()
     private val bookId = UUID.randomUUID()
     private val expectedBook = Book(
         id = bookId,
         title = "Title",
         author = "Author",
-        coverPath = null,
+        coverUrl = null,
         status = BookStatus.READ,
         createdAt = Instant.now(),
         genres = emptyList()
@@ -62,19 +63,19 @@ class GetBookByIdUseCaseTest {
 
     @Test
     fun `when a book is found, the book is successfully returned`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns expectedBook
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns expectedBook
 
-        val result = useCase.invoke(bookId, language)
+        val result = useCase.invoke(userId, bookId, language)
 
         assertEquals(expectedBook, result)
     }
 
     @Test
     fun `when a book is not found, a BookNotFoundException should be thrown`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns null
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns null
 
         val exception = assertThrows<BookNotFoundException> {
-            useCase.invoke(bookId, language)
+            useCase.invoke(userId, bookId, language)
         }
 
         assertTrue(exception.message!!.contains("$bookId"))
