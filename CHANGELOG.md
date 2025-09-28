@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Backend Server:** Implemented a JWT authentication system with a dual-token strategy (Access and Refresh tokens).
+- **Backend Server:** New authentication endpoints: `POST /api/users` (registration), `POST /api/verifications` (email verification), `POST /api/tokens` (login), and `POST /api/tokens/refresh`.
+- **Backend Server:** Applied JWT authentication middleware to all business-logic endpoints (`/books`, `/genres`, and `/users/me`) to secure user data.
+
 ## [0.4.0] - 2025-09-13
 
 ### Added
