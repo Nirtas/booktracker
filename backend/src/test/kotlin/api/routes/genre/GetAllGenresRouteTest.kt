@@ -18,6 +18,8 @@
 
 package api.routes.genre
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -34,13 +36,16 @@ import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
+import java.util.*
 
 class GetAllGenresRouteTest : GenresRouteTestBase() {
 
     private val url = "/api/genres"
+    private val userId = UUID.randomUUID()
 
     @Test
     fun `when genres exist, getAllGenres should return a list of genres and a 200 OK status`() = testApplication {
+        val token = generateTestToken(userId)
         val genres = listOf(
             Genre(1, "genre 1"),
             Genre(2, "genre 2"),
@@ -52,9 +57,14 @@ class GetAllGenresRouteTest : GenresRouteTestBase() {
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
-        val response = client.get(url)
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+            }
+        }
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(genresDto, Json.decodeFromString<List<GenreDto>>(response.bodyAsText()))
@@ -62,14 +72,20 @@ class GetAllGenresRouteTest : GenresRouteTestBase() {
 
     @Test
     fun `when genres not exist, getAllGenres should return an empty list and a 200 OK status`() = testApplication {
+        val token = generateTestToken(userId)
         coEvery { getGenresUseCase.invoke(any()) } returns emptyList()
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
-        val response = client.get(url)
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+            }
+        }
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(emptyList<GenreDto>(), Json.decodeFromString<List<GenreDto>>(response.bodyAsText()))
@@ -77,15 +93,20 @@ class GetAllGenresRouteTest : GenresRouteTestBase() {
 
     @Test
     fun `when Accept-Language header is present, language() should correctly parse and return it`() = testApplication {
+        val token = generateTestToken(userId)
         coEvery { getGenresUseCase.invoke(any()) } returns emptyList()
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         client.get(url) {
-            header(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+                append(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
+            }
         }
 
         coVerify(exactly = 1) { getGenresUseCase.invoke("en") }
@@ -94,14 +115,20 @@ class GetAllGenresRouteTest : GenresRouteTestBase() {
     @Test
     fun `when getGenresUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
+            val token = generateTestToken(userId)
             coEvery { getGenresUseCase.invoke(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
-            val response = client.get(url)
+            val response = client.get(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             val errorDto = ErrorDto(
@@ -110,4 +137,53 @@ class GetAllGenresRouteTest : GenresRouteTestBase() {
             )
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
         }
+
+    @Test
+    fun `when Authorization header is missing, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.get(url)
+
+        kotlin.test.assertEquals(HttpStatusCode.Unauthorized, response.status)
+        kotlin.test.assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { getGenresUseCase.invoke(any()) }
+    }
+
+    @Test
+    fun `when token is missing userId claim, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+        val invalidToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withExpiresAt(Date(System.currentTimeMillis() + 15L * 60 * 1000))
+            .sign(Algorithm.HMAC256(secret))
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $invalidToken")
+            }
+        }
+
+        kotlin.test.assertEquals(HttpStatusCode.Unauthorized, response.status)
+        kotlin.test.assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { getGenresUseCase.invoke(any()) }
+    }
 }

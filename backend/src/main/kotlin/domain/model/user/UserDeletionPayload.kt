@@ -21,6 +21,6 @@ package ru.jerael.booktracker.backend.domain.model.user
 import java.util.*
 
 data class UserDeletionPayload(
-    val id: UUID,
+    val userId: UUID,
     val password: String
 )

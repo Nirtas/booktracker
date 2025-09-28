@@ -16,17 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.data.db.tables
+package ru.jerael.booktracker.backend.domain.model.book
 
-import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.javatime.datetime
-import ru.jerael.booktracker.backend.data.db.DbConstants.TABLE_REFRESH_TOKENS
+import java.util.*
 
-object RefreshTokens : Table(TABLE_REFRESH_TOKENS) {
-    val token = varchar("token", 256)
-    val userId = uuid("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
-    val expiresAt = datetime("expires_at")
-
-    override val primaryKey = PrimaryKey(token, name = "refresh_tokens_pkey")
-}
+data class UpdateBookDetailsData(
+    val userId: UUID,
+    val bookId: UUID,
+    val title: String,
+    val author: String,
+    val status: BookStatus,
+    val genreIds: List<Int>
+)

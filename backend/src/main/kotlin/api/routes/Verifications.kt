@@ -28,10 +28,8 @@ fun Route.verifications(
         post {
             verificationController.verify(call)
         }
-        route("/resend") {
-            post {
-                verificationController.resendCode(call)
-            }
+        post("/resend") {
+            verificationController.resendCode(call)
         }
     }
 }

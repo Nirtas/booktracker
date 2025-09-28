@@ -38,7 +38,7 @@ import ru.jerael.booktracker.backend.domain.storage.FileStorage
 
 val dataModule = module {
     single<FileStorage> { FileStorageImpl(storagePath = get(Qualifiers.storagePath), logger = get()) }
-    single<CoverStorage> { CoverStorageImpl(fileStorage = get()) }
+    single<CoverStorage> { CoverStorageImpl(fileStorage = get(), imageBaseUrl = get(Qualifiers.imageBaseUrl)) }
 
     single<BookRepository> { BookRepositoryImpl() }
     single<GenreRepository> { GenreRepositoryImpl() }

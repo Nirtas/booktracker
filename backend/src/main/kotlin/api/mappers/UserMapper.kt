@@ -18,15 +18,10 @@
 
 package ru.jerael.booktracker.backend.api.mappers
 
-import ru.jerael.booktracker.backend.api.dto.user.*
-import ru.jerael.booktracker.backend.domain.model.user.*
-import java.util.*
+import ru.jerael.booktracker.backend.api.dto.user.UserDto
+import ru.jerael.booktracker.backend.domain.model.user.User
 
 interface UserMapper {
     fun mapUserToDto(user: User): UserDto
     fun mapUsersToDtos(users: List<User>): List<UserDto>
-    fun mapCreationDtoToCreationPayload(dto: UserCreationDto): UserCreationPayload
-    fun mapUpdateEmailDtoToUpdateEmailPayload(userId: UUID, dto: UserUpdateEmailDto): UserUpdateEmailPayload
-    fun mapUpdatePasswordDtoToUpdatePasswordPayload(userId: UUID, dto: UserUpdatePasswordDto): UserUpdatePasswordPayload
-    fun mapDeletionDtoToDeletionPayload(userId: UUID, dto: UserDeletionDto): UserDeletionPayload
 }

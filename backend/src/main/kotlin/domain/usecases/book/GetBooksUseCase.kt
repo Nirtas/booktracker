@@ -20,9 +20,10 @@ package ru.jerael.booktracker.backend.domain.usecases.book
 
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
+import java.util.*
 
 class GetBooksUseCase(private val bookRepository: BookRepository) {
-    suspend operator fun invoke(language: String): List<Book> {
-        return bookRepository.getBooks(language)
+    suspend operator fun invoke(userId: UUID, language: String): List<Book> {
+        return bookRepository.getBooks(userId, language)
     }
 }

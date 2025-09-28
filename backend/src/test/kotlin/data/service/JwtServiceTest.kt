@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.data.service.JwtService
 import ru.jerael.booktracker.backend.domain.config.JwtConfig
+import ru.jerael.booktracker.backend.domain.model.token.RefreshToken
 import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.repository.RefreshTokenRepository
 import java.time.LocalDateTime
@@ -63,9 +64,9 @@ class JwtServiceTest {
 
     @Test
     fun `when generateTokenPair is called, it should return a valid token pair`() = runTest {
-        coEvery { refreshTokenRepository.createToken(any(), any(), any()) } just Runs
+        coEvery { refreshTokenRepository.createToken(any()) } just Runs
 
-        val tokenPair = service.generateTokenPair(user)
+        val tokenPair = service.generateTokenPair(user.id)
 
         assertNotNull(tokenPair)
         assertNotNull(tokenPair.accessToken)
@@ -80,9 +81,9 @@ class JwtServiceTest {
             .withIssuer(jwtConfig.issuer)
             .acceptLeeway(5L)
             .build()
-        coEvery { refreshTokenRepository.createToken(any(), any(), any()) } just Runs
+        coEvery { refreshTokenRepository.createToken(any()) } just Runs
 
-        val tokenPair = service.generateTokenPair(user)
+        val tokenPair = service.generateTokenPair(user.id)
 
         val decodedJWT = verifier.verify(tokenPair.accessToken)
         assertEquals(user.id.toString(), decodedJWT.getClaim("userId").asString())
@@ -92,23 +93,17 @@ class JwtServiceTest {
 
     @Test
     fun `when generateTokenPair is called, it should call repository to create a refresh token`() = runTest {
-        val userIdSlot = slot<UUID>()
-        val tokenSlot = slot<String>()
-        val expiresAtSlot = slot<LocalDateTime>()
-        coEvery {
-            refreshTokenRepository.createToken(capture(userIdSlot), capture(tokenSlot), capture(expiresAtSlot))
-        } returns Unit
+        val refreshTokenSlot = slot<RefreshToken>()
+        coEvery { refreshTokenRepository.createToken(capture(refreshTokenSlot)) } returns Unit
 
-        service.generateTokenPair(user)
+        service.generateTokenPair(user.id)
 
-        assertEquals(user.id, userIdSlot.captured)
-        assertEquals(64, tokenSlot.captured.length)
+        assertEquals(user.id, refreshTokenSlot.captured.userId)
+        assertEquals(64, refreshTokenSlot.captured.token.length)
         val expectedExpiresAt = LocalDateTime.now().plusDays(30)
-        val actualExpiresAt = expiresAtSlot.captured
+        val actualExpiresAt = refreshTokenSlot.captured.expiresAt
         assertTrue(actualExpiresAt.isAfter(expectedExpiresAt.minusSeconds(5)))
         assertTrue(actualExpiresAt.isBefore(expectedExpiresAt.plusSeconds(5)))
-        coVerify(exactly = 1) {
-            refreshTokenRepository.createToken(any(), any(), any())
-        }
+        coVerify(exactly = 1) { refreshTokenRepository.createToken(any()) }
     }
 }

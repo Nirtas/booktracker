@@ -28,7 +28,9 @@ import org.junit.jupiter.api.assertThrows
 import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.exceptions.StorageException
 import ru.jerael.booktracker.backend.domain.model.book.Book
+import ru.jerael.booktracker.backend.domain.model.book.BookCoverUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
+import ru.jerael.booktracker.backend.domain.model.book.UpdateBookCoverData
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.usecases.book.UpdateBookCoverUseCase
@@ -53,20 +55,24 @@ class UpdateBookCoverUseCaseTest {
     private val coverFileName: String = "cover.jpg"
 
     private val language = "en"
+    private val userId = UUID.randomUUID()
     private val bookId = UUID.randomUUID()
-    private val oldCoverPath = "covers/old_book.jpg"
+    private val oldCoverPath = "$userId/covers/old_book.jpg"
+    private val imageBaseUrl = "http://example.com"
+    private val oldCoverUrl = "$imageBaseUrl/$oldCoverPath"
     private val existingBookWithCover = Book(
         id = bookId,
         title = "Title",
         author = "Author",
-        coverPath = oldCoverPath,
+        coverUrl = oldCoverUrl,
         status = BookStatus.READ,
         createdAt = Instant.now(),
         genres = emptyList()
     )
-    private val existingBookWithoutCover = existingBookWithCover.copy(coverPath = null)
-    private val newCoverPath = "covers/new_book.jpg"
-    private val updatedBook = existingBookWithCover.copy(coverPath = newCoverPath)
+    private val existingBookWithoutCover = existingBookWithCover.copy(coverUrl = null)
+    private val newCoverPath = "$userId/covers/new_book.jpg"
+    private val newCoverUrl = "$imageBaseUrl/$newCoverPath"
+    private val updatedBook = existingBookWithCover.copy(coverUrl = newCoverUrl)
 
     @BeforeEach
     fun setUp() {
@@ -76,74 +82,118 @@ class UpdateBookCoverUseCaseTest {
 
     @Test
     fun `when everything is fine, the cover is successfully updated`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverPath) } just Runs
-        coEvery { coverStorage.save(coverBytes, coverFileName) } returns newCoverPath
-        coEvery { bookRepository.updateBookCover(bookId, newCoverPath, language) } returns updatedBook
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
+        coEvery { coverStorage.delete(oldCoverUrl) } just Runs
+        coEvery { coverStorage.save(any(), coverBytes) } returns newCoverUrl
+        val updateBookCoverData = UpdateBookCoverData(
+            userId = userId,
+            bookId = bookId,
+            coverUrl = newCoverUrl
+        )
+        coEvery { bookRepository.updateBookCover(updateBookCoverData, language) } returns updatedBook
+        val bookCoverUpdatePayload = BookCoverUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            coverBytes = coverBytes,
+            coverFileName = coverFileName
+        )
 
-        val result = useCase.invoke(bookId, coverBytes, coverFileName, language)
+        val result = useCase.invoke(bookCoverUpdatePayload)
 
         assertEquals(updatedBook, result)
-        coVerify(exactly = 1) { bookRepository.getBookById(bookId, language) }
-        coVerify(exactly = 1) { coverStorage.delete(oldCoverPath) }
-        coVerify(exactly = 1) { coverStorage.save(coverBytes, coverFileName) }
-        coVerify(exactly = 1) { bookRepository.updateBookCover(bookId, newCoverPath, language) }
+        coVerify(exactly = 1) { bookRepository.getBookById(userId, bookId, language) }
+        coVerify(exactly = 1) { coverStorage.delete(oldCoverUrl) }
+        coVerify(exactly = 1) { coverStorage.save(any(), coverBytes) }
+        coVerify(exactly = 1) { bookRepository.updateBookCover(updateBookCoverData, language) }
     }
 
     @Test
     fun `when a book is not found, a BookNotFoundException should be thrown`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } throws BookNotFoundException(bookId.toString())
+        coEvery { bookRepository.getBookById(userId, bookId, language) } throws BookNotFoundException(bookId.toString())
+        val bookCoverUpdatePayload = BookCoverUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            coverBytes = coverBytes,
+            coverFileName = coverFileName
+        )
 
         assertThrows<BookNotFoundException> {
-            useCase.invoke(bookId, coverBytes, coverFileName, language)
+            useCase.invoke(bookCoverUpdatePayload)
         }
 
         coVerify(exactly = 0) { coverStorage.delete(any()) }
         coVerify(exactly = 0) { coverStorage.save(any(), any()) }
-        coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any(), any()) }
+        coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any()) }
     }
 
     @Test
     fun `when it is not possible to remove a cover from storage, a StorageException should be thrown`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverPath) } throws StorageException(message = "Error")
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
+        coEvery { coverStorage.delete(oldCoverUrl) } throws StorageException(message = "Error")
+        val bookCoverUpdatePayload = BookCoverUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            coverBytes = coverBytes,
+            coverFileName = coverFileName
+        )
 
         assertThrows<StorageException> {
-            useCase.invoke(bookId, coverBytes, coverFileName, language)
+            useCase.invoke(bookCoverUpdatePayload)
         }
 
         coVerify(exactly = 0) { coverStorage.save(any(), any()) }
-        coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any(), any()) }
+        coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any()) }
     }
 
     @Test
     fun `when it is not possible to save a new cover to storage, a StorageException should be thrown`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverPath) } just Runs
-        coEvery { coverStorage.save(coverBytes, coverFileName) } throws StorageException(message = "Error")
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
+        coEvery { coverStorage.delete(oldCoverUrl) } just Runs
+        coEvery { coverStorage.save(any(), coverBytes) } throws StorageException(message = "Error")
+        val bookCoverUpdatePayload = BookCoverUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            coverBytes = coverBytes,
+            coverFileName = coverFileName
+        )
 
         assertThrows<StorageException> {
-            useCase.invoke(bookId, coverBytes, coverFileName, language)
+            useCase.invoke(bookCoverUpdatePayload)
         }
 
-        coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any(), any()) }
+        coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any()) }
     }
 
     @Test
     fun `when repository fails to update book, it should propagate the exception`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverPath) } just Runs
-        coEvery { coverStorage.save(coverBytes, coverFileName) } returns newCoverPath
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
+        coEvery { coverStorage.delete(oldCoverUrl) } just Runs
+        coEvery { coverStorage.save(any(), coverBytes) } returns newCoverUrl
+        val updateBookCoverData = UpdateBookCoverData(
+            userId = userId,
+            bookId = bookId,
+            coverUrl = newCoverUrl
+        )
         coEvery {
             bookRepository.updateBookCover(
-                bookId,
-                newCoverPath,
+                updateBookCoverData,
                 language
             )
         } throws BookNotFoundException(bookId.toString())
+        val bookCoverUpdatePayload = BookCoverUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            coverBytes = coverBytes,
+            coverFileName = coverFileName
+        )
 
         val exception = assertThrows<BookNotFoundException> {
-            useCase.invoke(bookId, coverBytes, coverFileName, language)
+            useCase.invoke(bookCoverUpdatePayload)
         }
 
         assertTrue(exception.message!!.contains("$bookId"))
@@ -151,15 +201,27 @@ class UpdateBookCoverUseCaseTest {
 
     @Test
     fun `when the book does not have a cover, it is not deleted`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBookWithoutCover
-        coEvery { coverStorage.save(coverBytes, coverFileName) } returns newCoverPath
-        coEvery { bookRepository.updateBookCover(bookId, newCoverPath, language) } returns updatedBook
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithoutCover
+        coEvery { coverStorage.save(any(), coverBytes) } returns newCoverUrl
+        val updateBookCoverData = UpdateBookCoverData(
+            userId = userId,
+            bookId = bookId,
+            coverUrl = newCoverUrl
+        )
+        coEvery { bookRepository.updateBookCover(updateBookCoverData, language) } returns updatedBook
+        val bookCoverUpdatePayload = BookCoverUpdatePayload(
+            userId = userId,
+            bookId = bookId,
+            language = language,
+            coverBytes = coverBytes,
+            coverFileName = coverFileName
+        )
 
-        val result = useCase.invoke(bookId, coverBytes, coverFileName, language)
+        val result = useCase.invoke(bookCoverUpdatePayload)
 
         assertEquals(updatedBook, result)
         coVerify(exactly = 0) { coverStorage.delete(any()) }
-        coVerify(exactly = 1) { coverStorage.save(coverBytes, coverFileName) }
-        coVerify(exactly = 1) { bookRepository.updateBookCover(bookId, newCoverPath, language) }
+        coVerify(exactly = 1) { coverStorage.save(any(), coverBytes) }
+        coVerify(exactly = 1) { bookRepository.updateBookCover(updateBookCoverData, language) }
     }
 }

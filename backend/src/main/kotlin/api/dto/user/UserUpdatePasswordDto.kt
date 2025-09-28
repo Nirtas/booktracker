@@ -22,7 +22,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserUpdatePasswordDto(
-    val email: String,
     val currentPassword: String,
     val newPassword: String
 )

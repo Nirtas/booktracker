@@ -21,23 +21,19 @@ package ru.jerael.booktracker.backend.data.storage
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import java.io.ByteArrayInputStream
-import java.io.File
-import java.util.*
-
-private const val COVERS_PATH_PREFIX = "covers"
 
 class CoverStorageImpl(
-    private val fileStorage: FileStorage
+    private val fileStorage: FileStorage,
+    private val imageBaseUrl: String
 ) : CoverStorage {
-    override suspend fun save(content: ByteArray, fileName: String): String {
-        val fileExtension = File(fileName).extension
-        val path = "$COVERS_PATH_PREFIX/${UUID.randomUUID()}.$fileExtension"
+    override suspend fun save(path: String, content: ByteArray): String {
         val inputStream = ByteArrayInputStream(content)
         fileStorage.saveFile(path, inputStream)
-        return path
+        return "$imageBaseUrl/$path"
     }
 
-    override suspend fun delete(path: String) {
-        return fileStorage.deleteFile(path)
+    override suspend fun delete(url: String) {
+        val path = url.removePrefix("$imageBaseUrl/")
+        fileStorage.deleteFile(path)
     }
 }

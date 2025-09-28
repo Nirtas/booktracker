@@ -26,7 +26,7 @@ data class Book(
     val id: UUID,
     val title: String,
     val author: String,
-    val coverPath: String?,
+    val coverUrl: String?,
     val status: BookStatus,
     val createdAt: Instant,
     val genres: List<Genre>

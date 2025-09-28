@@ -21,8 +21,8 @@ package ru.jerael.booktracker.backend.data.service
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import ru.jerael.booktracker.backend.domain.config.JwtConfig
+import ru.jerael.booktracker.backend.domain.model.token.RefreshToken
 import ru.jerael.booktracker.backend.domain.model.token.TokenPair
-import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.repository.RefreshTokenRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
 import java.security.SecureRandom
@@ -35,18 +35,23 @@ class JwtService(
 ) : TokenService {
     private val secureRandom = SecureRandom()
 
-    override suspend fun generateTokenPair(user: User): TokenPair {
+    override suspend fun generateTokenPair(userId: UUID): TokenPair {
         val accessToken = JWT.create()
             .withAudience(jwtConfig.audience)
             .withIssuer(jwtConfig.issuer)
-            .withClaim("userId", user.id.toString())
-            .withExpiresAt(Date(System.currentTimeMillis() + jwtConfig.accessExpiresInMinutes))
+            .withClaim("userId", userId.toString())
+            .withExpiresAt(Date(System.currentTimeMillis() + jwtConfig.accessExpiresInMinutes * 60 * 1000))
             .sign(Algorithm.HMAC256(jwtConfig.secret))
 
-        val refreshToken = generateRefreshToken()
+        val refreshTokenValue = generateRefreshToken()
         val refreshTokenExpiresAt = LocalDateTime.now().plusDays(jwtConfig.refreshExpiresInDays)
-        refreshTokenRepository.createToken(user.id, refreshToken, refreshTokenExpiresAt)
-        return TokenPair(accessToken, refreshToken)
+        val refreshToken = RefreshToken(
+            userId = userId,
+            token = refreshTokenValue,
+            expiresAt = refreshTokenExpiresAt
+        )
+        refreshTokenRepository.createToken(refreshToken)
+        return TokenPair(accessToken, refreshTokenValue)
     }
 
     private fun generateRefreshToken(): String {

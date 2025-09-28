@@ -57,6 +57,11 @@ class VerificationRepositoryImplTest : RepositoryTestBase() {
         expiresAt = LocalDateTime.now().plusMinutes(15L)
     )
     private val newCode = "654321"
+    private val newVerificationCode = VerificationCode(
+        userId = secondUser.id,
+        code = newCode,
+        expiresAt = LocalDateTime.now().plusMinutes(15L)
+    )
 
     @BeforeEach
     fun setUp() {
@@ -79,16 +84,7 @@ class VerificationRepositoryImplTest : RepositoryTestBase() {
 
     @Test
     fun `when saveCode is called for a new user, it should insert a new verification code`() = runTest {
-        val newVerificationCode = VerificationCode(
-            userId = secondUser.id,
-            code = newCode,
-            expiresAt = LocalDateTime.now().plusMinutes(15L)
-        )
-        verificationRepository.saveCode(
-            newVerificationCode.userId,
-            newVerificationCode.code,
-            newVerificationCode.expiresAt
-        )
+        verificationRepository.saveCode(newVerificationCode)
 
         val savedCode = verificationRepository.getCode(newVerificationCode.userId)
         assertNotNull(savedCode)
@@ -98,7 +94,7 @@ class VerificationRepositoryImplTest : RepositoryTestBase() {
 
     @Test
     fun `when saveCode is called for an existing user, it should update the existing verification code`() = runTest {
-        verificationRepository.saveCode(firstCode.userId, newCode, LocalDateTime.now().plusMinutes(15L))
+        verificationRepository.saveCode(newVerificationCode.copy(userId = firstCode.userId))
 
         val savedCode = verificationRepository.getCode(firstCode.userId)
         assertNotNull(savedCode)

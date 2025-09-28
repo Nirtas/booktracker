@@ -55,7 +55,7 @@ class DeleteUserUseCaseTest {
         isVerified = true
     )
 
-    private val userDeletionPayload = UserDeletionPayload(id = userId, password = password)
+    private val userDeletionPayload = UserDeletionPayload(userId = userId, password = password)
 
     @BeforeEach
     fun setUp() {

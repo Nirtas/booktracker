@@ -29,15 +29,15 @@ class UpdateUserPasswordUseCase(
     private val passwordHasher: PasswordHasher
 ) {
     suspend operator fun invoke(userUpdatePasswordPayload: UserUpdatePasswordPayload) {
-        val user = userRepository.getUserById(userUpdatePasswordPayload.id) ?: throw UserByIdNotFoundException(
-            userUpdatePasswordPayload.id.toString()
+        val user = userRepository.getUserById(userUpdatePasswordPayload.userId) ?: throw UserByIdNotFoundException(
+            userUpdatePasswordPayload.userId.toString()
         )
         if (!passwordHasher.verify(userUpdatePasswordPayload.currentPassword, user.passwordHash)) {
             throw PasswordVerificationException()
         }
         val newPasswordHash = passwordHasher.hash(userUpdatePasswordPayload.newPassword)
         userRepository.updateUserPassword(
-            userId = userUpdatePasswordPayload.id,
+            userId = userUpdatePasswordPayload.userId,
             newPasswordHash = newPasswordHash
         )
     }

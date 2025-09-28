@@ -18,8 +18,10 @@
 
 package ru.jerael.booktracker.backend.api.routes
 
+import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import ru.jerael.booktracker.backend.api.controller.UserController
+import ru.jerael.booktracker.backend.api.util.getUserId
 
 fun Route.users(
     userController: UserController
@@ -28,21 +30,23 @@ fun Route.users(
         post {
             userController.register(call)
         }
-        route("/{id}") {
-            get {
-                userController.getUserById(call)
-            }
-            delete {
-                userController.deleteUser(call)
-            }
-            route("/email") {
-                put {
-                    userController.updateUserEmail(call)
+        authenticate("auth-jwt") {
+            route("/me") {
+                get {
+                    val userId = call.getUserId()
+                    userController.getUserById(call, userId)
                 }
-            }
-            route("/password") {
-                put {
-                    userController.updateUserPassword(call)
+                delete {
+                    val userId = call.getUserId()
+                    userController.deleteUser(call, userId)
+                }
+                put("/email") {
+                    val userId = call.getUserId()
+                    userController.updateUserEmail(call, userId)
+                }
+                put("/password") {
+                    val userId = call.getUserId()
+                    userController.updateUserPassword(call, userId)
                 }
             }
         }

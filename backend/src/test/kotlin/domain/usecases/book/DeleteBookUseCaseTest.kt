@@ -18,9 +18,7 @@
 
 package domain.usecases.book
 
-import io.mockk.MockKAnnotations
-import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.*
 import io.mockk.impl.annotations.RelaxedMockK
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +29,7 @@ import ru.jerael.booktracker.backend.domain.exceptions.StorageException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.storage.FileStorage
+import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.usecases.book.DeleteBookUseCase
 import java.time.Instant
 import java.util.*
@@ -42,76 +40,79 @@ class DeleteBookUseCaseTest {
     private lateinit var bookRepository: BookRepository
 
     @RelaxedMockK
-    private lateinit var fileStorage: FileStorage
+    private lateinit var coverStorage: CoverStorage
 
     private lateinit var useCase: DeleteBookUseCase
 
     private val language = "en"
+    private val userId = UUID.randomUUID()
     private val bookId = UUID.randomUUID()
     private val coverPath = "covers/book.jpg"
+    private val imageBaseUrl = "http://example.com"
+    private val coverUrl = "$imageBaseUrl/$coverPath"
     private val bookWithCover = Book(
         id = bookId,
         title = "Title",
         author = "Author",
-        coverPath = coverPath,
+        coverUrl = coverUrl,
         status = BookStatus.READ,
         createdAt = Instant.now(),
         genres = emptyList()
     )
-    private val bookWithoutCover = bookWithCover.copy(coverPath = null)
+    private val bookWithoutCover = bookWithCover.copy(coverUrl = null)
 
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = DeleteBookUseCase(bookRepository, fileStorage)
+        useCase = DeleteBookUseCase(bookRepository, coverStorage)
     }
 
     @Test
     fun `when the book and cover have been successfully removed`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns bookWithCover
-        coEvery { bookRepository.deleteBook(bookId) } returns true
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns bookWithCover
+        coEvery { bookRepository.deleteBook(userId, bookId) } just Runs
 
-        useCase.invoke(bookId)
+        useCase.invoke(userId, bookId)
 
-        coVerify(exactly = 1) { bookRepository.getBookById(bookId, language) }
-        coVerify(exactly = 1) { fileStorage.deleteFile(coverPath) }
-        coVerify(exactly = 1) { bookRepository.deleteBook(bookId) }
+        coVerify(exactly = 1) { bookRepository.getBookById(userId, bookId, language) }
+        coVerify(exactly = 1) { coverStorage.delete(coverUrl) }
+        coVerify(exactly = 1) { bookRepository.deleteBook(userId, bookId) }
     }
 
     @Test
     fun `when a book has no cover, only the book details are successfully removed`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns bookWithoutCover
-        coEvery { bookRepository.deleteBook(bookId) } returns true
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns bookWithoutCover
+        coEvery { bookRepository.deleteBook(userId, bookId) } just Runs
 
-        useCase.invoke(bookId)
+        useCase.invoke(userId, bookId)
 
-        coVerify(exactly = 1) { bookRepository.getBookById(bookId, language) }
-        coVerify(exactly = 0) { fileStorage.deleteFile(coverPath) }
-        coVerify(exactly = 1) { bookRepository.deleteBook(bookId) }
+        coVerify(exactly = 1) { bookRepository.getBookById(userId, bookId, language) }
+        coVerify(exactly = 0) { coverStorage.delete(any()) }
+        coVerify(exactly = 1) { bookRepository.deleteBook(userId, bookId) }
     }
 
     @Test
     fun `when it is not possible to remove a cover from storage, a StorageException should be thrown`() = runTest {
-        coEvery { bookRepository.getBookById(bookId, language) } returns bookWithCover
-        coEvery { fileStorage.deleteFile(any()) } throws Exception("Error")
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns bookWithCover
+        coEvery { coverStorage.delete(any()) } throws StorageException(message = "Error")
 
         assertThrows<StorageException> {
-            useCase.invoke(bookId)
+            useCase.invoke(userId, bookId)
         }
 
-        coVerify(exactly = 0) { bookRepository.deleteBook(bookId) }
+        coVerify(exactly = 0) { bookRepository.deleteBook(userId, bookId) }
     }
 
     @Test
     fun `when it is not possible to delete book details from the database, an ExternalServiceException should be thrown`() =
         runTest {
-            coEvery { bookRepository.getBookById(bookId, language) } returns bookWithCover
-            coEvery { bookRepository.deleteBook(any()) } throws Exception("Error")
+            coEvery { bookRepository.getBookById(userId, bookId, language) } returns bookWithCover
+            coEvery { bookRepository.deleteBook(any(), any()) } throws ExternalServiceException("Error", "Error")
 
             assertThrows<ExternalServiceException> {
-                useCase.invoke(bookId)
+                useCase.invoke(userId, bookId)
             }
 
-            coVerify(exactly = 1) { fileStorage.deleteFile(coverPath) }
+            coVerify(exactly = 1) { coverStorage.delete(coverUrl) }
         }
 }

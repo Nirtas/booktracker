@@ -19,11 +19,9 @@
 package ru.jerael.booktracker.backend.domain.repository
 
 import ru.jerael.booktracker.backend.domain.model.token.RefreshToken
-import java.time.LocalDateTime
-import java.util.*
 
 interface RefreshTokenRepository {
     suspend fun getToken(token: String): RefreshToken?
-    suspend fun createToken(userId: UUID, token: String, expiresAt: LocalDateTime)
+    suspend fun createToken(refreshToken: RefreshToken)
     suspend fun deleteToken(token: String)
 }

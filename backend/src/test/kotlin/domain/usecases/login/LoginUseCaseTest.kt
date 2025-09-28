@@ -74,14 +74,14 @@ class LoginUseCaseTest {
 
         coEvery { userRepository.getUserByEmail(email) } returns user
         every { passwordHasher.verify(password, hash) } returns true
-        coEvery { tokenService.generateTokenPair(user) } returns expectedToken
+        coEvery { tokenService.generateTokenPair(user.id) } returns expectedToken
 
         val resultToken = useCase.invoke(loginPayload)
 
         assertEquals(expectedToken, resultToken)
         coVerify(exactly = 1) { userRepository.getUserByEmail(email) }
         verify(exactly = 1) { passwordHasher.verify(password, hash) }
-        coVerify(exactly = 1) { tokenService.generateTokenPair(user) }
+        coVerify(exactly = 1) { tokenService.generateTokenPair(user.id) }
     }
 
     @Test

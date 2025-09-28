@@ -49,6 +49,7 @@ class ResendCodeRouteTest : VerificationsRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
@@ -69,6 +70,7 @@ class ResendCodeRouteTest : VerificationsRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
@@ -89,6 +91,7 @@ class ResendCodeRouteTest : VerificationsRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {

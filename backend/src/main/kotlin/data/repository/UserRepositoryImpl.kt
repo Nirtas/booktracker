@@ -38,9 +38,9 @@ import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import java.util.*
 
 class UserRepositoryImpl : UserRepository {
-    override suspend fun getUserById(id: UUID): User? {
+    override suspend fun getUserById(userId: UUID): User? {
         return withContext(Dispatchers.IO) {
-            findUser { Users.id eq id }
+            findUser { Users.id eq userId }
         }
     }
 
@@ -64,10 +64,10 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
-    override suspend fun updateUserVerificationStatus(id: UUID, isVerified: Boolean) {
+    override suspend fun updateUserVerificationStatus(userId: UUID, isVerified: Boolean) {
         withContext(Dispatchers.IO) {
             transaction {
-                Users.update({ Users.id eq id }) {
+                Users.update({ Users.id eq userId }) {
                     it[Users.isVerified] = isVerified
                 }
             }
@@ -103,12 +103,12 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
-    override suspend fun deleteUser(id: UUID) {
-        return withContext(Dispatchers.IO) {
+    override suspend fun deleteUser(userId: UUID) {
+        withContext(Dispatchers.IO) {
             transaction {
-                val deletedRows = Users.deleteWhere { Users.id eq id }
+                val deletedRows = Users.deleteWhere { Users.id eq userId }
                 if (deletedRows == 0) {
-                    throw UserByIdNotFoundException(id.toString())
+                    throw UserByIdNotFoundException(userId.toString())
                 }
             }
         }

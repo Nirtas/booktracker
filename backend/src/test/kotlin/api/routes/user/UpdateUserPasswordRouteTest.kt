@@ -18,6 +18,8 @@
 
 package api.routes.user
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -30,14 +32,15 @@ import ru.jerael.booktracker.backend.api.dto.user.UserUpdatePasswordDto
 import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
+import java.util.*
 import kotlin.test.assertEquals
 
 class UpdateUserPasswordRouteTest : UsersRouteTestBase() {
 
-    private val userId = "661d6c9d-c4e9-4921-93c5-8b3dd4e57bf3"
-    private val url = "/api/users/$userId/password"
+    private val userId = UUID.randomUUID()
+    private val url = "/api/users/me/password"
     private val json = Json.encodeToString(
-        UserUpdatePasswordDto("test@example.com", "Passw0rd!", "Passw0rd@")
+        UserUpdatePasswordDto("Passw0rd!", "Passw0rd@")
     )
     private val errorDto = ErrorDto(
         code = "INTERNAL_SERVER_ERROR",
@@ -46,35 +49,44 @@ class UpdateUserPasswordRouteTest : UsersRouteTestBase() {
 
     @Test
     fun `when request is valid, updateUserPassword should return a 200 OK status`() = testApplication {
+        val token = generateTestToken(userId)
         coEvery { updateUserPasswordUseCase.invoke(any()) } just Runs
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         val response = client.put(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+            }
             contentType(ContentType.Application.Json)
             setBody(json)
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
         verify(exactly = 1) { userValidator.validateUpdatePassword(any()) }
-        verify(exactly = 1) { userMapper.mapUpdatePasswordDtoToUpdatePasswordPayload(any(), any()) }
         coVerify(exactly = 1) { updateUserPasswordUseCase.invoke(any()) }
     }
 
     @Test
     fun `when validateUpdatePassword is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
+            val token = generateTestToken(userId)
             every { userValidator.validateUpdatePassword(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.put(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
                 contentType(ContentType.Application.Json)
                 setBody(json)
             }
@@ -87,14 +99,19 @@ class UpdateUserPasswordRouteTest : UsersRouteTestBase() {
     @Test
     fun `when updateUserPasswordUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
+            val token = generateTestToken(userId)
             coEvery { updateUserPasswordUseCase.invoke(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.put(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
                 contentType(ContentType.Application.Json)
                 setBody(json)
             }
@@ -102,4 +119,53 @@ class UpdateUserPasswordRouteTest : UsersRouteTestBase() {
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
         }
+
+    @Test
+    fun `when Authorization header is missing, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.put(url)
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { updateUserPasswordUseCase.invoke(any()) }
+    }
+
+    @Test
+    fun `when token is missing userId claim, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+        val invalidToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withExpiresAt(Date(System.currentTimeMillis() + 15L * 60 * 1000))
+            .sign(Algorithm.HMAC256(secret))
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.put(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $invalidToken")
+            }
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { updateUserPasswordUseCase.invoke(any()) }
+    }
 }

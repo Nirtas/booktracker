@@ -60,7 +60,7 @@ class UpdateUserEmailUseCaseTest {
         isVerified = true
     )
     private val userUpdateEmailPayload = UserUpdateEmailPayload(
-        id = userId,
+        userId = userId,
         newEmail = newEmail,
         password = password
     )

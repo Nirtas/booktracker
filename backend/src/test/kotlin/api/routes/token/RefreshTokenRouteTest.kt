@@ -55,6 +55,7 @@ class RefreshTokenRouteTest : TokensRouteTestBase() {
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         val response = client.post(url) {
@@ -78,6 +79,7 @@ class RefreshTokenRouteTest : TokensRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
@@ -96,6 +98,7 @@ class RefreshTokenRouteTest : TokensRouteTestBase() {
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         val response = client.post(url) {

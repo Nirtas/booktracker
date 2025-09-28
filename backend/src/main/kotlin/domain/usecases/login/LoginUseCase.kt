@@ -42,6 +42,6 @@ class LoginUseCase(
                 errorCode = "ACCOUNT_NOT_VERIFIED"
             )
         }
-        return tokenService.generateTokenPair(user)
+        return tokenService.generateTokenPair(user.id)
     }
 }

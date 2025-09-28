@@ -48,7 +48,6 @@ class UserValidator {
 
     fun validateUpdatePassword(dto: UserUpdatePasswordDto) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("email", validateEmail(dto.email))
         errors.putIfNotEmpty("currentPassword", validatePassword(dto.currentPassword))
         errors.putIfNotEmpty("newPassword", validatePassword(dto.newPassword))
         if (dto.currentPassword == dto.newPassword) {

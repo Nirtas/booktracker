@@ -18,6 +18,8 @@
 
 package api.routes.user
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -39,16 +41,16 @@ import kotlin.test.assertEquals
 
 class GetUserByIdRouteTest : UsersRouteTestBase() {
 
-    private val userId = "661d6c9d-c4e9-4921-93c5-8b3dd4e57bf3"
-    private val url = "/api/users/$userId"
+    private val userId = UUID.randomUUID()
+    private val url = "/api/users/me"
     private val user = User(
-        id = UUID.fromString(userId),
+        id = userId,
         email = "test@example.com",
         passwordHash = "hash",
         isVerified = false
     )
     private val userDto = UserDto(
-        id = userId,
+        id = userId.toString(),
         email = user.email,
         isVerified = user.isVerified
     )
@@ -59,15 +61,21 @@ class GetUserByIdRouteTest : UsersRouteTestBase() {
 
     @Test
     fun `when request is valid, getUserById should return found user and a 200 OK status`() = testApplication {
+        val token = generateTestToken(userId)
         coEvery { getUserByIdUseCase.invoke(any()) } returns user
         every { userMapper.mapUserToDto(user) } returns userDto
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
-        val response = client.get(url)
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+            }
+        }
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(userDto, Json.decodeFromString<UserDto>(response.bodyAsText()))
@@ -78,16 +86,71 @@ class GetUserByIdRouteTest : UsersRouteTestBase() {
     @Test
     fun `when getUserByIdUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
+            val token = generateTestToken(userId)
             coEvery { getUserByIdUseCase.invoke(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
-            val response = client.get(url)
+            val response = client.get(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
         }
+
+    @Test
+    fun `when Authorization header is missing, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.get(url)
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { getUserByIdUseCase.invoke(any()) }
+    }
+
+    @Test
+    fun `when token is missing userId claim, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+        val invalidToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withExpiresAt(Date(System.currentTimeMillis() + 15L * 60 * 1000))
+            .sign(Algorithm.HMAC256(secret))
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.get(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $invalidToken")
+            }
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { getUserByIdUseCase.invoke(any()) }
+    }
 }

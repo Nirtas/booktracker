@@ -28,7 +28,6 @@ import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class CoverStorageImplTest {
 
@@ -38,31 +37,28 @@ class CoverStorageImplTest {
     private lateinit var coverStorage: CoverStorage
 
     private val coverBytes: ByteArray = "file content".toByteArray()
-    private val coverFileName: String = "cover.jpg"
+    private val imageBaseUrl = "http://storage.com"
+    private val coverPath = "covers/cover.jpg"
 
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        coverStorage = CoverStorageImpl(fileStorage)
+        coverStorage = CoverStorageImpl(fileStorage, imageBaseUrl)
     }
 
     @Test
-    fun `when save is called with valid jpg file, it should generate path and call fileStorage`() = runTest {
-        val pathSlot = slot<String>()
-        coEvery { fileStorage.saveFile(capture(pathSlot), any()) } returns ""
+    fun `when save is called, it should save the file via fileStorage and return the full URL`() = runTest {
+        coEvery { fileStorage.saveFile(any(), any()) } returns ""
 
-        val path = coverStorage.save(coverBytes, coverFileName)
+        val url = coverStorage.save(coverPath, coverBytes)
 
-        coVerify(exactly = 1) { fileStorage.saveFile(any(), any()) }
-        val capturedPath = pathSlot.captured
-        assertTrue(capturedPath.startsWith("covers/"))
-        assertTrue(capturedPath.endsWith(".jpg"))
-        assertEquals(capturedPath, path)
+        coVerify(exactly = 1) { fileStorage.saveFile(coverPath, any()) }
+        val expectedUrl = "$imageBaseUrl/$coverPath"
+        assertEquals(expectedUrl, url)
     }
 
     @Test
     fun `when delete is called, it should call fileStorage with the correct path`() = runTest {
-        val coverPath = "covers/$coverFileName"
         coEvery { fileStorage.deleteFile(any()) } just Runs
 
         coverStorage.delete(coverPath)
@@ -75,7 +71,7 @@ class CoverStorageImplTest {
         coEvery { fileStorage.saveFile(any(), any()) } throws Exception("Error")
 
         assertThrows<Exception> {
-            coverStorage.save(coverBytes, coverFileName)
+            coverStorage.save(coverPath, coverBytes)
         }
     }
 }

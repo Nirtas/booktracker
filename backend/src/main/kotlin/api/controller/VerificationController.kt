@@ -24,8 +24,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationResendCodeDto
-import ru.jerael.booktracker.backend.api.mappers.VerificationMapper
+import ru.jerael.booktracker.backend.api.mappers.TokenMapper
 import ru.jerael.booktracker.backend.api.validation.validator.VerificationValidator
+import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
 import ru.jerael.booktracker.backend.domain.usecases.verification.ResendVerificationCodeUseCase
 import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
 
@@ -33,14 +34,17 @@ class VerificationController(
     private val verifyCodeUseCase: VerifyCodeUseCase,
     private val resendVerificationCodeUseCase: ResendVerificationCodeUseCase,
     private val verificationValidator: VerificationValidator,
-    private val verificationMapper: VerificationMapper
+    private val tokenMapper: TokenMapper
 ) {
     suspend fun verify(call: ApplicationCall) {
         val verificationDto = call.receive<VerificationDto>()
         verificationValidator.validateVerification(verificationDto)
-        val verificationPayload = verificationMapper.mapDtoToPayload(verificationDto)
-        verifyCodeUseCase(verificationPayload)
-        call.respond(HttpStatusCode.OK)
+        val verificationPayload = VerificationPayload(
+            email = verificationDto.email,
+            code = verificationDto.code
+        )
+        val newTokenPair = verifyCodeUseCase(verificationPayload)
+        call.respond(HttpStatusCode.OK, tokenMapper.mapTokenToResponseDto(newTokenPair))
     }
 
     suspend fun resendCode(call: ApplicationCall) {

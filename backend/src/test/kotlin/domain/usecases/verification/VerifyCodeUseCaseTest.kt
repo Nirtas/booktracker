@@ -26,14 +26,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.jerael.booktracker.backend.domain.exceptions.InvalidVerificationException
 import ru.jerael.booktracker.backend.domain.exceptions.UserByEmailNotFoundException
+import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationCode
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
+import ru.jerael.booktracker.backend.domain.service.TokenService
 import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.test.assertEquals
 
 class VerifyCodeUseCaseTest {
 
@@ -42,6 +45,9 @@ class VerifyCodeUseCaseTest {
 
     @MockK
     private lateinit var verificationRepository: VerificationRepository
+
+    @MockK
+    private lateinit var tokenService: TokenService
 
     private lateinit var useCase: VerifyCodeUseCase
 
@@ -67,18 +73,21 @@ class VerifyCodeUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = VerifyCodeUseCase(userRepository, verificationRepository)
+        useCase = VerifyCodeUseCase(userRepository, verificationRepository, tokenService)
     }
 
     @Test
     fun `when code is valid and not expired, it should verify user and delete code`() = runTest {
+        val tokenPair = TokenPair("access", "refresh")
         coEvery { userRepository.getUserByEmail(email) } returns user
         coEvery { verificationRepository.getCode(userId) } returns verificationCode
         coEvery { userRepository.updateUserVerificationStatus(userId, true) } just Runs
         coEvery { verificationRepository.deleteCode(userId) } just Runs
+        coEvery { tokenService.generateTokenPair(userId) } returns tokenPair
 
-        useCase.invoke(verificationPayload)
+        val result = useCase.invoke(verificationPayload)
 
+        assertEquals(tokenPair, result)
         coVerify(exactly = 1) { userRepository.updateUserVerificationStatus(userId, true) }
         coVerify(exactly = 1) { verificationRepository.deleteCode(userId) }
     }

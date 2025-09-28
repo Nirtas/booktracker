@@ -77,7 +77,7 @@ class RefreshTokenUseCaseTest {
         coEvery { refreshTokenRepository.getToken(refreshToken) } returns token
         coEvery { refreshTokenRepository.deleteToken(refreshToken) } just Runs
         coEvery { userRepository.getUserById(userId) } returns user
-        coEvery { tokenService.generateTokenPair(user) } returns expectedTokenPair
+        coEvery { tokenService.generateTokenPair(user.id) } returns expectedTokenPair
 
         val resultTokenPair = useCase.invoke(refreshToken)
 
@@ -85,7 +85,7 @@ class RefreshTokenUseCaseTest {
         coVerify(exactly = 1) { refreshTokenRepository.getToken(refreshToken) }
         coVerify(exactly = 1) { refreshTokenRepository.deleteToken(refreshToken) }
         coVerify(exactly = 1) { userRepository.getUserById(userId) }
-        coVerify(exactly = 1) { tokenService.generateTokenPair(user) }
+        coVerify(exactly = 1) { tokenService.generateTokenPair(user.id) }
     }
 
     @Test

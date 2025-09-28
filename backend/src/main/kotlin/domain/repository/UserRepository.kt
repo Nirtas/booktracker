@@ -22,11 +22,11 @@ import ru.jerael.booktracker.backend.domain.model.user.User
 import java.util.*
 
 interface UserRepository {
-    suspend fun getUserById(id: UUID): User?
+    suspend fun getUserById(userId: UUID): User?
     suspend fun getUserByEmail(email: String): User?
     suspend fun createUser(email: String, passwordHash: String): User
-    suspend fun updateUserVerificationStatus(id: UUID, isVerified: Boolean)
+    suspend fun updateUserVerificationStatus(userId: UUID, isVerified: Boolean)
     suspend fun updateUserEmail(userId: UUID, newEmail: String): User
     suspend fun updateUserPassword(userId: UUID, newPasswordHash: String)
-    suspend fun deleteUser(id: UUID)
+    suspend fun deleteUser(userId: UUID)
 }

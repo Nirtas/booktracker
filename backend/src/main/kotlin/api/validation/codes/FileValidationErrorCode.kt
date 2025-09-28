@@ -19,7 +19,5 @@
 package ru.jerael.booktracker.backend.api.validation.codes
 
 enum class FileValidationErrorCode : ValidationErrorCode {
-    EMPTY_NAME,
-    INVALID_EXTENSION,
-    EMPTY_CONTENT
+    INVALID_EXTENSION
 }

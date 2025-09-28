@@ -51,7 +51,7 @@ val domainModule = module {
             coverValidator = get()
         )
     }
-    single<DeleteBookUseCase> { DeleteBookUseCase(bookRepository = get(), fileStorage = get()) }
+    single<DeleteBookUseCase> { DeleteBookUseCase(bookRepository = get(), coverStorage = get()) }
 
     single<GetGenresUseCase> { GetGenresUseCase(genreRepository = get()) }
 
@@ -75,7 +75,13 @@ val domainModule = module {
 
     single<LoginUseCase> { LoginUseCase(userRepository = get(), passwordHasher = get(), tokenService = get()) }
 
-    single<VerifyCodeUseCase> { VerifyCodeUseCase(userRepository = get(), verificationRepository = get()) }
+    single<VerifyCodeUseCase> {
+        VerifyCodeUseCase(
+            userRepository = get(),
+            verificationRepository = get(),
+            tokenService = get()
+        )
+    }
     single<ResendVerificationCodeUseCase> {
         ResendVerificationCodeUseCase(
             userRepository = get(),

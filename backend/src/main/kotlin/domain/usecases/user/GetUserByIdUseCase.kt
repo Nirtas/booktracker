@@ -24,7 +24,7 @@ import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import java.util.*
 
 class GetUserByIdUseCase(private val userRepository: UserRepository) {
-    suspend operator fun invoke(id: UUID): User {
-        return userRepository.getUserById(id) ?: throw UserByIdNotFoundException(id.toString())
+    suspend operator fun invoke(userId: UUID): User {
+        return userRepository.getUserById(userId) ?: throw UserByIdNotFoundException(userId.toString())
     }
 }

@@ -16,16 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.mappers
+package ru.jerael.booktracker.backend.domain.model.book
 
-import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
-import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
+import java.util.*
 
-class VerificationMapperImpl : VerificationMapper {
-    override fun mapDtoToPayload(dto: VerificationDto): VerificationPayload {
-        return VerificationPayload(
-            email = dto.email,
-            code = dto.code
-        )
-    }
-}
+data class UpdateBookCoverData(
+    val userId: UUID,
+    val bookId: UUID,
+    val coverUrl: String
+)

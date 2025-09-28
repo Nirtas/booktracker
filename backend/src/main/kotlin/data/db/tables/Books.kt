@@ -18,6 +18,7 @@
 
 package ru.jerael.booktracker.backend.data.db.tables
 
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.CurrentTimestampWithTimeZone
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
@@ -26,12 +27,12 @@ import ru.jerael.booktracker.backend.data.db.types.bookStatusEnum
 
 object Books : Table(TABLE_BOOKS) {
     val id = uuid("book_id").autoGenerate()
+    val userId = uuid("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
     val title = text("title")
     val author = text("author")
-    val coverPath = text("cover_path").nullable()
+    val coverUrl = text("cover_url").nullable()
     val status = bookStatusEnum("status")
     val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
 
     override val primaryKey = PrimaryKey(id, name = "books_pkey")
 }
-

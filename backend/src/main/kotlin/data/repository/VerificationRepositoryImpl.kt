@@ -29,17 +29,16 @@ import ru.jerael.booktracker.backend.data.db.tables.EmailVerifications
 import ru.jerael.booktracker.backend.data.mappers.toVerificationCode
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationCode
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
-import java.time.LocalDateTime
 import java.util.*
 
 class VerificationRepositoryImpl : VerificationRepository {
-    override suspend fun saveCode(userId: UUID, code: String, expiresAt: LocalDateTime) {
+    override suspend fun saveCode(verificationCode: VerificationCode) {
         withContext(Dispatchers.IO) {
             transaction {
                 EmailVerifications.upsert {
-                    it[EmailVerifications.userId] = userId
-                    it[EmailVerifications.code] = code
-                    it[EmailVerifications.expiresAt] = expiresAt
+                    it[EmailVerifications.userId] = verificationCode.userId
+                    it[EmailVerifications.code] = verificationCode.code
+                    it[EmailVerifications.expiresAt] = verificationCode.expiresAt
                 }
             }
         }

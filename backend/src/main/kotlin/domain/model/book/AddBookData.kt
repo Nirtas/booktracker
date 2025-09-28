@@ -16,16 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.mappers
+package ru.jerael.booktracker.backend.domain.model.book
 
-import ru.jerael.booktracker.backend.api.dto.login.LoginRequestDto
-import ru.jerael.booktracker.backend.domain.model.login.LoginPayload
+import java.util.*
 
-class LoginMapperImpl : LoginMapper {
-    override fun mapDtoToPayload(dto: LoginRequestDto): LoginPayload {
-        return LoginPayload(
-            email = dto.email,
-            password = dto.password
-        )
-    }
-}
+data class AddBookData(
+    val userId: UUID,
+    val title: String,
+    val author: String,
+    val coverUrl: String?,
+    val status: BookStatus,
+    val genreIds: List<Int>
+)

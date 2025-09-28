@@ -21,7 +21,7 @@ package ru.jerael.booktracker.backend.domain.model.user
 import java.util.*
 
 data class UserUpdatePasswordPayload(
-    val id: UUID,
+    val userId: UUID,
     val currentPassword: String,
     val newPassword: String
 )

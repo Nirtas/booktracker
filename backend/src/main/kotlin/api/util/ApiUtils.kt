@@ -19,10 +19,12 @@
 package ru.jerael.booktracker.backend.api.util
 
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import ru.jerael.booktracker.backend.api.validation.ValidationError
 import ru.jerael.booktracker.backend.api.validation.ValidationException
 import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
+import ru.jerael.booktracker.backend.domain.exceptions.UnauthenticatedException
 import java.util.*
 
 fun ApplicationRequest.language(): String {
@@ -39,6 +41,20 @@ fun ApplicationCall.getUuidFromPath(parameter: String): UUID {
         UUID.fromString(parameterString)
     } catch (e: Exception) {
         throw ValidationException(mapOf(parameter to listOf(ValidationError(CommonValidationErrorCode.INVALID_UUID_FORMAT))))
+    }
+}
+
+fun ApplicationCall.getUserId(): UUID {
+    val principal =
+        this.principal<UserIdPrincipal>() ?: throw UnauthenticatedException("Authentication principal not found.")
+    val userIdString = principal.name
+    if (userIdString.isBlank()) {
+        throw UnauthenticatedException("User id is missing in the token.")
+    }
+    return try {
+        UUID.fromString(userIdString)
+    } catch (e: Exception) {
+        throw UnauthenticatedException("Invalid user id format in token.")
     }
 }
 

@@ -32,8 +32,8 @@ class UpdateUserEmailUseCase(
     private val verificationService: VerificationService
 ) {
     suspend operator fun invoke(userUpdateEmailPayload: UserUpdateEmailPayload) {
-        val user = userRepository.getUserById(userUpdateEmailPayload.id) ?: throw UserByIdNotFoundException(
-            userUpdateEmailPayload.id.toString()
+        val user = userRepository.getUserById(userUpdateEmailPayload.userId) ?: throw UserByIdNotFoundException(
+            userUpdateEmailPayload.userId.toString()
         )
         if (!passwordHasher.verify(userUpdateEmailPayload.password, user.passwordHash)) {
             throw PasswordVerificationException()
@@ -42,7 +42,7 @@ class UpdateUserEmailUseCase(
             throw UserAlreadyExistsException(it.email)
         }
         val updatedUser = userRepository.updateUserEmail(
-            userId = userUpdateEmailPayload.id,
+            userId = userUpdateEmailPayload.userId,
             newEmail = userUpdateEmailPayload.newEmail
         )
         verificationService.start(updatedUser)

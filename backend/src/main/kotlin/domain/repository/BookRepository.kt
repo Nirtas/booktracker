@@ -18,16 +18,17 @@
 
 package ru.jerael.booktracker.backend.domain.repository
 
+import ru.jerael.booktracker.backend.domain.model.book.AddBookData
 import ru.jerael.booktracker.backend.domain.model.book.Book
-import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
-import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.model.book.UpdateBookCoverData
+import ru.jerael.booktracker.backend.domain.model.book.UpdateBookDetailsData
 import java.util.*
 
 interface BookRepository {
-    suspend fun getBooks(language: String): List<Book>
-    suspend fun addBook(bookCreationPayload: BookCreationPayload, language: String): Book
-    suspend fun getBookById(id: UUID, language: String): Book?
-    suspend fun updateBookDetails(id: UUID, bookDetailsUpdatePayload: BookDetailsUpdatePayload, language: String): Book
-    suspend fun updateBookCover(id: UUID, newCoverPath: String, language: String): Book
-    suspend fun deleteBook(id: UUID): Boolean
+    suspend fun getBooks(userId: UUID, language: String): List<Book>
+    suspend fun addBook(data: AddBookData, language: String): Book
+    suspend fun getBookById(userId: UUID, bookId: UUID, language: String): Book?
+    suspend fun updateBookDetails(data: UpdateBookDetailsData, language: String): Book
+    suspend fun updateBookCover(data: UpdateBookCoverData, language: String): Book
+    suspend fun deleteBook(userId: UUID, bookId: UUID)
 }

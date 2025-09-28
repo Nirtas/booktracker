@@ -27,9 +27,13 @@ import ru.jerael.booktracker.backend.api.dto.user.UserDeletionDto
 import ru.jerael.booktracker.backend.api.dto.user.UserUpdateEmailDto
 import ru.jerael.booktracker.backend.api.dto.user.UserUpdatePasswordDto
 import ru.jerael.booktracker.backend.api.mappers.UserMapper
-import ru.jerael.booktracker.backend.api.util.getUuidFromPath
 import ru.jerael.booktracker.backend.api.validation.validator.UserValidator
+import ru.jerael.booktracker.backend.domain.model.user.UserCreationPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserUpdateEmailPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserUpdatePasswordPayload
 import ru.jerael.booktracker.backend.domain.usecases.user.*
+import java.util.*
 
 class UserController(
     private val registerUserUseCase: RegisterUserUseCase,
@@ -43,41 +47,50 @@ class UserController(
     suspend fun register(call: ApplicationCall) {
         val userCreationDto = call.receive<UserCreationDto>()
         userValidator.validateCreation(userCreationDto)
-        val userCreationPayload = userMapper.mapCreationDtoToCreationPayload(userCreationDto)
+        val userCreationPayload = UserCreationPayload(
+            email = userCreationDto.email,
+            password = userCreationDto.password
+        )
         val newUser = registerUserUseCase(userCreationPayload)
         call.respond(HttpStatusCode.Created, userMapper.mapUserToDto(newUser))
     }
 
-    suspend fun getUserById(call: ApplicationCall) {
-        val id = call.getUuidFromPath("id")
-        val user = getUserByIdUseCase(id)
+    suspend fun getUserById(call: ApplicationCall, userId: UUID) {
+        val user = getUserByIdUseCase(userId)
         call.respond(HttpStatusCode.OK, userMapper.mapUserToDto(user))
     }
 
-    suspend fun updateUserEmail(call: ApplicationCall) {
-        val id = call.getUuidFromPath("id")
+    suspend fun updateUserEmail(call: ApplicationCall, userId: UUID) {
         val userUpdateEmailDto = call.receive<UserUpdateEmailDto>()
         userValidator.validateUpdateEmail(userUpdateEmailDto)
-        val userUpdateEmailPayload = userMapper.mapUpdateEmailDtoToUpdateEmailPayload(id, userUpdateEmailDto)
+        val userUpdateEmailPayload = UserUpdateEmailPayload(
+            userId = userId,
+            newEmail = userUpdateEmailDto.newEmail,
+            password = userUpdateEmailDto.password
+        )
         updateUserEmailUseCase(userUpdateEmailPayload)
         call.respond(HttpStatusCode.OK)
     }
 
-    suspend fun updateUserPassword(call: ApplicationCall) {
-        val id = call.getUuidFromPath("id")
+    suspend fun updateUserPassword(call: ApplicationCall, userId: UUID) {
         val userUpdatePasswordDto = call.receive<UserUpdatePasswordDto>()
         userValidator.validateUpdatePassword(userUpdatePasswordDto)
-        val userUpdatePasswordPayload =
-            userMapper.mapUpdatePasswordDtoToUpdatePasswordPayload(id, userUpdatePasswordDto)
+        val userUpdatePasswordPayload = UserUpdatePasswordPayload(
+            userId = userId,
+            currentPassword = userUpdatePasswordDto.currentPassword,
+            newPassword = userUpdatePasswordDto.newPassword
+        )
         updateUserPasswordUseCase(userUpdatePasswordPayload)
         call.respond(HttpStatusCode.OK)
     }
 
-    suspend fun deleteUser(call: ApplicationCall) {
-        val id = call.getUuidFromPath("id")
+    suspend fun deleteUser(call: ApplicationCall, userId: UUID) {
         val userDeletionDto = call.receive<UserDeletionDto>()
         userValidator.validateDeletion(userDeletionDto)
-        val userDeletionPayload = userMapper.mapDeletionDtoToDeletionPayload(id, userDeletionDto)
+        val userDeletionPayload = UserDeletionPayload(
+            userId = userId,
+            password = userDeletionDto.currentPassword
+        )
         deleteUserUseCase(userDeletionPayload)
         call.respond(HttpStatusCode.NoContent)
     }

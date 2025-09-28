@@ -19,11 +19,10 @@
 package ru.jerael.booktracker.backend.domain.repository
 
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationCode
-import java.time.LocalDateTime
 import java.util.*
 
 interface VerificationRepository {
-    suspend fun saveCode(userId: UUID, code: String, expiresAt: LocalDateTime)
+    suspend fun saveCode(verificationCode: VerificationCode)
     suspend fun getCode(userId: UUID): VerificationCode?
     suspend fun deleteCode(userId: UUID)
 }

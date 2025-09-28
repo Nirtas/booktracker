@@ -29,8 +29,8 @@ class DeleteUserUseCase(
     private val passwordHasher: PasswordHasher
 ) {
     suspend operator fun invoke(userDeletionPayload: UserDeletionPayload) {
-        val user = userRepository.getUserById(userDeletionPayload.id) ?: throw UserByIdNotFoundException(
-            userDeletionPayload.id.toString()
+        val user = userRepository.getUserById(userDeletionPayload.userId) ?: throw UserByIdNotFoundException(
+            userDeletionPayload.userId.toString()
         )
         if (!passwordHasher.verify(userDeletionPayload.password, user.passwordHash)) {
             throw PasswordVerificationException()

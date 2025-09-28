@@ -23,6 +23,7 @@ import org.apache.commons.mail.SimpleEmail
 import ru.jerael.booktracker.backend.domain.config.SmtpConfig
 import ru.jerael.booktracker.backend.domain.exceptions.InternalException
 import ru.jerael.booktracker.backend.domain.model.user.User
+import ru.jerael.booktracker.backend.domain.model.verification.VerificationCode
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
 import ru.jerael.booktracker.backend.domain.service.OtpGenerator
 import ru.jerael.booktracker.backend.domain.service.VerificationService
@@ -39,7 +40,12 @@ class EmailVerificationService(
         try {
             val code = otpGenerator.generate()
             val expiresAt = LocalDateTime.now().plusMinutes(otpValidityMinutes)
-            verificationRepository.saveCode(user.id, code, expiresAt)
+            val verificationCode = VerificationCode(
+                userId = user.id,
+                code = code,
+                expiresAt = expiresAt
+            )
+            verificationRepository.saveCode(verificationCode)
             sendEmail(user.email, code)
         } catch (e: Exception) {
             throw InternalException(message = "Error while sending an email")

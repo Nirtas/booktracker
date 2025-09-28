@@ -18,9 +18,8 @@
 
 package ru.jerael.booktracker.backend.api.mappers
 
-import ru.jerael.booktracker.backend.api.dto.user.*
-import ru.jerael.booktracker.backend.domain.model.user.*
-import java.util.*
+import ru.jerael.booktracker.backend.api.dto.user.UserDto
+import ru.jerael.booktracker.backend.domain.model.user.User
 
 class UserMapperImpl : UserMapper {
     override fun mapUserToDto(user: User): UserDto {
@@ -33,38 +32,5 @@ class UserMapperImpl : UserMapper {
 
     override fun mapUsersToDtos(users: List<User>): List<UserDto> {
         return users.map { mapUserToDto(it) }
-    }
-
-    override fun mapCreationDtoToCreationPayload(dto: UserCreationDto): UserCreationPayload {
-        return UserCreationPayload(
-            email = dto.email,
-            password = dto.password
-        )
-    }
-
-    override fun mapUpdateEmailDtoToUpdateEmailPayload(userId: UUID, dto: UserUpdateEmailDto): UserUpdateEmailPayload {
-        return UserUpdateEmailPayload(
-            id = userId,
-            newEmail = dto.newEmail,
-            password = dto.password
-        )
-    }
-
-    override fun mapUpdatePasswordDtoToUpdatePasswordPayload(
-        userId: UUID,
-        dto: UserUpdatePasswordDto
-    ): UserUpdatePasswordPayload {
-        return UserUpdatePasswordPayload(
-            id = userId,
-            currentPassword = dto.currentPassword,
-            newPassword = dto.newPassword
-        )
-    }
-
-    override fun mapDeletionDtoToDeletionPayload(userId: UUID, dto: UserDeletionDto): UserDeletionPayload {
-        return UserDeletionPayload(
-            id = userId,
-            password = dto.currentPassword
-        )
     }
 }

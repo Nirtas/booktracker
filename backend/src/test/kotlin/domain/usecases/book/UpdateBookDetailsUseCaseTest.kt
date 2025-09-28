@@ -33,6 +33,7 @@ import ru.jerael.booktracker.backend.domain.exceptions.BookNotFoundException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
+import ru.jerael.booktracker.backend.domain.model.book.UpdateBookDetailsData
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.usecases.book.UpdateBookDetailsUseCase
@@ -51,6 +52,7 @@ class UpdateBookDetailsUseCaseTest {
     private lateinit var useCase: UpdateBookDetailsUseCase
 
     private val language = "en"
+    private val userId = UUID.randomUUID()
     private val bookId = UUID.randomUUID()
     private val foundGenres = listOf(
         Genre(1, "genre 1"),
@@ -61,13 +63,16 @@ class UpdateBookDetailsUseCaseTest {
         id = bookId,
         title = "Title",
         author = "Author",
-        coverPath = null,
+        coverUrl = null,
         status = BookStatus.READ,
         createdAt = Instant.now(),
         genres = emptyList()
     )
 
     private fun createPayload(genreIds: List<Int> = emptyList()) = BookDetailsUpdatePayload(
+        userId = userId,
+        bookId = bookId,
+        language = language,
         title = "Title",
         author = "Author",
         status = BookStatus.READ,
@@ -85,14 +90,22 @@ class UpdateBookDetailsUseCaseTest {
         val requestedGenreIds = listOf(1, 2, 3)
         val bookDetailsUpdatePayload = createPayload(requestedGenreIds)
         val updatedBook = existingBook.copy(genres = foundGenres)
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBook
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBook
         coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
-        coEvery { bookRepository.updateBookDetails(bookId, bookDetailsUpdatePayload, language) } returns updatedBook
+        val updateBookDetailsData = UpdateBookDetailsData(
+            userId = userId,
+            bookId = bookId,
+            title = bookDetailsUpdatePayload.title,
+            author = bookDetailsUpdatePayload.author,
+            status = bookDetailsUpdatePayload.status,
+            genreIds = bookDetailsUpdatePayload.genreIds
+        )
+        coEvery { bookRepository.updateBookDetails(updateBookDetailsData, language) } returns updatedBook
 
-        val result = useCase.invoke(bookId, bookDetailsUpdatePayload, language)
+        val result = useCase.invoke(bookDetailsUpdatePayload)
 
         assertEquals(updatedBook, result)
-        coVerify(exactly = 1) { bookRepository.updateBookDetails(bookId, bookDetailsUpdatePayload, language) }
+        coVerify(exactly = 1) { bookRepository.updateBookDetails(updateBookDetailsData, language) }
     }
 
     @Test
@@ -102,43 +115,47 @@ class UpdateBookDetailsUseCaseTest {
         val mockkCode = mockk<ValidationErrorCode>()
         val errors = mapOf("genreIds" to listOf(ValidationError(mockkCode)))
         val exception = ValidationException(errors)
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBook
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBook
         coEvery { genreValidator.invoke(requestedGenreIds, language) } throws exception
 
         assertThrows<ValidationException> {
-            useCase.invoke(bookId, bookDetailsUpdatePayload, language)
+            useCase.invoke(bookDetailsUpdatePayload)
         }
 
-        coVerify(exactly = 0) { bookRepository.updateBookDetails(any(), any(), any()) }
+        coVerify(exactly = 0) { bookRepository.updateBookDetails(any(), any()) }
     }
 
     @Test
     fun `when a book is not found, a BookNotFoundException should be thrown`() = runTest {
         val bookDetailsUpdatePayload = createPayload()
-        coEvery { bookRepository.getBookById(bookId, language) } throws BookNotFoundException(bookId.toString())
+        coEvery { bookRepository.getBookById(userId, bookId, language) } throws BookNotFoundException(bookId.toString())
 
         assertThrows<BookNotFoundException> {
-            useCase.invoke(bookId, bookDetailsUpdatePayload, language)
+            useCase.invoke(bookDetailsUpdatePayload)
         }
 
-        coVerify(exactly = 0) { bookRepository.updateBookDetails(any(), any(), any()) }
+        coVerify(exactly = 0) { bookRepository.updateBookDetails(any(), any()) }
     }
 
     @Test
     fun `when repository fails to update book, it should propagate the exception`() = runTest {
         val bookDetailsUpdatePayload = createPayload()
-        coEvery { bookRepository.getBookById(bookId, language) } returns existingBook
+        coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBook
         coEvery { genreValidator.invoke(any(), any()) } just Runs
-        coEvery {
-            bookRepository.updateBookDetails(
-                bookId,
-                bookDetailsUpdatePayload,
-                language
-            )
-        } throws BookNotFoundException(bookId.toString())
+        val updateBookDetailsData = UpdateBookDetailsData(
+            userId = userId,
+            bookId = bookId,
+            title = bookDetailsUpdatePayload.title,
+            author = bookDetailsUpdatePayload.author,
+            status = bookDetailsUpdatePayload.status,
+            genreIds = bookDetailsUpdatePayload.genreIds
+        )
+        coEvery { bookRepository.updateBookDetails(updateBookDetailsData, language) } throws BookNotFoundException(
+            bookId.toString()
+        )
 
         val exception = assertThrows<BookNotFoundException> {
-            useCase.invoke(bookId, bookDetailsUpdatePayload, language)
+            useCase.invoke(bookDetailsUpdatePayload)
         }
 
         assertTrue(exception.message!!.contains("$bookId"))

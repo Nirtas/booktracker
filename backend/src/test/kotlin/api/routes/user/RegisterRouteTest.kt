@@ -66,6 +66,7 @@ class RegisterRouteTest : UsersRouteTestBase() {
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         val response = client.post(url) {
@@ -76,7 +77,6 @@ class RegisterRouteTest : UsersRouteTestBase() {
         assertEquals(HttpStatusCode.Created, response.status)
         assertEquals(userDto, Json.decodeFromString<UserDto>(response.bodyAsText()))
         verify(exactly = 1) { userValidator.validateCreation(any()) }
-        verify(exactly = 1) { userMapper.mapCreationDtoToCreationPayload(any()) }
         coVerify(exactly = 1) { registerUserUseCase.invoke(any()) }
         verify(exactly = 1) { userMapper.mapUserToDto(any()) }
     }
@@ -89,6 +89,7 @@ class RegisterRouteTest : UsersRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
@@ -109,6 +110,7 @@ class RegisterRouteTest : UsersRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {

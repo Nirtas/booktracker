@@ -20,16 +20,19 @@ package ru.jerael.booktracker.backend.domain.usecases.verification
 
 import ru.jerael.booktracker.backend.domain.exceptions.InvalidVerificationException
 import ru.jerael.booktracker.backend.domain.exceptions.UserByEmailNotFoundException
+import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
+import ru.jerael.booktracker.backend.domain.service.TokenService
 import java.time.LocalDateTime
 
 class VerifyCodeUseCase(
     private val userRepository: UserRepository,
-    private val verificationRepository: VerificationRepository
+    private val verificationRepository: VerificationRepository,
+    private val tokenService: TokenService
 ) {
-    suspend operator fun invoke(verificationPayload: VerificationPayload) {
+    suspend operator fun invoke(verificationPayload: VerificationPayload): TokenPair {
         val user = userRepository.getUserByEmail(verificationPayload.email) ?: throw UserByEmailNotFoundException(
             verificationPayload.email
         )
@@ -39,5 +42,6 @@ class VerifyCodeUseCase(
         if (!isCodeValid || isCodeExpired) throw InvalidVerificationException()
         userRepository.updateUserVerificationStatus(user.id, true)
         verificationRepository.deleteCode(user.id)
+        return tokenService.generateTokenPair(user.id)
     }
 }

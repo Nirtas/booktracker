@@ -57,7 +57,11 @@ class RefreshTokenRepositoryImplTest : RepositoryTestBase() {
         token = "refresh",
         expiresAt = LocalDateTime.now().plusDays(30L)
     )
-    private val newRefreshToken = "refresh2"
+    private val newRefreshToken = RefreshToken(
+        userId = secondUser.id,
+        token = "refresh2",
+        expiresAt = LocalDateTime.now().plusDays(30L)
+    )
     private val nonExistingToken = "nonExistingToken"
 
     @BeforeEach
@@ -81,14 +85,12 @@ class RefreshTokenRepositoryImplTest : RepositoryTestBase() {
 
     @Test
     fun `when createToken is called, it should insert a new refresh token`() = runTest {
-        val expiresAt = LocalDateTime.now().plusDays(30L)
+        refreshTokenRepository.createToken(newRefreshToken)
 
-        refreshTokenRepository.createToken(secondUser.id, newRefreshToken, expiresAt)
-
-        val savedToken = refreshTokenRepository.getToken(newRefreshToken)
+        val savedToken = refreshTokenRepository.getToken(newRefreshToken.token)
         assertNotNull(savedToken)
         assertEquals(secondUser.id, savedToken!!.userId)
-        assertEquals(newRefreshToken, savedToken.token)
+        assertEquals(newRefreshToken.token, savedToken.token)
     }
 
     @Test

@@ -42,7 +42,6 @@ class UserValidatorTest {
         password = "Passw0rd!"
     )
     private val userUpdatePasswordDto = UserUpdatePasswordDto(
-        email = "test@example.com",
         currentPassword = "Passw0rd!",
         newPassword = "Passw0rd@"
     )
@@ -118,26 +117,26 @@ class UserValidatorTest {
     }
 
     @Test
-    fun `when email is invalid, validateUpdatePassword should throw ValidationException`() {
-        val invalidDto = userUpdatePasswordDto.copy(email = "")
+    fun `when currentPassword is invalid, validateUpdatePassword should throw ValidationException`() {
+        val invalidDto = userUpdatePasswordDto.copy(currentPassword = "")
 
         val exception = assertThrows<ValidationException> {
             validator.validateUpdatePassword(invalidDto)
         }
 
-        assertTrue(exception.errors.containsKey("email"))
+        assertTrue(exception.errors.containsKey("currentPassword"))
     }
 
     @Test
     fun `when multiple fields are invalid, validateUpdatePassword should throw ValidationException containing all errors`() {
-        val invalidDto = userUpdatePasswordDto.copy(email = "", currentPassword = "")
+        val invalidDto = userUpdatePasswordDto.copy(currentPassword = "", newPassword = "")
 
         val exception = assertThrows<ValidationException> {
             validator.validateUpdatePassword(invalidDto)
         }
 
-        assertTrue(exception.errors.containsKey("email"))
         assertTrue(exception.errors.containsKey("currentPassword"))
+        assertTrue(exception.errors.containsKey("newPassword"))
     }
 
     @Test

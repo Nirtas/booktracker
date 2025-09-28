@@ -26,11 +26,9 @@ import ru.jerael.booktracker.backend.api.validation.validator.*
 import ru.jerael.booktracker.backend.domain.config.OtpConfig
 
 val apiModule = module {
-    single<BookMapper> { BookMapperImpl(imageBaseUrl = get(qualifier = Qualifiers.imageBaseUrl), genreMapper = get()) }
+    single<BookMapper> { BookMapperImpl(genreMapper = get()) }
     single<GenreMapper> { GenreMapperImpl() }
     single<UserMapper> { UserMapperImpl() }
-    single<VerificationMapper> { VerificationMapperImpl() }
-    single<LoginMapper> { LoginMapperImpl() }
     single<TokenMapper> { TokenMapperImpl() }
 
     single<MultipartParser> { MultipartParser() }
@@ -76,7 +74,6 @@ val apiModule = module {
             refreshTokenUseCase = get(),
             loginValidator = get(),
             tokenValidator = get(),
-            loginMapper = get(),
             tokenMapper = get()
         )
     }
@@ -85,7 +82,7 @@ val apiModule = module {
             verifyCodeUseCase = get(),
             resendVerificationCodeUseCase = get(),
             verificationValidator = get(),
-            verificationMapper = get()
+            tokenMapper = get()
         )
     }
 }

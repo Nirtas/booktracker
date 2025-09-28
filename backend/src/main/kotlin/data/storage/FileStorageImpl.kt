@@ -74,7 +74,10 @@ class FileStorageImpl(
         } catch (e: Exception) {
             if (e is AppException) throw e
             logger.error("Failed to delete file at path: $path", e)
-            throw StorageException(message = "Failed to delete file '$path'. Reason: ${e.message}")
+            throw StorageException(
+                userMessage = "Couldn't delete file. Please try again later.",
+                message = "Failed to delete file '$path'. Reason: ${e.message}"
+            )
         }
     }
 }

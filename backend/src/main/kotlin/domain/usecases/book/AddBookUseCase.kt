@@ -18,12 +18,14 @@
 
 package ru.jerael.booktracker.backend.domain.usecases.book
 
+import ru.jerael.booktracker.backend.domain.model.book.AddBookData
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.validation.CoverValidator
 import ru.jerael.booktracker.backend.domain.validation.GenreValidator
+import java.util.*
 
 class AddBookUseCase(
     private val bookRepository: BookRepository,
@@ -31,20 +33,24 @@ class AddBookUseCase(
     private val coverStorage: CoverStorage,
     private val coverValidator: CoverValidator
 ) {
-    suspend operator fun invoke(
-        payload: BookCreationPayload,
-        coverBytes: ByteArray?,
-        coverFileName: String?,
-        language: String
-    ): Book {
-        genreValidator.invoke(payload.genreIds, language)
-        val coverPath = if (coverBytes != null && coverFileName != null) {
-            coverValidator(coverBytes, coverFileName)
-            coverStorage.save(coverBytes, coverFileName)
+    suspend operator fun invoke(payload: BookCreationPayload): Book {
+        genreValidator.invoke(payload.genreIds, payload.language)
+        val coverUrl = if (payload.coverBytes != null && payload.coverFileName != null) {
+            coverValidator(payload.coverBytes, payload.coverFileName)
+            val fileExtension = payload.coverFileName.substringAfterLast('.', "")
+            val path = "${payload.userId}/covers/${UUID.randomUUID()}.$fileExtension"
+            coverStorage.save(path, payload.coverBytes)
         } else {
             null
         }
-        val finalPayload = payload.copy(coverPath = coverPath)
-        return bookRepository.addBook(finalPayload, language)
+        val addBookData = AddBookData(
+            userId = payload.userId,
+            title = payload.title,
+            author = payload.author,
+            coverUrl = coverUrl,
+            status = payload.status,
+            genreIds = payload.genreIds
+        )
+        return bookRepository.addBook(addBookData, payload.language)
     }
 }

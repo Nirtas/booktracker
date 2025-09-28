@@ -16,11 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.mappers
+package ru.jerael.booktracker.backend.domain.exceptions
 
-import ru.jerael.booktracker.backend.api.dto.login.LoginRequestDto
-import ru.jerael.booktracker.backend.domain.model.login.LoginPayload
+import io.ktor.http.*
 
-interface LoginMapper {
-    fun mapDtoToPayload(dto: LoginRequestDto): LoginPayload
-}
+class UnauthenticatedException(
+    userMessage: String
+) : AppException(
+    httpStatusCode = HttpStatusCode.Unauthorized,
+    message = userMessage,
+    userMessage = userMessage,
+    errorCode = "INVALID_TOKEN"
+)

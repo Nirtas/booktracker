@@ -37,6 +37,6 @@ class RefreshTokenUseCase(
         if (LocalDateTime.now().isAfter(token.expiresAt)) throw ExpiredRefreshTokenException()
         refreshTokenRepository.deleteToken(refreshToken)
         val user = userRepository.getUserById(token.userId) ?: throw UserByIdNotFoundException(token.userId.toString())
-        return tokenService.generateTokenPair(user)
+        return tokenService.generateTokenPair(user.id)
     }
 }

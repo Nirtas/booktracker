@@ -29,6 +29,7 @@ import ru.jerael.booktracker.backend.data.service.EmailVerificationService
 import ru.jerael.booktracker.backend.domain.config.SmtpConfig
 import ru.jerael.booktracker.backend.domain.exceptions.InternalException
 import ru.jerael.booktracker.backend.domain.model.user.User
+import ru.jerael.booktracker.backend.domain.model.verification.VerificationCode
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
 import ru.jerael.booktracker.backend.domain.service.OtpGenerator
 import java.util.*
@@ -69,24 +70,17 @@ class EmailVerificationServiceTest {
     @Test
     fun `when start is called, it should save the code from generator`() = runTest {
         val expectedCode = "123456"
-        val userIdSlot = slot<UUID>()
-        val codeSlot = slot<String>()
         val serviceSpy = spyk<EmailVerificationService>(service, recordPrivateCalls = true)
+        val codeSlot = slot<VerificationCode>()
         every { otpGenerator.generate() } returns expectedCode
-        coEvery {
-            verificationRepository.saveCode(
-                capture(userIdSlot),
-                capture(codeSlot),
-                any()
-            )
-        } just Runs
+        coEvery { verificationRepository.saveCode(capture(codeSlot)) } just Runs
         every { serviceSpy["sendEmail"](any<String>(), any<String>()) } returns Unit
 
         serviceSpy.start(user)
 
-        assertEquals(user.id, userIdSlot.captured)
-        assertEquals(expectedCode, codeSlot.captured)
-        coVerify(exactly = 1) { verificationRepository.saveCode(any(), any(), any()) }
+        assertEquals(user.id, codeSlot.captured.userId)
+        assertEquals(expectedCode, codeSlot.captured.code)
+        coVerify(exactly = 1) { verificationRepository.saveCode(any()) }
         verify(exactly = 1) { serviceSpy["sendEmail"](any<String>(), any<String>()) }
     }
 
@@ -94,7 +88,7 @@ class EmailVerificationServiceTest {
     fun `when verificationRepository throws an exception, start should rethrow it as InternalException`() = runTest {
         val exception = RuntimeException("Error")
         every { otpGenerator.generate() } returns "123456"
-        coEvery { verificationRepository.saveCode(any(), any(), any()) } throws exception
+        coEvery { verificationRepository.saveCode(any()) } throws exception
 
         assertThrows<InternalException> {
             service.start(user)

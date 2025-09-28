@@ -18,6 +18,8 @@
 
 package api.routes.book
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -25,6 +27,7 @@ import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.slot
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
@@ -44,7 +47,7 @@ import kotlin.test.assertEquals
 
 class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
 
-    private val language = "en"
+    private val userId = UUID.randomUUID()
     private val bookId = UUID.randomUUID()
     private val bookUpdateDto = BookUpdateDto(
         title = "Title",
@@ -56,7 +59,7 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
         id = bookId,
         title = bookUpdateDto.title,
         author = bookUpdateDto.author,
-        coverPath = null,
+        coverUrl = null,
         status = BookStatus.fromString(bookUpdateDto.status)!!,
         createdAt = Instant.now(),
         genres = emptyList()
@@ -70,21 +73,29 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
     @Test
     fun `when request is valid and the book exists, updateBookDetails should return the updated book and a 200 OK status`() =
         testApplication {
+            val token = generateTestToken(userId)
             val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+                userId = userId,
+                bookId = bookId,
+                language = "en",
                 title = "Title",
                 author = "Author",
                 status = BookStatus.READ,
                 genreIds = emptyList()
             )
-            val updatedBookDto = BookMapperImpl(imageBaseUrl, GenreMapperImpl()).mapBookToDto(updatedBook)
-            coEvery { updateBookDetailsUseCase.invoke(bookId, bookDetailsUpdatePayload, language) } returns updatedBook
+            val updatedBookDto = BookMapperImpl(GenreMapperImpl()).mapBookToDto(updatedBook)
+            coEvery { updateBookDetailsUseCase.invoke(bookDetailsUpdatePayload) } returns updatedBook
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.put(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
                 contentType(ContentType.Application.Json)
                 val json = Json.encodeToString(bookUpdateDto)
                 setBody(json)
@@ -96,34 +107,46 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
 
     @Test
     fun `when Accept-Language header is present, language() should correctly parse and return it`() = testApplication {
-        coEvery { updateBookDetailsUseCase.invoke(any(), any(), any()) } returns updatedBook
+        val token = generateTestToken(userId)
+        val payloadSlot = slot<BookDetailsUpdatePayload>()
+        coEvery { updateBookDetailsUseCase.invoke(capture(payloadSlot)) } returns updatedBook
 
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         client.put(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
+            }
             contentType(ContentType.Application.Json)
             val json = Json.encodeToString(bookUpdateDto)
             setBody(json)
             header(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
         }
 
-        coVerify(exactly = 1) { updateBookDetailsUseCase.invoke(any(), any(), "en") }
+        assertEquals("en", payloadSlot.captured.language)
+        coVerify(exactly = 1) { updateBookDetailsUseCase.invoke(any()) }
     }
 
     @Test
     fun `when validateUpdate is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
+            val token = generateTestToken(userId)
             every { bookValidator.validateUpdate(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.put(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
                 contentType(ContentType.Application.Json)
                 val json = Json.encodeToString(bookUpdateDto)
                 setBody(json)
@@ -131,20 +154,25 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            coVerify(exactly = 0) { updateBookDetailsUseCase.invoke(any(), any(), any()) }
+            coVerify(exactly = 0) { updateBookDetailsUseCase.invoke(any()) }
         }
 
     @Test
     fun `when updateBookDetailsUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
-            coEvery { updateBookDetailsUseCase.invoke(any(), any(), any()) } throws Exception("Error")
+            val token = generateTestToken(userId)
+            coEvery { updateBookDetailsUseCase.invoke(any()) } throws Exception("Error")
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.put(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
                 contentType(ContentType.Application.Json)
                 val json = Json.encodeToString(bookUpdateDto)
                 setBody(json)
@@ -153,4 +181,53 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
         }
+
+    @Test
+    fun `when Authorization header is missing, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.put(url)
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { updateBookDetailsUseCase.invoke(any()) }
+    }
+
+    @Test
+    fun `when token is missing userId claim, it should return 401 Unauthorized`() = testApplication {
+        val expectedErrorDto = ErrorDto(
+            code = "INVALID_TOKEN",
+            message = "Token is not valid or has expired."
+        )
+        val invalidToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withExpiresAt(Date(System.currentTimeMillis() + 15L * 60 * 1000))
+            .sign(Algorithm.HMAC256(secret))
+
+        application {
+            configureStatusPages()
+            configureSerialization()
+            configureTestAuthentication()
+            configureRouting()
+        }
+        val response = client.put(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $invalidToken")
+            }
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(expectedErrorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
+        coVerify(exactly = 0) { updateBookDetailsUseCase.invoke(any()) }
+    }
 }

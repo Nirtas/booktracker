@@ -57,7 +57,7 @@ class UpdateUserPasswordUseCaseTest {
         isVerified = true
     )
     private val userUpdatePasswordPayload = UserUpdatePasswordPayload(
-        id = userId,
+        userId = userId,
         currentPassword = password,
         newPassword = newPassword
     )

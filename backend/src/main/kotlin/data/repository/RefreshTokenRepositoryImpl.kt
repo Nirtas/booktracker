@@ -29,8 +29,6 @@ import ru.jerael.booktracker.backend.data.db.tables.RefreshTokens
 import ru.jerael.booktracker.backend.data.mappers.toRefreshToken
 import ru.jerael.booktracker.backend.domain.model.token.RefreshToken
 import ru.jerael.booktracker.backend.domain.repository.RefreshTokenRepository
-import java.time.LocalDateTime
-import java.util.*
 
 class RefreshTokenRepositoryImpl : RefreshTokenRepository {
     override suspend fun getToken(token: String): RefreshToken? {
@@ -42,13 +40,13 @@ class RefreshTokenRepositoryImpl : RefreshTokenRepository {
         }
     }
 
-    override suspend fun createToken(userId: UUID, token: String, expiresAt: LocalDateTime) {
+    override suspend fun createToken(refreshToken: RefreshToken) {
         withContext(Dispatchers.IO) {
             transaction {
                 RefreshTokens.insert {
-                    it[RefreshTokens.userId] = userId
-                    it[RefreshTokens.token] = token
-                    it[RefreshTokens.expiresAt] = expiresAt
+                    it[RefreshTokens.token] = refreshToken.token
+                    it[RefreshTokens.userId] = refreshToken.userId
+                    it[RefreshTokens.expiresAt] = refreshToken.expiresAt
                 }
             }
         }

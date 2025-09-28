@@ -22,14 +22,19 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.verify
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
+import ru.jerael.booktracker.backend.api.dto.login.LoginResponseDto
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
 import ru.jerael.booktracker.backend.api.plugins.configureRouting
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
+import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 import kotlin.test.assertEquals
 
 class VerifyCodeRouteTest : VerificationsRouteTestBase() {
@@ -42,13 +47,17 @@ class VerifyCodeRouteTest : VerificationsRouteTestBase() {
     )
 
     @Test
-    fun `when request is valid, verify should return a 200 OK status`() =
+    fun `when request is valid, verify should return new token pair and a 200 OK status`() =
         testApplication {
-            coEvery { verifyCodeUseCase.invoke(any()) } just Runs
+            val tokenPair = TokenPair("access", "refresh")
+            val responseDto = LoginResponseDto(tokenPair.accessToken, tokenPair.refreshToken)
+            coEvery { verifyCodeUseCase.invoke(any()) } returns tokenPair
+            every { tokenMapper.mapTokenToResponseDto(tokenPair) } returns responseDto
 
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
@@ -57,8 +66,8 @@ class VerifyCodeRouteTest : VerificationsRouteTestBase() {
             }
 
             assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(responseDto, Json.decodeFromString<LoginResponseDto>(response.bodyAsText()))
             verify(exactly = 1) { verificationValidator.validateVerification(any()) }
-            verify(exactly = 1) { verificationMapper.mapDtoToPayload(any()) }
             coVerify(exactly = 1) { verifyCodeUseCase.invoke(any()) }
         }
 
@@ -70,6 +79,7 @@ class VerifyCodeRouteTest : VerificationsRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
@@ -89,6 +99,7 @@ class VerifyCodeRouteTest : VerificationsRouteTestBase() {
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         val response = client.post(url) {

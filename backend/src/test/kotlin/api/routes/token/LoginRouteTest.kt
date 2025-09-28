@@ -57,6 +57,7 @@ class LoginRouteTest : TokensRouteTestBase() {
             application {
                 configureStatusPages()
                 configureSerialization()
+                configureTestAuthentication()
                 configureRouting()
             }
             val response = client.post(url) {
@@ -67,7 +68,6 @@ class LoginRouteTest : TokensRouteTestBase() {
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(loginResponseDto, Json.decodeFromString<LoginResponseDto>(response.bodyAsText()))
             verify(exactly = 1) { loginValidator.validateLogin(any()) }
-            verify(exactly = 1) { loginMapper.mapDtoToPayload(any()) }
             coVerify(exactly = 1) { loginUseCase.invoke(any()) }
             verify(exactly = 1) { tokenMapper.mapTokenToResponseDto(any()) }
         }
@@ -79,6 +79,7 @@ class LoginRouteTest : TokensRouteTestBase() {
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         val response = client.post(url) {
@@ -98,6 +99,7 @@ class LoginRouteTest : TokensRouteTestBase() {
         application {
             configureStatusPages()
             configureSerialization()
+            configureTestAuthentication()
             configureRouting()
         }
         val response = client.post(url) {
