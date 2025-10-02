@@ -29,7 +29,7 @@ import ru.jerael.booktracker.backend.domain.exceptions.StorageException
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 import ru.jerael.booktracker.backend.domain.usecases.book.DeleteBookUseCase
 import java.time.Instant
 import java.util.*
@@ -40,7 +40,7 @@ class DeleteBookUseCaseTest {
     private lateinit var bookRepository: BookRepository
 
     @RelaxedMockK
-    private lateinit var coverStorage: CoverStorage
+    private lateinit var userAssetStorage: UserAssetStorage
 
     private lateinit var useCase: DeleteBookUseCase
 
@@ -64,7 +64,7 @@ class DeleteBookUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = DeleteBookUseCase(bookRepository, coverStorage)
+        useCase = DeleteBookUseCase(bookRepository, userAssetStorage)
     }
 
     @Test
@@ -75,7 +75,7 @@ class DeleteBookUseCaseTest {
         useCase.invoke(userId, bookId)
 
         coVerify(exactly = 1) { bookRepository.getBookById(userId, bookId, language) }
-        coVerify(exactly = 1) { coverStorage.delete(coverUrl) }
+        coVerify(exactly = 1) { userAssetStorage.delete(coverUrl) }
         coVerify(exactly = 1) { bookRepository.deleteBook(userId, bookId) }
     }
 
@@ -87,14 +87,14 @@ class DeleteBookUseCaseTest {
         useCase.invoke(userId, bookId)
 
         coVerify(exactly = 1) { bookRepository.getBookById(userId, bookId, language) }
-        coVerify(exactly = 0) { coverStorage.delete(any()) }
+        coVerify(exactly = 0) { userAssetStorage.delete(any()) }
         coVerify(exactly = 1) { bookRepository.deleteBook(userId, bookId) }
     }
 
     @Test
     fun `when it is not possible to remove a cover from storage, a StorageException should be thrown`() = runTest {
         coEvery { bookRepository.getBookById(userId, bookId, language) } returns bookWithCover
-        coEvery { coverStorage.delete(any()) } throws StorageException(message = "Error")
+        coEvery { userAssetStorage.delete(any()) } throws StorageException(message = "Error")
 
         assertThrows<StorageException> {
             useCase.invoke(userId, bookId)
@@ -113,6 +113,6 @@ class DeleteBookUseCaseTest {
                 useCase.invoke(userId, bookId)
             }
 
-            coVerify(exactly = 1) { coverStorage.delete(coverUrl) }
+            coVerify(exactly = 1) { userAssetStorage.delete(coverUrl) }
         }
 }

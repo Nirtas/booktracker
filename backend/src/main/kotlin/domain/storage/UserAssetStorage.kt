@@ -18,7 +18,11 @@
 
 package ru.jerael.booktracker.backend.domain.storage
 
-interface CoverStorage {
-    suspend fun save(path: String, content: ByteArray): String
+import ru.jerael.booktracker.backend.domain.model.AssetType
+import java.util.*
+
+interface UserAssetStorage {
+    suspend fun save(userId: UUID, assetType: AssetType, fileName: String, content: ByteArray): String
     suspend fun delete(url: String)
+    suspend fun deleteUserDirectory(userId: UUID)
 }

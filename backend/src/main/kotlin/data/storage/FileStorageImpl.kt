@@ -80,4 +80,26 @@ class FileStorageImpl(
             )
         }
     }
+
+    override suspend fun deleteDirectory(path: String) {
+        try {
+            withContext(Dispatchers.IO) {
+                val directory = File(storagePath, path)
+                if (!directory.exists()) return@withContext
+                if (directory.isDirectory) {
+                    val wasDeleted = directory.deleteRecursively()
+                    if (!wasDeleted) {
+                        throw StorageException(message = "Failed to delete directory at path: $path")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            if (e is AppException) throw e
+            logger.error("Failed to delete directory at path: $path", e)
+            throw StorageException(
+                userMessage = "Couldn't delete directory. Please try again later.",
+                message = "Failed to delete directory '$path'. Reason: ${e.message}"
+            )
+        }
+    }
 }

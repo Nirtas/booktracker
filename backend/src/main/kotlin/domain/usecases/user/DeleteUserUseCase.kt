@@ -23,12 +23,14 @@ import ru.jerael.booktracker.backend.domain.exceptions.UserByIdNotFoundException
 import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 
 class DeleteUserUseCase(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,
-    private val userValidator: UserValidator
+    private val userValidator: UserValidator,
+    private val userAssetStorage: UserAssetStorage
 ) {
     suspend operator fun invoke(payload: UserDeletionPayload) {
         userValidator.validateDeletion(payload)
@@ -39,5 +41,6 @@ class DeleteUserUseCase(
             throw PasswordVerificationException()
         }
         userRepository.deleteUser(user.id)
+        userAssetStorage.deleteUserDirectory(user.id)
     }
 }

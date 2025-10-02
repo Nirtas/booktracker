@@ -32,7 +32,7 @@ import ru.jerael.booktracker.backend.domain.model.book.BookCoverUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.model.book.UpdateBookCoverData
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 import ru.jerael.booktracker.backend.domain.usecases.book.UpdateBookCoverUseCase
 import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
 import java.time.Instant
@@ -45,7 +45,7 @@ class UpdateBookCoverUseCaseTest {
     private lateinit var bookRepository: BookRepository
 
     @MockK
-    private lateinit var coverStorage: CoverStorage
+    private lateinit var userAssetStorage: UserAssetStorage
 
     private val coverValidator: CoverValidator = CoverValidator()
 
@@ -77,14 +77,14 @@ class UpdateBookCoverUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = UpdateBookCoverUseCase(bookRepository, coverStorage, coverValidator)
+        useCase = UpdateBookCoverUseCase(bookRepository, userAssetStorage, coverValidator)
     }
 
     @Test
     fun `when everything is fine, the cover is successfully updated`() = runTest {
         coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverUrl) } just Runs
-        coEvery { coverStorage.save(any(), coverBytes) } returns newCoverUrl
+        coEvery { userAssetStorage.delete(oldCoverUrl) } just Runs
+        coEvery { userAssetStorage.save(any(), any(), any(), coverBytes) } returns newCoverUrl
         val updateBookCoverData = UpdateBookCoverData(
             userId = userId,
             bookId = bookId,
@@ -103,8 +103,8 @@ class UpdateBookCoverUseCaseTest {
 
         assertEquals(updatedBook, result)
         coVerify(exactly = 1) { bookRepository.getBookById(userId, bookId, language) }
-        coVerify(exactly = 1) { coverStorage.delete(oldCoverUrl) }
-        coVerify(exactly = 1) { coverStorage.save(any(), coverBytes) }
+        coVerify(exactly = 1) { userAssetStorage.delete(oldCoverUrl) }
+        coVerify(exactly = 1) { userAssetStorage.save(any(), any(), any(), coverBytes) }
         coVerify(exactly = 1) { bookRepository.updateBookCover(updateBookCoverData, language) }
     }
 
@@ -123,15 +123,15 @@ class UpdateBookCoverUseCaseTest {
             useCase.invoke(bookCoverUpdatePayload)
         }
 
-        coVerify(exactly = 0) { coverStorage.delete(any()) }
-        coVerify(exactly = 0) { coverStorage.save(any(), any()) }
+        coVerify(exactly = 0) { userAssetStorage.delete(any()) }
+        coVerify(exactly = 0) { userAssetStorage.save(any(), any(), any(), any()) }
         coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any()) }
     }
 
     @Test
     fun `when it is not possible to remove a cover from storage, a StorageException should be thrown`() = runTest {
         coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverUrl) } throws StorageException(message = "Error")
+        coEvery { userAssetStorage.delete(oldCoverUrl) } throws StorageException(message = "Error")
         val bookCoverUpdatePayload = BookCoverUpdatePayload(
             userId = userId,
             bookId = bookId,
@@ -144,15 +144,15 @@ class UpdateBookCoverUseCaseTest {
             useCase.invoke(bookCoverUpdatePayload)
         }
 
-        coVerify(exactly = 0) { coverStorage.save(any(), any()) }
+        coVerify(exactly = 0) { userAssetStorage.save(any(), any(), any(), any()) }
         coVerify(exactly = 0) { bookRepository.updateBookCover(any(), any()) }
     }
 
     @Test
     fun `when it is not possible to save a new cover to storage, a StorageException should be thrown`() = runTest {
         coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverUrl) } just Runs
-        coEvery { coverStorage.save(any(), coverBytes) } throws StorageException(message = "Error")
+        coEvery { userAssetStorage.delete(oldCoverUrl) } just Runs
+        coEvery { userAssetStorage.save(any(), any(), any(), coverBytes) } throws StorageException(message = "Error")
         val bookCoverUpdatePayload = BookCoverUpdatePayload(
             userId = userId,
             bookId = bookId,
@@ -171,8 +171,8 @@ class UpdateBookCoverUseCaseTest {
     @Test
     fun `when repository fails to update book, it should propagate the exception`() = runTest {
         coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithCover
-        coEvery { coverStorage.delete(oldCoverUrl) } just Runs
-        coEvery { coverStorage.save(any(), coverBytes) } returns newCoverUrl
+        coEvery { userAssetStorage.delete(oldCoverUrl) } just Runs
+        coEvery { userAssetStorage.save(any(), any(), any(), coverBytes) } returns newCoverUrl
         val updateBookCoverData = UpdateBookCoverData(
             userId = userId,
             bookId = bookId,
@@ -202,7 +202,7 @@ class UpdateBookCoverUseCaseTest {
     @Test
     fun `when the book does not have a cover, it is not deleted`() = runTest {
         coEvery { bookRepository.getBookById(userId, bookId, language) } returns existingBookWithoutCover
-        coEvery { coverStorage.save(any(), coverBytes) } returns newCoverUrl
+        coEvery { userAssetStorage.save(any(), any(), any(), coverBytes) } returns newCoverUrl
         val updateBookCoverData = UpdateBookCoverData(
             userId = userId,
             bookId = bookId,
@@ -220,8 +220,8 @@ class UpdateBookCoverUseCaseTest {
         val result = useCase.invoke(bookCoverUpdatePayload)
 
         assertEquals(updatedBook, result)
-        coVerify(exactly = 0) { coverStorage.delete(any()) }
-        coVerify(exactly = 1) { coverStorage.save(any(), coverBytes) }
+        coVerify(exactly = 0) { userAssetStorage.delete(any()) }
+        coVerify(exactly = 1) { userAssetStorage.save(any(), any(), any(), coverBytes) }
         coVerify(exactly = 1) { bookRepository.updateBookCover(updateBookCoverData, language) }
     }
 }

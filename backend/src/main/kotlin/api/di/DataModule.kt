@@ -24,8 +24,8 @@ import ru.jerael.booktracker.backend.data.repository.*
 import ru.jerael.booktracker.backend.data.service.EmailVerificationService
 import ru.jerael.booktracker.backend.data.service.JwtService
 import ru.jerael.booktracker.backend.data.service.OtpGeneratorImpl
-import ru.jerael.booktracker.backend.data.storage.CoverStorageImpl
 import ru.jerael.booktracker.backend.data.storage.FileStorageImpl
+import ru.jerael.booktracker.backend.data.storage.UserAssetStorageImpl
 import ru.jerael.booktracker.backend.domain.config.JwtConfig
 import ru.jerael.booktracker.backend.domain.config.OtpConfig
 import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
@@ -33,12 +33,12 @@ import ru.jerael.booktracker.backend.domain.repository.*
 import ru.jerael.booktracker.backend.domain.service.OtpGenerator
 import ru.jerael.booktracker.backend.domain.service.TokenService
 import ru.jerael.booktracker.backend.domain.service.VerificationService
-import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 
 val dataModule = module {
     single<FileStorage> { FileStorageImpl(storagePath = get(Qualifiers.storagePath), logger = get()) }
-    single<CoverStorage> { CoverStorageImpl(fileStorage = get(), imageBaseUrl = get(Qualifiers.imageBaseUrl)) }
+    single<UserAssetStorage> { UserAssetStorageImpl(fileStorage = get(), imageBaseUrl = get(Qualifiers.imageBaseUrl)) }
 
     single<BookRepository> { BookRepositoryImpl() }
     single<GenreRepository> { GenreRepositoryImpl() }

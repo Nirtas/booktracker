@@ -30,6 +30,7 @@ import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 import ru.jerael.booktracker.backend.domain.usecases.user.DeleteUserUseCase
 import ru.jerael.booktracker.backend.domain.validation.ValidationException
 import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
@@ -45,6 +46,9 @@ class DeleteUserUseCaseTest {
 
     @MockK
     private lateinit var userValidator: UserValidator
+
+    @MockK
+    private lateinit var userAssetStorage: UserAssetStorage
 
     private lateinit var useCase: DeleteUserUseCase
 
@@ -65,7 +69,7 @@ class DeleteUserUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = DeleteUserUseCase(userRepository, passwordHasher, userValidator)
+        useCase = DeleteUserUseCase(userRepository, passwordHasher, userValidator, userAssetStorage)
     }
 
     @Test
@@ -74,10 +78,12 @@ class DeleteUserUseCaseTest {
         coEvery { userRepository.getUserById(userId) } returns user
         every { passwordHasher.verify(password, hash) } returns true
         coEvery { userRepository.deleteUser(userId) } just Runs
+        coEvery { userAssetStorage.deleteUserDirectory(userId) } just Runs
 
         useCase.invoke(userDeletionPayload)
 
         coVerify(exactly = 1) { userRepository.deleteUser(userId) }
+        coVerify(exactly = 1) { userAssetStorage.deleteUserDirectory(any()) }
     }
 
     @Test
@@ -91,6 +97,7 @@ class DeleteUserUseCaseTest {
 
         verify(exactly = 0) { passwordHasher.verify(any(), any()) }
         coVerify(exactly = 0) { userRepository.deleteUser(any()) }
+        coVerify(exactly = 0) { userAssetStorage.deleteUserDirectory(any()) }
     }
 
     @Test
@@ -104,6 +111,7 @@ class DeleteUserUseCaseTest {
         }
 
         coVerify(exactly = 0) { userRepository.deleteUser(any()) }
+        coVerify(exactly = 0) { userAssetStorage.deleteUserDirectory(any()) }
     }
 
     @Test
@@ -117,5 +125,6 @@ class DeleteUserUseCaseTest {
 
         verify(exactly = 0) { passwordHasher.verify(any(), any()) }
         coVerify(exactly = 0) { userRepository.deleteUser(any()) }
+        coVerify(exactly = 0) { userAssetStorage.deleteUserDirectory(any()) }
     }
 }

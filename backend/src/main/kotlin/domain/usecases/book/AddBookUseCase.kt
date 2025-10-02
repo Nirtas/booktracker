@@ -18,20 +18,20 @@
 
 package ru.jerael.booktracker.backend.domain.usecases.book
 
+import ru.jerael.booktracker.backend.domain.model.AssetType
 import ru.jerael.booktracker.backend.domain.model.book.AddBookData
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 import ru.jerael.booktracker.backend.domain.validation.validator.BookValidator
 import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
 import ru.jerael.booktracker.backend.domain.validation.validator.GenreValidator
-import java.util.*
 
 class AddBookUseCase(
     private val bookRepository: BookRepository,
     private val genreValidator: GenreValidator,
-    private val coverStorage: CoverStorage,
+    private val userAssetStorage: UserAssetStorage,
     private val bookValidator: BookValidator,
     private val coverValidator: CoverValidator
 ) {
@@ -40,9 +40,12 @@ class AddBookUseCase(
         genreValidator.invoke(payload.genreIds, payload.language)
         val coverUrl = if (payload.coverBytes != null && payload.coverFileName != null) {
             coverValidator(payload.coverBytes, payload.coverFileName)
-            val fileExtension = payload.coverFileName.substringAfterLast('.', "")
-            val path = "${payload.userId}/covers/${UUID.randomUUID()}.$fileExtension"
-            coverStorage.save(path, payload.coverBytes)
+            userAssetStorage.save(
+                userId = payload.userId,
+                assetType = AssetType.COVER,
+                fileName = payload.coverFileName,
+                content = payload.coverBytes
+            )
         } else {
             null
         }

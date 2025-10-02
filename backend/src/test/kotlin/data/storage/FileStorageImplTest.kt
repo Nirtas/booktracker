@@ -126,4 +126,38 @@ class FileStorageImplTest {
         assertTrue(directory.exists())
         assertTrue(file.exists())
     }
+
+    @Test
+    fun `when deleteDirectory is called with an existing directory, it should remove the directory and its content`() =
+        runTest {
+            val dirPath = "test"
+            val directory = File(tempDir, dirPath)
+            directory.mkdir()
+
+            val file = File(directory, "file.txt")
+            file.writeText("")
+
+            fileStorage.deleteDirectory(dirPath)
+
+            assertFalse(directory.exists())
+            assertFalse(file.exists())
+        }
+
+    @Test
+    fun `when deleteDirectory is called with a non-existing path, it should complete without errors`() = runTest {
+        val path = "non-existing-dir"
+
+        fileStorage.deleteDirectory(path)
+    }
+
+    @Test
+    fun `when deleteDirectory is called on a file path, it should do nothing and complete without errors`() = runTest {
+        val path = "file.txt"
+        val file = File(tempDir, path)
+        file.writeText("content")
+
+        fileStorage.deleteDirectory(path)
+
+        assertTrue(file.exists())
+    }
 }

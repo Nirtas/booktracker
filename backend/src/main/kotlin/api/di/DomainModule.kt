@@ -37,7 +37,7 @@ val domainModule = module {
         AddBookUseCase(
             bookRepository = get(),
             genreValidator = get(),
-            coverStorage = get(),
+            userAssetStorage = get(),
             bookValidator = get(),
             coverValidator = get()
         )
@@ -54,11 +54,11 @@ val domainModule = module {
     single<UpdateBookCoverUseCase> {
         UpdateBookCoverUseCase(
             bookRepository = get(),
-            coverStorage = get(),
+            userAssetStorage = get(),
             coverValidator = get()
         )
     }
-    single<DeleteBookUseCase> { DeleteBookUseCase(bookRepository = get(), coverStorage = get()) }
+    single<DeleteBookUseCase> { DeleteBookUseCase(bookRepository = get(), userAssetStorage = get()) }
 
     single<GetGenresUseCase> { GetGenresUseCase(genreRepository = get()) }
 
@@ -90,7 +90,8 @@ val domainModule = module {
         DeleteUserUseCase(
             userRepository = get(),
             passwordHasher = get(),
-            userValidator = get()
+            userValidator = get(),
+            userAssetStorage = get()
         )
     }
 
