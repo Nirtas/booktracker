@@ -16,12 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.domain.storage
+package ru.jerael.booktracker.backend.domain.model
 
-import java.io.InputStream
-
-interface FileStorage {
-    suspend fun saveFile(path: String, inputStream: InputStream): String
-    suspend fun deleteFile(path: String)
-    suspend fun deleteDirectory(path: String)
+enum class AssetType(val directoryName: String) {
+    COVER("covers")
 }

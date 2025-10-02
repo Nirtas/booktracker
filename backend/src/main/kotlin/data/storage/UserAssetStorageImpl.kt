@@ -18,15 +18,18 @@
 
 package ru.jerael.booktracker.backend.data.storage
 
-import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.model.AssetType
 import ru.jerael.booktracker.backend.domain.storage.FileStorage
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 import java.io.ByteArrayInputStream
+import java.util.*
 
-class CoverStorageImpl(
+class UserAssetStorageImpl(
     private val fileStorage: FileStorage,
     private val imageBaseUrl: String
-) : CoverStorage {
-    override suspend fun save(path: String, content: ByteArray): String {
+) : UserAssetStorage {
+    override suspend fun save(userId: UUID, assetType: AssetType, fileName: String, content: ByteArray): String {
+        val path = generatePath(userId, assetType, fileName)
         val inputStream = ByteArrayInputStream(content)
         fileStorage.saveFile(path, inputStream)
         return "$imageBaseUrl/$path"
@@ -35,5 +38,14 @@ class CoverStorageImpl(
     override suspend fun delete(url: String) {
         val path = url.removePrefix("$imageBaseUrl/")
         fileStorage.deleteFile(path)
+    }
+
+    override suspend fun deleteUserDirectory(userId: UUID) {
+        fileStorage.deleteDirectory(userId.toString())
+    }
+
+    private fun generatePath(userId: UUID, assetType: AssetType, fileName: String): String {
+        val fileExtension = fileName.substringAfterLast('.', "")
+        return "$userId/${assetType.directoryName}/${UUID.randomUUID()}.$fileExtension"
     }
 }

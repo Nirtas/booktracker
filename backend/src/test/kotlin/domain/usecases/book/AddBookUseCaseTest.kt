@@ -22,13 +22,14 @@ import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
+import ru.jerael.booktracker.backend.domain.model.AssetType
 import ru.jerael.booktracker.backend.domain.model.book.AddBookData
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.storage.CoverStorage
+import ru.jerael.booktracker.backend.domain.storage.UserAssetStorage
 import ru.jerael.booktracker.backend.domain.usecases.book.AddBookUseCase
 import ru.jerael.booktracker.backend.domain.validation.ValidationError
 import ru.jerael.booktracker.backend.domain.validation.ValidationException
@@ -39,7 +40,6 @@ import ru.jerael.booktracker.backend.domain.validation.validator.GenreValidator
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class AddBookUseCaseTest {
 
@@ -50,7 +50,7 @@ class AddBookUseCaseTest {
     private lateinit var genreValidator: GenreValidator
 
     @MockK
-    private lateinit var coverStorage: CoverStorage
+    private lateinit var userAssetStorage: UserAssetStorage
 
     @MockK
     private lateinit var bookValidator: BookValidator
@@ -100,7 +100,7 @@ class AddBookUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = AddBookUseCase(bookRepository, genreValidator, coverStorage, bookValidator, coverValidator)
+        useCase = AddBookUseCase(bookRepository, genreValidator, userAssetStorage, bookValidator, coverValidator)
     }
 
     @Test
@@ -109,27 +109,22 @@ class AddBookUseCaseTest {
             val requestedGenreIds = listOf(1, 2, 3)
             val bookCreationPayload = createPayload(requestedGenreIds, coverBytes, coverFileName)
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
-            val pathSlot = slot<String>()
             val addBookDataSlot = slot<AddBookData>()
+            val coverUrl = "$imageBaseUrl/$userId/covers/book.jpg"
             every { bookValidator.validateCreation(bookCreationPayload) } just Runs
             coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
-            coEvery { coverStorage.save(capture(pathSlot), coverBytes) } answers {
-                "$imageBaseUrl/${pathSlot.captured}"
-            }
+            coEvery { userAssetStorage.save(userId, AssetType.COVER, coverFileName, coverBytes) } returns coverUrl
             coEvery { bookRepository.addBook(capture(addBookDataSlot), language) } returns expectedBookWithGenres
 
             val result = useCase.invoke(bookCreationPayload)
 
             assertEquals(expectedBookWithGenres, result)
-            coVerify(exactly = 1) { coverStorage.save(any(), coverBytes) }
+            coVerify(exactly = 1) { userAssetStorage.save(userId, AssetType.COVER, coverFileName, coverBytes) }
             coVerify(exactly = 1) { bookRepository.addBook(any(), language) }
 
-            val capturedPath = pathSlot.captured
-            assertTrue(capturedPath.startsWith("$userId/covers/"))
-            assertTrue(capturedPath.endsWith(".jpg"))
             val capturedAddBookData = addBookDataSlot.captured
             assertNotNull(capturedAddBookData.coverUrl)
-            assertEquals("$imageBaseUrl/$capturedPath", capturedAddBookData.coverUrl)
+            assertEquals(coverUrl, capturedAddBookData.coverUrl)
         }
 
     @Test
@@ -146,7 +141,7 @@ class AddBookUseCaseTest {
             val result = useCase.invoke(bookCreationPayload)
 
             assertEquals(expectedBookWithGenres, result)
-            coVerify(exactly = 0) { coverStorage.save(any(), any()) }
+            coVerify(exactly = 0) { userAssetStorage.save(any(), any(), any(), any()) }
             coVerify(exactly = 1) { bookRepository.addBook(any(), language) }
 
             val capturedAddBookData = addBookDataSlot.captured
@@ -167,7 +162,7 @@ class AddBookUseCaseTest {
             useCase.invoke(bookCreationPayload)
         }
 
-        coVerify(exactly = 0) { coverStorage.save(any(), any()) }
+        coVerify(exactly = 0) { userAssetStorage.save(any(), any(), any(), any()) }
         coVerify(exactly = 0) { bookRepository.addBook(any(), any()) }
     }
 
@@ -181,7 +176,7 @@ class AddBookUseCaseTest {
             useCase.invoke(bookCreationPayload)
         }
 
-        coVerify(exactly = 0) { coverStorage.save(any(), any()) }
+        coVerify(exactly = 0) { userAssetStorage.save(any(), any(), any(), any()) }
         coVerify(exactly = 0) { bookRepository.addBook(any(), any()) }
     }
 }
