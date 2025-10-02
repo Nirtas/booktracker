@@ -18,13 +18,10 @@
 
 package ru.jerael.booktracker.backend.domain.exceptions
 
-import io.ktor.http.*
-
 abstract class VerificationException(
     userMessage: String,
     errorCode: String
 ) : AppException(
-    httpStatusCode = HttpStatusCode.BadRequest,
     message = userMessage,
     userMessage = userMessage,
     errorCode = errorCode

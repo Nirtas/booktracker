@@ -18,13 +18,10 @@
 
 package ru.jerael.booktracker.backend.domain.exceptions
 
-import io.ktor.http.*
-
 abstract class AlreadyExistsException(
     userMessage: String,
     errorCode: String = "ALREADY_EXISTS"
 ) : AppException(
-    httpStatusCode = HttpStatusCode.Conflict,
     message = userMessage,
     userMessage = userMessage,
     errorCode = errorCode

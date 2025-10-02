@@ -18,13 +18,10 @@
 
 package ru.jerael.booktracker.backend.domain.exceptions
 
-import io.ktor.http.*
-
 class ForbiddenException(
     userMessage: String,
     errorCode: String
 ) : AppException(
-    httpStatusCode = HttpStatusCode.Forbidden,
     message = userMessage,
     userMessage = userMessage,
     errorCode = errorCode

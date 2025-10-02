@@ -138,7 +138,7 @@ class ParseBookCreationTest {
                 setBody(multipartBody)
             }
 
-            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals(HttpStatusCode.UnprocessableEntity, response.status)
             assertTrue(response.bodyAsText().contains(CommonValidationErrorCode.INVALID_FORM_ITEM.name))
         }
 

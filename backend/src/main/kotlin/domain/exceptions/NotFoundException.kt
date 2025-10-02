@@ -18,13 +18,10 @@
 
 package ru.jerael.booktracker.backend.domain.exceptions
 
-import io.ktor.http.*
-
 abstract class NotFoundException(
     userMessage: String,
     errorCode: String = "RESOURCE_NOT_FOUND"
 ) : AppException(
-    httpStatusCode = HttpStatusCode.NotFound,
     message = userMessage,
     userMessage = userMessage,
     errorCode = errorCode
@@ -35,11 +32,6 @@ class BookNotFoundException(bookId: String) : NotFoundException(
     errorCode = "BOOK_NOT_FOUND"
 )
 
-class GenresNotFoundException(val genreIds: List<Int>) : NotFoundException(
-    userMessage = "One or more genres were not found: $genreIds",
-    errorCode = "GENRES_NOT_FOUND"
-)
-
 class UserByIdNotFoundException(userId: String) : NotFoundException(
     userMessage = "User with ID '$userId' was not found.",
     errorCode = "USER_WITH_ID_NOT_FOUND"
@@ -48,4 +40,10 @@ class UserByIdNotFoundException(userId: String) : NotFoundException(
 class UserByEmailNotFoundException(email: String) : NotFoundException(
     userMessage = "User with email '$email' was not found.",
     errorCode = "USER_WITH_EMAIL_NOT_FOUND"
+)
+
+class GenresNotFoundException(val genreIds: List<Int>) : AppException(
+    message = "One or more genres were not found: $genreIds",
+    userMessage = "One or more genres were not found: $genreIds",
+    errorCode = "GENRES_NOT_FOUND"
 )
