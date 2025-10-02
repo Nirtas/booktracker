@@ -18,13 +18,9 @@
 
 package ru.jerael.booktracker.backend.api.validation
 
-import io.ktor.http.*
 import ru.jerael.booktracker.backend.domain.exceptions.AppException
 
-class ValidationException(
-    val errors: Map<String, List<ValidationError>>
-) : AppException(
-    httpStatusCode = HttpStatusCode.BadRequest,
+class ValidationException(val errors: Map<String, List<ValidationError>>) : AppException(
     message = "Validation failed for fields: ${errors.keys.joinToString()}",
     userMessage = "One or more fields are invalid.",
     errorCode = "VALIDATION_ERROR"

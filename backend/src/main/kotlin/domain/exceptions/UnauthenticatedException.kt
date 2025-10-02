@@ -18,12 +18,9 @@
 
 package ru.jerael.booktracker.backend.domain.exceptions
 
-import io.ktor.http.*
-
 class UnauthenticatedException(
     userMessage: String
 ) : AppException(
-    httpStatusCode = HttpStatusCode.Unauthorized,
     message = userMessage,
     userMessage = userMessage,
     errorCode = "INVALID_TOKEN"

@@ -124,7 +124,7 @@ class ParseBookCoverUpdateTest {
                 setBody(multipartBody)
             }
 
-            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals(HttpStatusCode.UnprocessableEntity, response.status)
             assertTrue(response.bodyAsText().contains(CommonValidationErrorCode.INVALID_FILE_PART.name))
         }
 
@@ -154,7 +154,7 @@ class ParseBookCoverUpdateTest {
                 setBody(multipartBody)
             }
 
-            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals(HttpStatusCode.UnprocessableEntity, response.status)
             assertTrue(response.bodyAsText().contains(CommonValidationErrorCode.INVALID_FILE_PART.name))
         }
 
@@ -184,7 +184,7 @@ class ParseBookCoverUpdateTest {
                 setBody(multipartBody)
             }
 
-            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals(HttpStatusCode.UnprocessableEntity, response.status)
             assertTrue(response.bodyAsText().contains(CommonValidationErrorCode.INVALID_FILE_PART.name))
         }
 
@@ -201,7 +201,7 @@ class ParseBookCoverUpdateTest {
                 setBody(multipartBody)
             }
 
-            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals(HttpStatusCode.UnprocessableEntity, response.status)
             assertTrue(response.bodyAsText().contains(CommonValidationErrorCode.INVALID_FILE_PART.name))
         }
 }

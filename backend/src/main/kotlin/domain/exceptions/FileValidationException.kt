@@ -18,13 +18,10 @@
 
 package ru.jerael.booktracker.backend.domain.exceptions
 
-import io.ktor.http.*
-
 abstract class FileValidationException(
     userMessage: String,
     errorCode: String
 ) : AppException(
-    httpStatusCode = HttpStatusCode.BadRequest,
     message = userMessage,
     userMessage = userMessage,
     errorCode = errorCode
@@ -35,14 +32,13 @@ class EmptyFileNameException : FileValidationException(
     errorCode = "EMPTY_FILE_NAME"
 )
 
-class InvalidFileExtensionException(
-    val allowedExtensions: List<String>
-) : FileValidationException(
-    userMessage = "Invalid file extensions. Allowed types: ${allowedExtensions.joinToString()}",
-    errorCode = "INVALID_FILE_EXTENSION"
-)
-
 class EmptyFileContentException : FileValidationException(
     userMessage = "File content can't be empty.",
     errorCode = "EMPTY_FILE_CONTENT"
+)
+
+class InvalidFileExtensionException(val allowedExtensions: List<String>) : AppException(
+    message = "Invalid file extensions. Allowed types: ${allowedExtensions.joinToString()}",
+    userMessage = "Invalid file extensions. Allowed types: ${allowedExtensions.joinToString()}",
+    errorCode = "INVALID_FILE_EXTENSION"
 )
