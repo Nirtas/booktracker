@@ -16,12 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.validator
+package ru.jerael.booktracker.backend.domain.validation.validator
 
 import org.apache.commons.validator.routines.EmailValidator
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.codes.*
-import ru.jerael.booktracker.backend.domain.model.book.BookStatus
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.codes.*
 import java.util.*
 
 private const val MAX_TITLE_LENGTH = 500
@@ -62,19 +61,6 @@ fun validateAuthor(author: String): List<ValidationError> {
                 )
             )
         }
-    }
-    return errors
-}
-
-fun validateStatus(status: String): List<ValidationError> {
-    val errors = mutableListOf<ValidationError>()
-    if (BookStatus.fromString(status) == null) {
-        val allowedStatuses = BookStatus.entries.map { it.value }
-        val error = ValidationError(
-            code = BookValidationErrorCode.INVALID_STATUS,
-            params = mapOf("allowed" to allowedStatuses)
-        )
-        errors.add(error)
     }
     return errors
 }

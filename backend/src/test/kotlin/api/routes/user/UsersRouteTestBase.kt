@@ -41,7 +41,6 @@ import org.koin.test.KoinTest
 import ru.jerael.booktracker.backend.api.controller.*
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.mappers.UserMapper
-import ru.jerael.booktracker.backend.api.validation.validator.UserValidator
 import ru.jerael.booktracker.backend.domain.usecases.user.*
 import java.util.*
 
@@ -62,9 +61,6 @@ abstract class UsersRouteTestBase : KoinTest {
 
     @MockK
     protected lateinit var deleteUserUseCase: DeleteUserUseCase
-
-    @RelaxedMockK
-    protected lateinit var userValidator: UserValidator
 
     @RelaxedMockK
     protected lateinit var userMapper: UserMapper
@@ -128,7 +124,6 @@ abstract class UsersRouteTestBase : KoinTest {
                         updateUserEmailUseCase,
                         updateUserPasswordUseCase,
                         deleteUserUseCase,
-                        userValidator,
                         userMapper
                     )
                 }

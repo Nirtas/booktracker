@@ -21,10 +21,10 @@ package ru.jerael.booktracker.backend.api.util
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
 import ru.jerael.booktracker.backend.domain.exceptions.UnauthenticatedException
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.codes.CommonValidationErrorCode
 import java.util.*
 
 fun ApplicationRequest.language(): String {
@@ -55,11 +55,5 @@ fun ApplicationCall.getUserId(): UUID {
         UUID.fromString(userIdString)
     } catch (e: Exception) {
         throw UnauthenticatedException("Invalid user id format in token.")
-    }
-}
-
-fun MutableMap<String, List<ValidationError>>.putIfNotEmpty(key: String, value: List<ValidationError>) {
-    if (value.isNotEmpty()) {
-        this[key] = value
     }
 }

@@ -34,8 +34,8 @@ import ru.jerael.booktracker.backend.api.dto.book.BookCreationDto
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
 import ru.jerael.booktracker.backend.api.plugins.configureSerialization
 import ru.jerael.booktracker.backend.api.plugins.configureStatusPages
-import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
+import ru.jerael.booktracker.backend.domain.validation.codes.CommonValidationErrorCode
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

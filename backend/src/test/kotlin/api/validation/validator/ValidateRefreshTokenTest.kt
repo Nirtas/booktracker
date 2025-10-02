@@ -19,9 +19,9 @@
 package api.validation.validator
 
 import org.junit.jupiter.api.Test
-import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.codes.RefreshTokenValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.validator.validateRefreshToken
+import ru.jerael.booktracker.backend.domain.validation.codes.CommonValidationErrorCode
+import ru.jerael.booktracker.backend.domain.validation.codes.RefreshTokenValidationErrorCode
+import ru.jerael.booktracker.backend.domain.validation.validator.validateRefreshToken
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

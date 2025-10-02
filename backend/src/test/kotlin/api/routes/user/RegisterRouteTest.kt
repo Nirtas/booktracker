@@ -76,31 +76,9 @@ class RegisterRouteTest : UsersRouteTestBase() {
 
         assertEquals(HttpStatusCode.Created, response.status)
         assertEquals(userDto, Json.decodeFromString<UserDto>(response.bodyAsText()))
-        verify(exactly = 1) { userValidator.validateCreation(any()) }
         coVerify(exactly = 1) { registerUserUseCase.invoke(any()) }
         verify(exactly = 1) { userMapper.mapUserToDto(any()) }
     }
-
-    @Test
-    fun `when validateCreation is failed, an Exception should be thrown with 500 InternalServerError`() =
-        testApplication {
-            every { userValidator.validateCreation(any()) } throws Exception("Error")
-
-            application {
-                configureStatusPages()
-                configureSerialization()
-                configureTestAuthentication()
-                configureRouting()
-            }
-            val response = client.post(url) {
-                contentType(ContentType.Application.Json)
-                setBody(json)
-            }
-
-            assertEquals(HttpStatusCode.InternalServerError, response.status)
-            assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            coVerify(exactly = 0) { registerUserUseCase.invoke(any()) }
-        }
 
     @Test
     fun `when registerUserUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =

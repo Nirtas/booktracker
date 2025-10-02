@@ -16,17 +16,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.validator
+package ru.jerael.booktracker.backend.domain.validation.validator
 
-import ru.jerael.booktracker.backend.api.dto.token.RefreshTokenDto
-import ru.jerael.booktracker.backend.api.util.putIfNotEmpty
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
+import ru.jerael.booktracker.backend.domain.util.putIfNotEmpty
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
 
-class TokenValidator {
-    fun validateRefresh(dto: RefreshTokenDto) {
+class VerificationValidator(private val otpCodeLength: Int) {
+    fun validateVerification(payload: VerificationPayload) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("refreshToken", validateRefreshToken(dto.refreshToken))
+        errors.putIfNotEmpty("email", validateEmail(payload.email))
+        errors.putIfNotEmpty("code", validateCode(payload.code, otpCodeLength))
+        if (errors.isNotEmpty()) {
+            throw ValidationException(errors)
+        }
+    }
+
+    fun validateResending(email: String) {
+        val errors = mutableMapOf<String, List<ValidationError>>()
+        errors.putIfNotEmpty("email", validateEmail(email))
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
         }

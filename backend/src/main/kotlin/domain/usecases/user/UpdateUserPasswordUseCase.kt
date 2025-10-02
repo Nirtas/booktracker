@@ -23,21 +23,24 @@ import ru.jerael.booktracker.backend.domain.exceptions.UserByIdNotFoundException
 import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 import ru.jerael.booktracker.backend.domain.model.user.UserUpdatePasswordPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 
 class UpdateUserPasswordUseCase(
     private val userRepository: UserRepository,
-    private val passwordHasher: PasswordHasher
+    private val passwordHasher: PasswordHasher,
+    private val userValidator: UserValidator
 ) {
-    suspend operator fun invoke(userUpdatePasswordPayload: UserUpdatePasswordPayload) {
-        val user = userRepository.getUserById(userUpdatePasswordPayload.userId) ?: throw UserByIdNotFoundException(
-            userUpdatePasswordPayload.userId.toString()
+    suspend operator fun invoke(payload: UserUpdatePasswordPayload) {
+        userValidator.validateUpdatePassword(payload)
+        val user = userRepository.getUserById(payload.userId) ?: throw UserByIdNotFoundException(
+            payload.userId.toString()
         )
-        if (!passwordHasher.verify(userUpdatePasswordPayload.currentPassword, user.passwordHash)) {
+        if (!passwordHasher.verify(payload.currentPassword, user.passwordHash)) {
             throw PasswordVerificationException()
         }
-        val newPasswordHash = passwordHasher.hash(userUpdatePasswordPayload.newPassword)
+        val newPasswordHash = passwordHasher.hash(payload.newPassword)
         userRepository.updateUserPassword(
-            userId = userUpdatePasswordPayload.userId,
+            userId = payload.userId,
             newPasswordHash = newPasswordHash
         )
     }

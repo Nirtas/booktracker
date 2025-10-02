@@ -16,13 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.codes
+package ru.jerael.booktracker.backend.domain.validation
 
-enum class PasswordValidationErrorCode : ValidationErrorCode {
-    LENGTH_INVALID,
-    NEEDS_LOWERCASE,
-    NEEDS_UPPERCASE,
-    NEEDS_DIGIT,
-    NEEDS_SPECIAL_CHAR,
-    CANNOT_BE_SAME_AS_OLD
-}
+import ru.jerael.booktracker.backend.domain.exceptions.AppException
+
+class ValidationException(val errors: Map<String, List<ValidationError>>) : AppException(
+    message = "Validation failed for fields: ${errors.keys.joinToString()}",
+    userMessage = "One or more fields are invalid.",
+    errorCode = "VALIDATION_ERROR"
+)

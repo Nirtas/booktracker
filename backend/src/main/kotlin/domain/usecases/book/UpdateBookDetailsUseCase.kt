@@ -23,13 +23,16 @@ import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.UpdateBookDetailsData
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
-import ru.jerael.booktracker.backend.domain.validation.GenreValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.BookValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.GenreValidator
 
 class UpdateBookDetailsUseCase(
     private val bookRepository: BookRepository,
+    private val bookValidator: BookValidator,
     private val genreValidator: GenreValidator
 ) {
     suspend operator fun invoke(payload: BookDetailsUpdatePayload): Book {
+        bookValidator.validateUpdate(payload)
         bookRepository.getBookById(payload.userId, payload.bookId, payload.language)
             ?: throw BookNotFoundException(payload.bookId.toString())
         genreValidator.invoke(payload.genreIds, payload.language)

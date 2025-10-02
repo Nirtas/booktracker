@@ -22,9 +22,6 @@ import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.codes.ValidationErrorCode
 import ru.jerael.booktracker.backend.domain.model.book.AddBookData
 import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
@@ -33,8 +30,12 @@ import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.usecases.book.AddBookUseCase
-import ru.jerael.booktracker.backend.domain.validation.CoverValidator
-import ru.jerael.booktracker.backend.domain.validation.GenreValidator
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.codes.ValidationErrorCode
+import ru.jerael.booktracker.backend.domain.validation.validator.BookValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.GenreValidator
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
@@ -50,6 +51,9 @@ class AddBookUseCaseTest {
 
     @MockK
     private lateinit var coverStorage: CoverStorage
+
+    @MockK
+    private lateinit var bookValidator: BookValidator
 
     private val coverValidator: CoverValidator = CoverValidator()
 
@@ -96,17 +100,18 @@ class AddBookUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = AddBookUseCase(bookRepository, genreValidator, coverStorage, coverValidator)
+        useCase = AddBookUseCase(bookRepository, genreValidator, coverStorage, bookValidator, coverValidator)
     }
 
     @Test
-    fun `when genre validation is passed and the cover is present, the book must be successfully created with the cover`() =
+    fun `when validations are passed and the cover is present, the book must be successfully created with the cover`() =
         runTest {
             val requestedGenreIds = listOf(1, 2, 3)
             val bookCreationPayload = createPayload(requestedGenreIds, coverBytes, coverFileName)
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
             val pathSlot = slot<String>()
             val addBookDataSlot = slot<AddBookData>()
+            every { bookValidator.validateCreation(bookCreationPayload) } just Runs
             coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
             coEvery { coverStorage.save(capture(pathSlot), coverBytes) } answers {
                 "$imageBaseUrl/${pathSlot.captured}"
@@ -128,12 +133,13 @@ class AddBookUseCaseTest {
         }
 
     @Test
-    fun `when genre validation is passed and the cover is not present, the book must be successfully created without cover`() =
+    fun `when validations are passed and the cover is not present, the book must be successfully created without cover`() =
         runTest {
             val requestedGenreIds = listOf(1, 2, 3)
             val bookCreationPayload = createPayload(requestedGenreIds)
             val expectedBookWithGenres = expectedBook.copy(genres = foundGenres)
             val addBookDataSlot = slot<AddBookData>()
+            every { bookValidator.validateCreation(bookCreationPayload) } just Runs
             coEvery { genreValidator.invoke(requestedGenreIds, language) } just Runs
             coEvery { bookRepository.addBook(capture(addBookDataSlot), language) } returns expectedBookWithGenres
 
@@ -154,7 +160,22 @@ class AddBookUseCaseTest {
         val mockkCode = mockk<ValidationErrorCode>()
         val errors = mapOf("genreIds" to listOf(ValidationError(mockkCode)))
         val exception = ValidationException(errors)
+        every { bookValidator.validateCreation(bookCreationPayload) } just Runs
         coEvery { genreValidator.invoke(requestedGenreIds, language) } throws exception
+
+        assertThrows<ValidationException> {
+            useCase.invoke(bookCreationPayload)
+        }
+
+        coVerify(exactly = 0) { coverStorage.save(any(), any()) }
+        coVerify(exactly = 0) { bookRepository.addBook(any(), any()) }
+    }
+
+    @Test
+    fun `when book validation is failed, a ValidationException should be thrown`() = runTest {
+        val bookCreationPayload = createPayload()
+        val exception = ValidationException(mapOf())
+        every { bookValidator.validateCreation(any()) } throws exception
 
         assertThrows<ValidationException> {
             useCase.invoke(bookCreationPayload)

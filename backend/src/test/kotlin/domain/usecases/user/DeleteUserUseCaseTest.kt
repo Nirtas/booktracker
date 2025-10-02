@@ -31,6 +31,8 @@ import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.usecases.user.DeleteUserUseCase
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 import java.util.*
 
 class DeleteUserUseCaseTest {
@@ -40,6 +42,9 @@ class DeleteUserUseCaseTest {
 
     @MockK
     private lateinit var passwordHasher: PasswordHasher
+
+    @MockK
+    private lateinit var userValidator: UserValidator
 
     private lateinit var useCase: DeleteUserUseCase
 
@@ -60,11 +65,12 @@ class DeleteUserUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = DeleteUserUseCase(userRepository, passwordHasher)
+        useCase = DeleteUserUseCase(userRepository, passwordHasher, userValidator)
     }
 
     @Test
     fun `when user exists and password is correct, it should delete the user`() = runTest {
+        every { userValidator.validateDeletion(any()) } just Runs
         coEvery { userRepository.getUserById(userId) } returns user
         every { passwordHasher.verify(password, hash) } returns true
         coEvery { userRepository.deleteUser(userId) } just Runs
@@ -76,6 +82,7 @@ class DeleteUserUseCaseTest {
 
     @Test
     fun `when user does not exist, a UserByIdNotFoundException should be thrown`() = runTest {
+        every { userValidator.validateDeletion(any()) } just Runs
         coEvery { userRepository.getUserById(userId) } returns null
 
         assertThrows<UserByIdNotFoundException> {
@@ -88,6 +95,7 @@ class DeleteUserUseCaseTest {
 
     @Test
     fun `when password is incorrect, a PasswordVerificationException should be thrown`() = runTest {
+        every { userValidator.validateDeletion(any()) } just Runs
         coEvery { userRepository.getUserById(userId) } returns user
         every { passwordHasher.verify(password, hash) } returns false
 
@@ -95,6 +103,19 @@ class DeleteUserUseCaseTest {
             useCase.invoke(userDeletionPayload)
         }
 
+        coVerify(exactly = 0) { userRepository.deleteUser(any()) }
+    }
+
+    @Test
+    fun `when validation is failed, a ValidationException should be thrown`() = runTest {
+        val exception = ValidationException(mapOf())
+        every { userValidator.validateDeletion(any()) } throws exception
+
+        assertThrows<ValidationException> {
+            useCase.invoke(userDeletionPayload)
+        }
+
+        verify(exactly = 0) { passwordHasher.verify(any(), any()) }
         coVerify(exactly = 0) { userRepository.deleteUser(any()) }
     }
 }

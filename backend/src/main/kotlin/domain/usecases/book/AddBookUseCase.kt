@@ -23,17 +23,20 @@ import ru.jerael.booktracker.backend.domain.model.book.Book
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
-import ru.jerael.booktracker.backend.domain.validation.CoverValidator
-import ru.jerael.booktracker.backend.domain.validation.GenreValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.BookValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.GenreValidator
 import java.util.*
 
 class AddBookUseCase(
     private val bookRepository: BookRepository,
     private val genreValidator: GenreValidator,
     private val coverStorage: CoverStorage,
+    private val bookValidator: BookValidator,
     private val coverValidator: CoverValidator
 ) {
     suspend operator fun invoke(payload: BookCreationPayload): Book {
+        bookValidator.validateCreation(payload)
         genreValidator.invoke(payload.genreIds, payload.language)
         val coverUrl = if (payload.coverBytes != null && payload.coverFileName != null) {
             coverValidator(payload.coverBytes, payload.coverFileName)

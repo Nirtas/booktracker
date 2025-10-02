@@ -41,8 +41,6 @@ import org.koin.test.KoinTest
 import ru.jerael.booktracker.backend.api.controller.*
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.mappers.TokenMapper
-import ru.jerael.booktracker.backend.api.validation.validator.LoginValidator
-import ru.jerael.booktracker.backend.api.validation.validator.TokenValidator
 import ru.jerael.booktracker.backend.domain.usecases.login.LoginUseCase
 import ru.jerael.booktracker.backend.domain.usecases.token.RefreshTokenUseCase
 import java.util.*
@@ -55,12 +53,6 @@ abstract class TokensRouteTestBase : KoinTest {
 
     @MockK
     protected lateinit var refreshTokenUseCase: RefreshTokenUseCase
-
-    @RelaxedMockK
-    protected lateinit var loginValidator: LoginValidator
-
-    @RelaxedMockK
-    protected lateinit var tokenValidator: TokenValidator
 
     @RelaxedMockK
     protected lateinit var tokenMapper: TokenMapper
@@ -118,8 +110,6 @@ abstract class TokensRouteTestBase : KoinTest {
                     TokenController(
                         loginUseCase,
                         refreshTokenUseCase,
-                        loginValidator,
-                        tokenValidator,
                         tokenMapper
                     )
                 }

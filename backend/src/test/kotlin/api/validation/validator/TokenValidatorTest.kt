@@ -21,31 +21,28 @@ package api.validation.validator
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.api.dto.token.RefreshTokenDto
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.validator.TokenValidator
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.TokenValidator
 
 class TokenValidatorTest {
 
     private val validator = TokenValidator()
 
-    private val refreshTokenDto = RefreshTokenDto(
-        refreshToken = "1MyFCt1uud8iM5M6TV0Dc46re6nUip3HeKyrATPbXOYxDcITwBsyAu2HN6gYIx7z"
-    )
+    private val refreshToken = "1MyFCt1uud8iM5M6TV0Dc46re6nUip3HeKyrATPbXOYxDcITwBsyAu2HN6gYIx7z"
 
     @Test
     fun `when dto is valid, validateRefresh should not throw exception`() {
         assertDoesNotThrow {
-            validator.validateRefresh(refreshTokenDto)
+            validator.validateRefresh(refreshToken)
         }
     }
 
     @Test
     fun `when refreshToken is invalid, validateRefresh should throw ValidationException`() {
-        val invalidDto = refreshTokenDto.copy(refreshToken = "")
+        val invalidToken = "token"
 
         val exception = assertThrows<ValidationException> {
-            validator.validateRefresh(invalidDto)
+            validator.validateRefresh(invalidToken)
         }
 
         assertEquals(1, exception.errors.size)

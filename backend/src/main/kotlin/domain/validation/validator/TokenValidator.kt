@@ -16,11 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation
+package ru.jerael.booktracker.backend.domain.validation.validator
 
-import ru.jerael.booktracker.backend.api.validation.codes.ValidationErrorCode
+import ru.jerael.booktracker.backend.domain.util.putIfNotEmpty
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
 
-data class ValidationError(
-    val code: ValidationErrorCode,
-    val params: Map<String, List<String>>? = null
-)
+class TokenValidator {
+    fun validateRefresh(refreshToken: String) {
+        val errors = mutableMapOf<String, List<ValidationError>>()
+        errors.putIfNotEmpty("refreshToken", validateRefreshToken(refreshToken))
+        if (errors.isNotEmpty()) {
+            throw ValidationException(errors)
+        }
+    }
+}

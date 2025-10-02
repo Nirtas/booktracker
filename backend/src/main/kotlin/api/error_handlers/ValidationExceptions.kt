@@ -23,12 +23,12 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import ru.jerael.booktracker.backend.api.dto.validation.ValidationErrorDto
 import ru.jerael.booktracker.backend.api.dto.validation.ValidationErrorParams
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.codes.FileValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.codes.GenreValidationErrorCode
 import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
 import ru.jerael.booktracker.backend.domain.exceptions.InvalidFileExtensionException
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.codes.FileValidationErrorCode
+import ru.jerael.booktracker.backend.domain.validation.codes.GenreValidationErrorCode
 
 fun StatusPagesConfig.configureValidationExceptions() {
     exception<InvalidFileExtensionException> { _, cause ->

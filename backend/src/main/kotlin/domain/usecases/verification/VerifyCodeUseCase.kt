@@ -25,19 +25,22 @@ import ru.jerael.booktracker.backend.domain.model.verification.VerificationPaylo
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
+import ru.jerael.booktracker.backend.domain.validation.validator.VerificationValidator
 import java.time.LocalDateTime
 
 class VerifyCodeUseCase(
     private val userRepository: UserRepository,
     private val verificationRepository: VerificationRepository,
-    private val tokenService: TokenService
+    private val tokenService: TokenService,
+    private val verificationValidator: VerificationValidator
 ) {
-    suspend operator fun invoke(verificationPayload: VerificationPayload): TokenPair {
-        val user = userRepository.getUserByEmail(verificationPayload.email) ?: throw UserByEmailNotFoundException(
-            verificationPayload.email
+    suspend operator fun invoke(payload: VerificationPayload): TokenPair {
+        verificationValidator.validateVerification(payload)
+        val user = userRepository.getUserByEmail(payload.email) ?: throw UserByEmailNotFoundException(
+            payload.email
         )
         val foundCode = verificationRepository.getCode(user.id) ?: throw InvalidVerificationException()
-        val isCodeValid = foundCode.code == verificationPayload.code
+        val isCodeValid = foundCode.code == payload.code
         val isCodeExpired = LocalDateTime.now().isAfter(foundCode.expiresAt)
         if (!isCodeValid || isCodeExpired) throw InvalidVerificationException()
         userRepository.updateUserVerificationStatus(user.id, true)

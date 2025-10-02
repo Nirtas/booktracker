@@ -28,7 +28,6 @@ import io.ktor.server.response.*
 import io.mockk.MockKAnnotations
 import io.mockk.clearAllMocks
 import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -41,7 +40,6 @@ import org.koin.test.KoinTest
 import ru.jerael.booktracker.backend.api.controller.*
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.mappers.TokenMapper
-import ru.jerael.booktracker.backend.api.validation.validator.VerificationValidator
 import ru.jerael.booktracker.backend.domain.usecases.verification.ResendVerificationCodeUseCase
 import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
 import java.util.*
@@ -54,9 +52,6 @@ abstract class VerificationsRouteTestBase : KoinTest {
 
     @MockK
     protected lateinit var resendVerificationCodeUseCase: ResendVerificationCodeUseCase
-
-    @RelaxedMockK
-    protected lateinit var verificationValidator: VerificationValidator
 
     @MockK
     protected lateinit var tokenMapper: TokenMapper
@@ -118,7 +113,6 @@ abstract class VerificationsRouteTestBase : KoinTest {
                     VerificationController(
                         verifyCodeUseCase,
                         resendVerificationCodeUseCase,
-                        verificationValidator,
                         tokenMapper
                     )
                 }

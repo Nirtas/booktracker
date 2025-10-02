@@ -16,8 +16,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.codes
+package ru.jerael.booktracker.backend.domain.validation.validator
 
-enum class FileValidationErrorCode : ValidationErrorCode {
-    INVALID_EXTENSION
+import ru.jerael.booktracker.backend.domain.model.login.LoginPayload
+import ru.jerael.booktracker.backend.domain.util.putIfNotEmpty
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+
+class LoginValidator {
+    fun validateLogin(payload: LoginPayload) {
+        val errors = mutableMapOf<String, List<ValidationError>>()
+        errors.putIfNotEmpty("email", validateEmail(payload.email))
+        errors.putIfNotEmpty("password", validatePassword(payload.password))
+        if (errors.isNotEmpty()) {
+            throw ValidationException(errors)
+        }
+    }
 }

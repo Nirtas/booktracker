@@ -16,8 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.codes
+package ru.jerael.booktracker.backend.domain.util
 
-interface ValidationErrorCode {
-    val name: String
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+
+fun MutableMap<String, List<ValidationError>>.putIfNotEmpty(key: String, value: List<ValidationError>) {
+    if (value.isNotEmpty()) {
+        this[key] = value
+    }
 }

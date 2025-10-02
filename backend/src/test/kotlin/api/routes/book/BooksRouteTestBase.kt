@@ -43,7 +43,6 @@ import ru.jerael.booktracker.backend.api.dto.ErrorDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapperImpl
 import ru.jerael.booktracker.backend.api.mappers.GenreMapperImpl
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
-import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
 import ru.jerael.booktracker.backend.domain.usecases.book.*
 import java.util.*
 
@@ -70,9 +69,6 @@ abstract class BooksRouteTestBase : KoinTest {
 
     @RelaxedMockK
     protected lateinit var multipartParser: MultipartParser
-
-    @RelaxedMockK
-    protected lateinit var bookValidator: BookValidator
 
     protected val secret = "secret"
     protected val issuer = "issuer"
@@ -131,7 +127,6 @@ abstract class BooksRouteTestBase : KoinTest {
                         updateBookDetailsUseCase,
                         updateBookCoverUseCase,
                         deleteBookUseCase,
-                        bookValidator,
                         multipartParser,
                         BookMapperImpl(GenreMapperImpl())
                     )

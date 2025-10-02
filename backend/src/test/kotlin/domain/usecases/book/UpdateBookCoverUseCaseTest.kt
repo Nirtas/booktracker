@@ -34,7 +34,7 @@ import ru.jerael.booktracker.backend.domain.model.book.UpdateBookCoverData
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
 import ru.jerael.booktracker.backend.domain.usecases.book.UpdateBookCoverUseCase
-import ru.jerael.booktracker.backend.domain.validation.CoverValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals

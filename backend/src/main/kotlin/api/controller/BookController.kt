@@ -26,12 +26,14 @@ import ru.jerael.booktracker.backend.api.dto.book.BookUpdateDto
 import ru.jerael.booktracker.backend.api.mappers.BookMapper
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
 import ru.jerael.booktracker.backend.api.util.language
-import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
 import ru.jerael.booktracker.backend.domain.model.book.BookCoverUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
 import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
 import ru.jerael.booktracker.backend.domain.usecases.book.*
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.codes.BookValidationErrorCode
 import java.util.*
 
 class BookController(
@@ -41,7 +43,6 @@ class BookController(
     private val updateBookDetailsUseCase: UpdateBookDetailsUseCase,
     private val updateBookCoverUseCase: UpdateBookCoverUseCase,
     private val deleteBookUseCase: DeleteBookUseCase,
-    private val validator: BookValidator,
     private val multipartParser: MultipartParser,
     private val bookMapper: BookMapper
 ) {
@@ -54,7 +55,15 @@ class BookController(
     suspend fun addBook(call: ApplicationCall, userId: UUID) {
         val language = call.request.language()
         val request = multipartParser.parseBookCreation(call)
-        validator.validateCreation(request.bookCreationDto)
+        val bookStatus = BookStatus.fromString(request.bookCreationDto.status)
+        if (bookStatus == null) {
+            val allowedStatuses = BookStatus.entries.map { it.value }
+            val error = ValidationError(
+                code = BookValidationErrorCode.INVALID_STATUS,
+                params = mapOf("allowed" to allowedStatuses)
+            )
+            throw ValidationException(mapOf("status" to listOf(error)))
+        }
         val bookCreationPayload = BookCreationPayload(
             userId = userId,
             language = language,
@@ -62,7 +71,7 @@ class BookController(
             author = request.bookCreationDto.author,
             coverBytes = request.coverBytes,
             coverFileName = request.coverFileName,
-            status = BookStatus.fromString(request.bookCreationDto.status)!!,
+            status = bookStatus,
             genreIds = request.bookCreationDto.genreIds
         )
         val newBook = addBookUseCase(bookCreationPayload)
@@ -83,7 +92,6 @@ class BookController(
     suspend fun updateBookDetails(call: ApplicationCall, userId: UUID, bookId: UUID) {
         val language = call.request.language()
         val bookUpdateDto = call.receive<BookUpdateDto>()
-        validator.validateUpdate(bookUpdateDto)
         val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
             userId = userId,
             bookId = bookId,

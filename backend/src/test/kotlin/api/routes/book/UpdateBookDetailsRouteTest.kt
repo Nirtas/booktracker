@@ -26,7 +26,6 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.slot
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -130,32 +129,6 @@ class UpdateBookDetailsRouteTest : BooksRouteTestBase() {
         assertEquals("en", payloadSlot.captured.language)
         coVerify(exactly = 1) { updateBookDetailsUseCase.invoke(any()) }
     }
-
-    @Test
-    fun `when validateUpdate is failed, an Exception should be thrown with 500 InternalServerError`() =
-        testApplication {
-            val token = generateTestToken(userId)
-            every { bookValidator.validateUpdate(any()) } throws Exception("Error")
-
-            application {
-                configureStatusPages()
-                configureSerialization()
-                configureTestAuthentication()
-                configureRouting()
-            }
-            val response = client.put(url) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer $token")
-                }
-                contentType(ContentType.Application.Json)
-                val json = Json.encodeToString(bookUpdateDto)
-                setBody(json)
-            }
-
-            assertEquals(HttpStatusCode.InternalServerError, response.status)
-            assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            coVerify(exactly = 0) { updateBookDetailsUseCase.invoke(any()) }
-        }
 
     @Test
     fun `when updateBookDetailsUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =

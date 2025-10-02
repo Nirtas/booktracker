@@ -31,6 +31,8 @@ import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.model.user.UserUpdatePasswordPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.usecases.user.UpdateUserPasswordUseCase
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 import java.util.*
 
 class UpdateUserPasswordUseCaseTest {
@@ -40,6 +42,9 @@ class UpdateUserPasswordUseCaseTest {
 
     @MockK
     private lateinit var passwordHasher: PasswordHasher
+
+    @MockK
+    private lateinit var userValidator: UserValidator
 
     private lateinit var useCase: UpdateUserPasswordUseCase
 
@@ -65,11 +70,12 @@ class UpdateUserPasswordUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = UpdateUserPasswordUseCase(userRepository, passwordHasher)
+        useCase = UpdateUserPasswordUseCase(userRepository, passwordHasher, userValidator)
     }
 
     @Test
     fun `when user and current password are valid, it should hash new password and update user`() = runTest {
+        every { userValidator.validateUpdatePassword(any()) } just Runs
         coEvery { userRepository.getUserById(userId) } returns user
         every { passwordHasher.verify(password, hash) } returns true
         every { passwordHasher.hash(newPassword) } returns newHash
@@ -83,6 +89,7 @@ class UpdateUserPasswordUseCaseTest {
 
     @Test
     fun `when user is not found, a UserByIdNotFoundException should be thrown`() = runTest {
+        every { userValidator.validateUpdatePassword(any()) } just Runs
         coEvery { userRepository.getUserById(userId) } returns null
 
         assertThrows<UserByIdNotFoundException> {
@@ -92,10 +99,24 @@ class UpdateUserPasswordUseCaseTest {
 
     @Test
     fun `when current password verification fails, a PasswordVerificationException should be thrown`() = runTest {
+        every { userValidator.validateUpdatePassword(any()) } just Runs
         coEvery { userRepository.getUserById(userId) } returns user
         every { passwordHasher.verify(password, hash) } returns false
 
         assertThrows<PasswordVerificationException> {
+            useCase.invoke(userUpdatePasswordPayload)
+        }
+
+        verify(exactly = 0) { passwordHasher.hash(any()) }
+        coVerify(exactly = 0) { userRepository.updateUserPassword(any(), any()) }
+    }
+
+    @Test
+    fun `when validation is failed, a ValidationException should be thrown`() = runTest {
+        val exception = ValidationException(mapOf())
+        every { userValidator.validateUpdatePassword(any()) } throws exception
+
+        assertThrows<ValidationException> {
             useCase.invoke(userUpdatePasswordPayload)
         }
 

@@ -25,25 +25,28 @@ import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 import ru.jerael.booktracker.backend.domain.model.user.UserUpdateEmailPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.VerificationService
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 
 class UpdateUserEmailUseCase(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,
-    private val verificationService: VerificationService
+    private val verificationService: VerificationService,
+    private val userValidator: UserValidator
 ) {
-    suspend operator fun invoke(userUpdateEmailPayload: UserUpdateEmailPayload) {
-        val user = userRepository.getUserById(userUpdateEmailPayload.userId) ?: throw UserByIdNotFoundException(
-            userUpdateEmailPayload.userId.toString()
+    suspend operator fun invoke(payload: UserUpdateEmailPayload) {
+        userValidator.validateUpdateEmail(payload)
+        val user = userRepository.getUserById(payload.userId) ?: throw UserByIdNotFoundException(
+            payload.userId.toString()
         )
-        if (!passwordHasher.verify(userUpdateEmailPayload.password, user.passwordHash)) {
+        if (!passwordHasher.verify(payload.password, user.passwordHash)) {
             throw PasswordVerificationException()
         }
-        userRepository.getUserByEmail(userUpdateEmailPayload.newEmail)?.let {
+        userRepository.getUserByEmail(payload.newEmail)?.let {
             throw UserAlreadyExistsException(it.email)
         }
         val updatedUser = userRepository.updateUserEmail(
-            userId = userUpdateEmailPayload.userId,
-            newEmail = userUpdateEmailPayload.newEmail
+            userId = payload.userId,
+            newEmail = payload.newEmail
         )
         verificationService.start(updatedUser)
     }

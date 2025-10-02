@@ -16,21 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.domain.validation
+package ru.jerael.booktracker.backend.domain.validation.codes
 
-import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
-import ru.jerael.booktracker.backend.domain.repository.GenreRepository
-
-class GenreValidator(private val genreRepository: GenreRepository) {
-    suspend operator fun invoke(genreIds: List<Int>, language: String) {
-        val uniqueGenres = genreIds.distinct()
-        if (uniqueGenres.isEmpty()) {
-            return
-        }
-        val foundGenres = genreRepository.getGenresByIds(uniqueGenres, language)
-        if (foundGenres.size != uniqueGenres.size) {
-            val notFoundGenreIds = (uniqueGenres.toSet() - foundGenres.map { it.id }.toSet()).toList()
-            throw GenresNotFoundException(notFoundGenreIds)
-        }
-    }
+enum class RefreshTokenValidationErrorCode : ValidationErrorCode {
+    LENGTH_INVALID,
+    INVALID_FORMAT
 }

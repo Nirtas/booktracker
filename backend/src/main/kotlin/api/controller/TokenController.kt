@@ -25,8 +25,6 @@ import io.ktor.server.response.*
 import ru.jerael.booktracker.backend.api.dto.login.LoginRequestDto
 import ru.jerael.booktracker.backend.api.dto.token.RefreshTokenDto
 import ru.jerael.booktracker.backend.api.mappers.TokenMapper
-import ru.jerael.booktracker.backend.api.validation.validator.LoginValidator
-import ru.jerael.booktracker.backend.api.validation.validator.TokenValidator
 import ru.jerael.booktracker.backend.domain.model.login.LoginPayload
 import ru.jerael.booktracker.backend.domain.usecases.login.LoginUseCase
 import ru.jerael.booktracker.backend.domain.usecases.token.RefreshTokenUseCase
@@ -34,13 +32,10 @@ import ru.jerael.booktracker.backend.domain.usecases.token.RefreshTokenUseCase
 class TokenController(
     private val loginUseCase: LoginUseCase,
     private val refreshTokenUseCase: RefreshTokenUseCase,
-    private val loginValidator: LoginValidator,
-    private val tokenValidator: TokenValidator,
     private val tokenMapper: TokenMapper
 ) {
     suspend fun login(call: ApplicationCall) {
         val loginRequestDto = call.receive<LoginRequestDto>()
-        loginValidator.validateLogin(loginRequestDto)
         val loginPayload = LoginPayload(
             email = loginRequestDto.email,
             password = loginRequestDto.password
@@ -51,7 +46,6 @@ class TokenController(
 
     suspend fun refreshToken(call: ApplicationCall) {
         val refreshTokenDto = call.receive<RefreshTokenDto>()
-        tokenValidator.validateRefresh(refreshTokenDto)
         val newTokenPair = refreshTokenUseCase(refreshTokenDto.refreshToken)
         call.respond(HttpStatusCode.OK, tokenMapper.mapTokenToResponseDto(newTokenPair))
     }

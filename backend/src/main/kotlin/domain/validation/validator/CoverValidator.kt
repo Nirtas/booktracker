@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.domain.validation
+package ru.jerael.booktracker.backend.domain.validation.validator
 
 import ru.jerael.booktracker.backend.domain.exceptions.EmptyFileContentException
 import ru.jerael.booktracker.backend.domain.exceptions.EmptyFileNameException
