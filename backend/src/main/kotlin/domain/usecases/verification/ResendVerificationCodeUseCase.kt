@@ -22,12 +22,15 @@ import ru.jerael.booktracker.backend.domain.exceptions.ForbiddenException
 import ru.jerael.booktracker.backend.domain.exceptions.UserByEmailNotFoundException
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.VerificationService
+import ru.jerael.booktracker.backend.domain.validation.validator.VerificationValidator
 
 class ResendVerificationCodeUseCase(
     private val userRepository: UserRepository,
-    private val verificationService: VerificationService
+    private val verificationService: VerificationService,
+    private val verificationValidator: VerificationValidator
 ) {
     suspend operator fun invoke(email: String) {
+        verificationValidator.validateResending(email)
         val user = userRepository.getUserByEmail(email) ?: throw UserByEmailNotFoundException(email)
         if (user.isVerified) {
             throw ForbiddenException(

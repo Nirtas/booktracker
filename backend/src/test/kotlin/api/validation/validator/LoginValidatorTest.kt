@@ -22,15 +22,15 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.api.dto.login.LoginRequestDto
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.validator.LoginValidator
+import ru.jerael.booktracker.backend.domain.model.login.LoginPayload
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.LoginValidator
 import kotlin.test.assertTrue
 
 class LoginValidatorTest {
 
     private val validator: LoginValidator = LoginValidator()
-    private val loginRequestDto = LoginRequestDto(
+    private val loginPayload = LoginPayload(
         email = "test@example.com",
         password = "Passw0rd!"
     )
@@ -38,16 +38,16 @@ class LoginValidatorTest {
     @Test
     fun `when dto is valid, validateLogin shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateLogin(loginRequestDto)
+            validator.validateLogin(loginPayload)
         }
     }
 
     @Test
     fun `when email is invalid, validateLogin should throw ValidationException`() {
-        val invalidDto = loginRequestDto.copy(email = "")
+        val invalidPayload = loginPayload.copy(email = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateLogin(invalidDto)
+            validator.validateLogin(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("email"))
@@ -55,10 +55,10 @@ class LoginValidatorTest {
 
     @Test
     fun `when multiple fields are invalid, validateLogin should throw ValidationException containing all errors`() {
-        val invalidDto = loginRequestDto.copy(email = "", password = "")
+        val invalidPayload = loginPayload.copy(email = "", password = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateLogin(invalidDto)
+            validator.validateLogin(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("email"))

@@ -26,8 +26,8 @@ import ru.jerael.booktracker.backend.domain.usecases.token.RefreshTokenUseCase
 import ru.jerael.booktracker.backend.domain.usecases.user.*
 import ru.jerael.booktracker.backend.domain.usecases.verification.ResendVerificationCodeUseCase
 import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
-import ru.jerael.booktracker.backend.domain.validation.CoverValidator
-import ru.jerael.booktracker.backend.domain.validation.GenreValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.GenreValidator
 
 val domainModule = module {
     single<GenreValidator> { GenreValidator(genreRepository = get()) }
@@ -38,12 +38,19 @@ val domainModule = module {
             bookRepository = get(),
             genreValidator = get(),
             coverStorage = get(),
+            bookValidator = get(),
             coverValidator = get()
         )
     }
     single<GetBooksUseCase> { GetBooksUseCase(bookRepository = get()) }
     single<GetBookByIdUseCase> { GetBookByIdUseCase(bookRepository = get()) }
-    single<UpdateBookDetailsUseCase> { UpdateBookDetailsUseCase(bookRepository = get(), genreValidator = get()) }
+    single<UpdateBookDetailsUseCase> {
+        UpdateBookDetailsUseCase(
+            bookRepository = get(),
+            bookValidator = get(),
+            genreValidator = get()
+        )
+    }
     single<UpdateBookCoverUseCase> {
         UpdateBookCoverUseCase(
             bookRepository = get(),
@@ -59,7 +66,8 @@ val domainModule = module {
         RegisterUserUseCase(
             userRepository = get(),
             passwordHasher = get(),
-            verificationService = get()
+            verificationService = get(),
+            userValidator = get()
         )
     }
     single<GetUserByIdUseCase> { GetUserByIdUseCase(userRepository = get()) }
@@ -67,25 +75,47 @@ val domainModule = module {
         UpdateUserEmailUseCase(
             userRepository = get(),
             passwordHasher = get(),
-            verificationService = get()
+            verificationService = get(),
+            userValidator = get()
         )
     }
-    single<UpdateUserPasswordUseCase> { UpdateUserPasswordUseCase(userRepository = get(), passwordHasher = get()) }
-    single<DeleteUserUseCase> { DeleteUserUseCase(userRepository = get(), passwordHasher = get()) }
+    single<UpdateUserPasswordUseCase> {
+        UpdateUserPasswordUseCase(
+            userRepository = get(),
+            passwordHasher = get(),
+            userValidator = get()
+        )
+    }
+    single<DeleteUserUseCase> {
+        DeleteUserUseCase(
+            userRepository = get(),
+            passwordHasher = get(),
+            userValidator = get()
+        )
+    }
 
-    single<LoginUseCase> { LoginUseCase(userRepository = get(), passwordHasher = get(), tokenService = get()) }
+    single<LoginUseCase> {
+        LoginUseCase(
+            userRepository = get(),
+            passwordHasher = get(),
+            tokenService = get(),
+            loginValidator = get()
+        )
+    }
 
     single<VerifyCodeUseCase> {
         VerifyCodeUseCase(
             userRepository = get(),
             verificationRepository = get(),
-            tokenService = get()
+            tokenService = get(),
+            verificationValidator = get()
         )
     }
     single<ResendVerificationCodeUseCase> {
         ResendVerificationCodeUseCase(
             userRepository = get(),
-            verificationService = get()
+            verificationService = get(),
+            verificationValidator = get()
         )
     }
 
@@ -93,7 +123,8 @@ val domainModule = module {
         RefreshTokenUseCase(
             userRepository = get(),
             refreshTokenRepository = get(),
-            tokenService = get()
+            tokenService = get(),
+            tokenValidator = get()
         )
     }
 }

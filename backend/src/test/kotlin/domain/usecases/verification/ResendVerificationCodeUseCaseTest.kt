@@ -30,6 +30,8 @@ import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.VerificationService
 import ru.jerael.booktracker.backend.domain.usecases.verification.ResendVerificationCodeUseCase
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.VerificationValidator
 import java.util.*
 
 class ResendVerificationCodeUseCaseTest {
@@ -39,6 +41,9 @@ class ResendVerificationCodeUseCaseTest {
 
     @MockK
     private lateinit var verificationService: VerificationService
+
+    @MockK
+    private lateinit var verificationValidator: VerificationValidator
 
     private lateinit var useCase: ResendVerificationCodeUseCase
 
@@ -54,11 +59,12 @@ class ResendVerificationCodeUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = ResendVerificationCodeUseCase(userRepository, verificationService)
+        useCase = ResendVerificationCodeUseCase(userRepository, verificationService, verificationValidator)
     }
 
     @Test
     fun `when user exists and is not verified, it should start verification process`() = runTest {
+        every { verificationValidator.validateResending(any()) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns unverifiedUser
         coEvery { verificationService.start(unverifiedUser) } just Runs
 
@@ -71,6 +77,7 @@ class ResendVerificationCodeUseCaseTest {
     @Test
     fun `when user does not exist, a UserByEmailNotFoundException should be thrown`() = runTest {
         val nonExistentEmail = "notfound@example.com"
+        every { verificationValidator.validateResending(any()) } just Runs
         coEvery { userRepository.getUserByEmail(nonExistentEmail) } returns null
 
         assertThrows<UserByEmailNotFoundException> {
@@ -83,12 +90,26 @@ class ResendVerificationCodeUseCaseTest {
     @Test
     fun `when user is already verified, a ForbiddenException should be thrown`() = runTest {
         val verifiedEmail = "verified@example.com"
+        every { verificationValidator.validateResending(any()) } just Runs
         coEvery { userRepository.getUserByEmail(verifiedEmail) } returns verifiedUser
 
         assertThrows<ForbiddenException> {
             useCase.invoke(verifiedEmail)
         }
 
+        coVerify(exactly = 0) { verificationService.start(any()) }
+    }
+
+    @Test
+    fun `when validation is failed, a ValidationException should be thrown`() = runTest {
+        val exception = ValidationException(mapOf())
+        every { verificationValidator.validateResending(any()) } throws exception
+
+        assertThrows<ValidationException> {
+            useCase.invoke(email)
+        }
+
+        coVerify(exactly = 0) { userRepository.getUserByEmail(any()) }
         coVerify(exactly = 0) { verificationService.start(any()) }
     }
 }

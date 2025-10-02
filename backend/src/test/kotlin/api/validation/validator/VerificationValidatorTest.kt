@@ -22,31 +22,30 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
-import ru.jerael.booktracker.backend.api.dto.verification.VerificationResendCodeDto
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.validator.VerificationValidator
+import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.VerificationValidator
 import kotlin.test.assertTrue
 
 class VerificationValidatorTest {
 
     private val validator: VerificationValidator = VerificationValidator(6)
-    private val verificationDto = VerificationDto("test@example.com", "123456")
-    private val verificationResendCodeDto = VerificationResendCodeDto("test@example.com")
+    private val email = "test@example.com"
+    private val verificationPayload = VerificationPayload(email, "123456")
 
     @Test
     fun `when dto is valid, validateVerification shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateVerification(verificationDto)
+            validator.validateVerification(verificationPayload)
         }
     }
 
     @Test
     fun `when email is invalid, validateVerification should throw ValidationException`() {
-        val invalidDto = verificationDto.copy(email = "")
+        val invalidPayload = verificationPayload.copy(email = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateVerification(invalidDto)
+            validator.validateVerification(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("email"))
@@ -54,10 +53,10 @@ class VerificationValidatorTest {
 
     @Test
     fun `when multiple fields are invalid, validateVerification should throw ValidationException containing all errors`() {
-        val invalidDto = verificationDto.copy(email = "", code = "")
+        val invalidPayload = verificationPayload.copy(email = "", code = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateVerification(invalidDto)
+            validator.validateVerification(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("email"))
@@ -67,16 +66,16 @@ class VerificationValidatorTest {
     @Test
     fun `when dto is valid, validateResending shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateResending(verificationResendCodeDto)
+            validator.validateResending(email)
         }
     }
 
     @Test
     fun `when email is invalid, validateResending should throw ValidationException`() {
-        val invalidDto = verificationResendCodeDto.copy(email = "")
+        val invalidEmail = ""
 
         val exception = assertThrows<ValidationException> {
-            validator.validateResending(invalidDto)
+            validator.validateResending(invalidEmail)
         }
 
         assertTrue(exception.errors.containsKey("email"))

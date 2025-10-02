@@ -27,7 +27,6 @@ import ru.jerael.booktracker.backend.api.dto.user.UserDeletionDto
 import ru.jerael.booktracker.backend.api.dto.user.UserUpdateEmailDto
 import ru.jerael.booktracker.backend.api.dto.user.UserUpdatePasswordDto
 import ru.jerael.booktracker.backend.api.mappers.UserMapper
-import ru.jerael.booktracker.backend.api.validation.validator.UserValidator
 import ru.jerael.booktracker.backend.domain.model.user.UserCreationPayload
 import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
 import ru.jerael.booktracker.backend.domain.model.user.UserUpdateEmailPayload
@@ -41,12 +40,10 @@ class UserController(
     private val updateUserEmailUseCase: UpdateUserEmailUseCase,
     private val updateUserPasswordUseCase: UpdateUserPasswordUseCase,
     private val deleteUserUseCase: DeleteUserUseCase,
-    private val userValidator: UserValidator,
     private val userMapper: UserMapper
 ) {
     suspend fun register(call: ApplicationCall) {
         val userCreationDto = call.receive<UserCreationDto>()
-        userValidator.validateCreation(userCreationDto)
         val userCreationPayload = UserCreationPayload(
             email = userCreationDto.email,
             password = userCreationDto.password
@@ -62,7 +59,6 @@ class UserController(
 
     suspend fun updateUserEmail(call: ApplicationCall, userId: UUID) {
         val userUpdateEmailDto = call.receive<UserUpdateEmailDto>()
-        userValidator.validateUpdateEmail(userUpdateEmailDto)
         val userUpdateEmailPayload = UserUpdateEmailPayload(
             userId = userId,
             newEmail = userUpdateEmailDto.newEmail,
@@ -74,7 +70,6 @@ class UserController(
 
     suspend fun updateUserPassword(call: ApplicationCall, userId: UUID) {
         val userUpdatePasswordDto = call.receive<UserUpdatePasswordDto>()
-        userValidator.validateUpdatePassword(userUpdatePasswordDto)
         val userUpdatePasswordPayload = UserUpdatePasswordPayload(
             userId = userId,
             currentPassword = userUpdatePasswordDto.currentPassword,
@@ -86,7 +81,6 @@ class UserController(
 
     suspend fun deleteUser(call: ApplicationCall, userId: UUID) {
         val userDeletionDto = call.receive<UserDeletionDto>()
-        userValidator.validateDeletion(userDeletionDto)
         val userDeletionPayload = UserDeletionPayload(
             userId = userId,
             password = userDeletionDto.currentPassword

@@ -22,7 +22,10 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.just
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
@@ -58,29 +61,7 @@ class ResendCodeRouteTest : VerificationsRouteTestBase() {
             }
 
             assertEquals(HttpStatusCode.OK, response.status)
-            verify(exactly = 1) { verificationValidator.validateResending(any()) }
             coVerify(exactly = 1) { resendVerificationCodeUseCase.invoke(any()) }
-        }
-
-    @Test
-    fun `when validateVerification is failed, an Exception should be thrown with 500 InternalServerError`() =
-        testApplication {
-            every { verificationValidator.validateResending(any()) } throws Exception("Error")
-
-            application {
-                configureStatusPages()
-                configureSerialization()
-                configureTestAuthentication()
-                configureRouting()
-            }
-            val response = client.post(url) {
-                contentType(ContentType.Application.Json)
-                setBody(json)
-            }
-
-            assertEquals(HttpStatusCode.InternalServerError, response.status)
-            assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            coVerify(exactly = 0) { resendVerificationCodeUseCase.invoke(any()) }
         }
 
     @Test

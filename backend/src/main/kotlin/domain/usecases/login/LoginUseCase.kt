@@ -25,15 +25,18 @@ import ru.jerael.booktracker.backend.domain.model.login.LoginPayload
 import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
+import ru.jerael.booktracker.backend.domain.validation.validator.LoginValidator
 
 class LoginUseCase(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,
-    private val tokenService: TokenService
+    private val tokenService: TokenService,
+    private val loginValidator: LoginValidator
 ) {
-    suspend operator fun invoke(loginPayload: LoginPayload): TokenPair {
-        val user = userRepository.getUserByEmail(loginPayload.email) ?: throw InvalidCredentialsException()
-        if (!passwordHasher.verify(loginPayload.password, user.passwordHash)) {
+    suspend operator fun invoke(payload: LoginPayload): TokenPair {
+        loginValidator.validateLogin(payload)
+        val user = userRepository.getUserByEmail(payload.email) ?: throw InvalidCredentialsException()
+        if (!passwordHasher.verify(payload.password, user.passwordHash)) {
             throw InvalidCredentialsException()
         }
         if (!user.isVerified) {

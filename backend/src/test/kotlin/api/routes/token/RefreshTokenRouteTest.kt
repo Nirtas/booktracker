@@ -22,7 +22,10 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.verify
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import ru.jerael.booktracker.backend.api.dto.ErrorDto
@@ -50,7 +53,6 @@ class RefreshTokenRouteTest : TokensRouteTestBase() {
     fun `when request is valid, refreshToken should return a new token pair and a 200 OK status`() = testApplication {
         coEvery { refreshTokenUseCase.invoke(any()) } returns token
         every { tokenMapper.mapTokenToResponseDto(token) } returns loginResponseDto
-        every { tokenValidator.validateRefresh(any()) } just Runs
 
         application {
             configureStatusPages()
@@ -65,7 +67,6 @@ class RefreshTokenRouteTest : TokensRouteTestBase() {
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(loginResponseDto, Json.decodeFromString<LoginResponseDto>(response.bodyAsText()))
-        verify(exactly = 1) { tokenValidator.validateRefresh(refreshTokenDto) }
         coVerify(exactly = 1) { refreshTokenUseCase.invoke(refreshTokenDto.refreshToken) }
         verify(exactly = 1) { tokenMapper.mapTokenToResponseDto(token) }
     }
@@ -74,7 +75,6 @@ class RefreshTokenRouteTest : TokensRouteTestBase() {
     fun `when refresh token is invalid, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
             coEvery { refreshTokenUseCase.invoke(any()) } throws Exception("Error")
-            every { tokenValidator.validateRefresh(any()) } just Runs
 
             application {
                 configureStatusPages()
@@ -90,23 +90,4 @@ class RefreshTokenRouteTest : TokensRouteTestBase() {
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
         }
-
-    @Test
-    fun `when validation fails, an Exception should be thrown with 500 InternalServerError`() = testApplication {
-        every { tokenValidator.validateRefresh(any()) } throws Exception("Error")
-
-        application {
-            configureStatusPages()
-            configureSerialization()
-            configureTestAuthentication()
-            configureRouting()
-        }
-        val response = client.post(url) {
-            contentType(ContentType.Application.Json)
-            setBody(json)
-        }
-
-        assertEquals(HttpStatusCode.InternalServerError, response.status)
-        coVerify(exactly = 0) { refreshTokenUseCase.invoke(any()) }
-    }
 }

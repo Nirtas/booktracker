@@ -25,9 +25,9 @@ import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
 import ru.jerael.booktracker.backend.api.dto.book.BookCreationDto
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.codes.CommonValidationErrorCode
 
 data class ParsedBookCreationRequest(
     val bookCreationDto: BookCreationDto,

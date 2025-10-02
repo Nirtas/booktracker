@@ -22,46 +22,50 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.api.dto.user.UserCreationDto
-import ru.jerael.booktracker.backend.api.dto.user.UserDeletionDto
-import ru.jerael.booktracker.backend.api.dto.user.UserUpdateEmailDto
-import ru.jerael.booktracker.backend.api.dto.user.UserUpdatePasswordDto
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.validator.UserValidator
+import ru.jerael.booktracker.backend.domain.model.user.UserCreationPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserUpdateEmailPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserUpdatePasswordPayload
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
+import java.util.*
 import kotlin.test.assertTrue
 
 class UserValidatorTest {
 
     private val validator: UserValidator = UserValidator()
-    private val userCreationDto = UserCreationDto(
+    private val userCreationPayload = UserCreationPayload(
         email = "test@example.com",
         password = "Passw0rd!"
     )
-    private val userUpdateEmailDto = UserUpdateEmailDto(
+    private val userUpdateEmailPayload = UserUpdateEmailPayload(
+        userId = UUID.randomUUID(),
         newEmail = "test@example.com",
         password = "Passw0rd!"
     )
-    private val userUpdatePasswordDto = UserUpdatePasswordDto(
+    private val userUpdatePasswordPayload = UserUpdatePasswordPayload(
+        userId = UUID.randomUUID(),
         currentPassword = "Passw0rd!",
         newPassword = "Passw0rd@"
     )
-    private val userDeletionDto = UserDeletionDto(
-        currentPassword = "Passw0rd!"
+    private val userDeletionPayload = UserDeletionPayload(
+        userId = UUID.randomUUID(),
+        password = "Passw0rd!"
     )
 
     @Test
     fun `when dto is valid, validateCreation shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateCreation(userCreationDto)
+            validator.validateCreation(userCreationPayload)
         }
     }
 
     @Test
     fun `when email is invalid, validateCreation should throw ValidationException`() {
-        val invalidDto = userCreationDto.copy(email = "")
+        val invalidPayload = userCreationPayload.copy(email = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateCreation(invalidDto)
+            validator.validateCreation(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("email"))
@@ -69,10 +73,10 @@ class UserValidatorTest {
 
     @Test
     fun `when multiple fields are invalid, validateCreation should throw ValidationException containing all errors`() {
-        val invalidDto = userCreationDto.copy(email = "", password = "")
+        val invalidPayload = userCreationPayload.copy(email = "", password = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateCreation(invalidDto)
+            validator.validateCreation(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("email"))
@@ -82,16 +86,16 @@ class UserValidatorTest {
     @Test
     fun `when dto is valid, validateUpdateEmail shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateUpdateEmail(userUpdateEmailDto)
+            validator.validateUpdateEmail(userUpdateEmailPayload)
         }
     }
 
     @Test
     fun `when newEmail is invalid, validateUpdateEmail should throw ValidationException`() {
-        val invalidDto = userUpdateEmailDto.copy(newEmail = "")
+        val invalidPayload = userUpdateEmailPayload.copy(newEmail = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateUpdateEmail(invalidDto)
+            validator.validateUpdateEmail(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("newEmail"))
@@ -99,10 +103,10 @@ class UserValidatorTest {
 
     @Test
     fun `when multiple fields are invalid, validateUpdateEmail should throw ValidationException containing all errors`() {
-        val invalidDto = userUpdateEmailDto.copy(newEmail = "", password = "")
+        val invalidPayload = userUpdateEmailPayload.copy(newEmail = "", password = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateUpdateEmail(invalidDto)
+            validator.validateUpdateEmail(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("newEmail"))
@@ -112,16 +116,16 @@ class UserValidatorTest {
     @Test
     fun `when dto is valid, validateUpdatePassword shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateUpdatePassword(userUpdatePasswordDto)
+            validator.validateUpdatePassword(userUpdatePasswordPayload)
         }
     }
 
     @Test
     fun `when currentPassword is invalid, validateUpdatePassword should throw ValidationException`() {
-        val invalidDto = userUpdatePasswordDto.copy(currentPassword = "")
+        val invalidPayload = userUpdatePasswordPayload.copy(currentPassword = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateUpdatePassword(invalidDto)
+            validator.validateUpdatePassword(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("currentPassword"))
@@ -129,10 +133,10 @@ class UserValidatorTest {
 
     @Test
     fun `when multiple fields are invalid, validateUpdatePassword should throw ValidationException containing all errors`() {
-        val invalidDto = userUpdatePasswordDto.copy(currentPassword = "", newPassword = "")
+        val invalidPayload = userUpdatePasswordPayload.copy(currentPassword = "", newPassword = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateUpdatePassword(invalidDto)
+            validator.validateUpdatePassword(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("currentPassword"))
@@ -142,16 +146,16 @@ class UserValidatorTest {
     @Test
     fun `when dto is valid, validateDeletion shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateDeletion(userDeletionDto)
+            validator.validateDeletion(userDeletionPayload)
         }
     }
 
     @Test
     fun `when currentPassword is invalid, validateDeletion should throw ValidationException`() {
-        val invalidDto = userDeletionDto.copy(currentPassword = "")
+        val invalidPayload = userDeletionPayload.copy(password = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateDeletion(invalidDto)
+            validator.validateDeletion(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("password"))

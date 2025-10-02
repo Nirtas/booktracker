@@ -31,7 +31,7 @@ import org.junit.jupiter.api.assertThrows
 import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
 import ru.jerael.booktracker.backend.domain.model.genre.Genre
 import ru.jerael.booktracker.backend.domain.repository.GenreRepository
-import ru.jerael.booktracker.backend.domain.validation.GenreValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.GenreValidator
 
 class GenreValidatorTest {
 

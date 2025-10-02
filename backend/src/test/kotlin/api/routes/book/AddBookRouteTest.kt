@@ -25,7 +25,9 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.slot
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -214,37 +216,19 @@ class AddBookRouteTest : BooksRouteTestBase() {
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)
             assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-            verify(exactly = 0) { bookValidator.validateCreation(any()) }
-            coVerify(exactly = 0) { addBookUseCase.invoke(any()) }
-        }
-
-    @Test
-    fun `when validateCreation is failed, an Exception should be thrown with 500 InternalServerError`() =
-        testApplication {
-            val token = generateTestToken(userId)
-            every { bookValidator.validateCreation(any()) } throws Exception("Error")
-
-            application {
-                configureStatusPages()
-                configureSerialization()
-                configureTestAuthentication()
-                configureRouting()
-            }
-            val response = client.post(url) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer $token")
-                }
-            }
-
-            assertEquals(HttpStatusCode.InternalServerError, response.status)
-            assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
             coVerify(exactly = 0) { addBookUseCase.invoke(any()) }
         }
 
     @Test
     fun `when addBookUseCase is failed, an Exception should be thrown with 500 InternalServerError`() =
         testApplication {
+            val parsedBookCreationRequest = ParsedBookCreationRequest(
+                bookCreationDto = bookCreationDto,
+                coverBytes = null,
+                coverFileName = null
+            )
             val token = generateTestToken(userId)
+            coEvery { multipartParser.parseBookCreation(any()) } returns parsedBookCreationRequest
             coEvery { addBookUseCase.invoke(any()) } throws Exception("Error")
 
             application {
@@ -257,6 +241,18 @@ class AddBookRouteTest : BooksRouteTestBase() {
                 headers {
                     append(HttpHeaders.Authorization, "Bearer $token")
                 }
+                val multipartBody = MultiPartFormDataContent(
+                    parts = formData {
+                        append(
+                            "book",
+                            Json.encodeToString(bookCreationDto),
+                            Headers.build {
+                                append(HttpHeaders.ContentType, "application/json")
+                            }
+                        )
+                    }
+                )
+                setBody(multipartBody)
             }
 
             assertEquals(HttpStatusCode.InternalServerError, response.status)

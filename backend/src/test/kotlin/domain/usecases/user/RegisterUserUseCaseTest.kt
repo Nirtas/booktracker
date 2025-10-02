@@ -32,6 +32,8 @@ import ru.jerael.booktracker.backend.domain.model.user.UserCreationPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.VerificationService
 import ru.jerael.booktracker.backend.domain.usecases.user.RegisterUserUseCase
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 import java.util.*
 
 class RegisterUserUseCaseTest {
@@ -44,6 +46,9 @@ class RegisterUserUseCaseTest {
 
     @MockK
     private lateinit var verificationService: VerificationService
+
+    @MockK
+    private lateinit var userValidator: UserValidator
 
     private lateinit var useCase: RegisterUserUseCase
 
@@ -63,12 +68,13 @@ class RegisterUserUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = RegisterUserUseCase(userRepository, passwordHasher, verificationService)
+        useCase = RegisterUserUseCase(userRepository, passwordHasher, verificationService, userValidator)
     }
 
     @Test
     fun `when user does not exist, it should hash password, create user, start verification, and return new user`() =
         runTest {
+            every { userValidator.validateCreation(any()) } just Runs
             coEvery { userRepository.getUserByEmail(email) } returns null
             every { passwordHasher.hash(password) } returns hash
             coEvery { userRepository.createUser(email, hash) } returns user
@@ -85,9 +91,24 @@ class RegisterUserUseCaseTest {
 
     @Test
     fun `when user already exists, a UserAlreadyExistsException should be thrown`() = runTest {
+        every { userValidator.validateCreation(any()) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns user
 
         assertThrows<UserAlreadyExistsException> {
+            useCase.invoke(userCreationPayload)
+        }
+
+        verify(exactly = 0) { passwordHasher.hash(any()) }
+        coVerify(exactly = 0) { userRepository.createUser(any(), any()) }
+        coVerify(exactly = 0) { verificationService.start(any()) }
+    }
+
+    @Test
+    fun `when validation is failed, a ValidationException should be thrown`() = runTest {
+        val exception = ValidationException(mapOf())
+        every { userValidator.validateCreation(any()) } throws exception
+
+        assertThrows<ValidationException> {
             useCase.invoke(userCreationPayload)
         }
 

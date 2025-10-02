@@ -21,8 +21,8 @@ package api.validation.validator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import ru.jerael.booktracker.backend.api.validation.codes.CommonValidationErrorCode
-import ru.jerael.booktracker.backend.api.validation.validator.validateAuthor
+import ru.jerael.booktracker.backend.domain.validation.codes.CommonValidationErrorCode
+import ru.jerael.booktracker.backend.domain.validation.validator.validateAuthor
 
 class ValidateAuthorTest {
 

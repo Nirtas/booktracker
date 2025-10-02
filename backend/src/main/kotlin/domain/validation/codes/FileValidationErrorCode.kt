@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.codes
+package ru.jerael.booktracker.backend.domain.validation.codes
 
-enum class BookValidationErrorCode : ValidationErrorCode {
-    INVALID_STATUS
+enum class FileValidationErrorCode : ValidationErrorCode {
+    INVALID_EXTENSION
 }

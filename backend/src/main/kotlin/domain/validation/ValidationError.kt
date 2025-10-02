@@ -16,9 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.codes
+package ru.jerael.booktracker.backend.domain.validation
 
-enum class RefreshTokenValidationErrorCode : ValidationErrorCode {
-    LENGTH_INVALID,
-    INVALID_FORMAT
-}
+import ru.jerael.booktracker.backend.domain.validation.codes.ValidationErrorCode
+
+data class ValidationError(
+    val code: ValidationErrorCode,
+    val params: Map<String, List<String>>? = null
+)

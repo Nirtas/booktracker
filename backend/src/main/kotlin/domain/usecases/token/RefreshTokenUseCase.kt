@@ -25,14 +25,17 @@ import ru.jerael.booktracker.backend.domain.model.token.TokenPair
 import ru.jerael.booktracker.backend.domain.repository.RefreshTokenRepository
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
+import ru.jerael.booktracker.backend.domain.validation.validator.TokenValidator
 import java.time.LocalDateTime
 
 class RefreshTokenUseCase(
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val tokenService: TokenService
+    private val tokenService: TokenService,
+    private val tokenValidator: TokenValidator
 ) {
     suspend operator fun invoke(refreshToken: String): TokenPair {
+        tokenValidator.validateRefresh(refreshToken)
         val token = refreshTokenRepository.getToken(refreshToken) ?: throw InvalidRefreshTokenException()
         if (LocalDateTime.now().isAfter(token.expiresAt)) throw ExpiredRefreshTokenException()
         refreshTokenRepository.deleteToken(refreshToken)

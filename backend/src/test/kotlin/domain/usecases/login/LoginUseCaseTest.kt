@@ -34,6 +34,8 @@ import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
 import ru.jerael.booktracker.backend.domain.usecases.login.LoginUseCase
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.LoginValidator
 import java.util.*
 
 class LoginUseCaseTest {
@@ -46,6 +48,9 @@ class LoginUseCaseTest {
 
     @MockK
     private lateinit var tokenService: TokenService
+
+    @MockK
+    private lateinit var loginValidator: LoginValidator
 
     private lateinit var useCase: LoginUseCase
 
@@ -65,13 +70,14 @@ class LoginUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = LoginUseCase(userRepository, passwordHasher, tokenService)
+        useCase = LoginUseCase(userRepository, passwordHasher, tokenService, loginValidator)
     }
 
     @Test
     fun `when credentials are valid and user is verified, it should return a token`() = runTest {
         val expectedToken = TokenPair(accessToken = "access", refreshToken = "refresh")
 
+        every { loginValidator.validateLogin(loginPayload) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns user
         every { passwordHasher.verify(password, hash) } returns true
         coEvery { tokenService.generateTokenPair(user.id) } returns expectedToken
@@ -86,6 +92,7 @@ class LoginUseCaseTest {
 
     @Test
     fun `when user is not found by email, an InvalidCredentialsException should be thrown`() = runTest {
+        every { loginValidator.validateLogin(loginPayload) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns null
 
         assertThrows<InvalidCredentialsException> {
@@ -98,6 +105,7 @@ class LoginUseCaseTest {
 
     @Test
     fun `when password does not match, an InvalidCredentialsException should be thrown`() = runTest {
+        every { loginValidator.validateLogin(loginPayload) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns user
         every { passwordHasher.verify(password, hash) } returns false
 
@@ -111,6 +119,7 @@ class LoginUseCaseTest {
     @Test
     fun `when user is not verified, a ForbiddenException should be thrown`() = runTest {
         val unverifiedUser = user.copy(isVerified = false)
+        every { loginValidator.validateLogin(loginPayload) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns unverifiedUser
         every { passwordHasher.verify(password, unverifiedUser.passwordHash) } returns true
 
@@ -124,6 +133,7 @@ class LoginUseCaseTest {
     @Test
     fun `when an unexpected error occurs in repository, it should propagate the exception`() = runTest {
         val exception = Exception("Error")
+        every { loginValidator.validateLogin(loginPayload) } just Runs
         coEvery { userRepository.getUserByEmail(email) } throws exception
 
         val actualException = assertThrows<Exception> {
@@ -131,5 +141,19 @@ class LoginUseCaseTest {
         }
 
         assertEquals(exception, actualException)
+    }
+
+    @Test
+    fun `when login validation is failed, a ValidationException should be thrown`() = runTest {
+        val exception = ValidationException(mapOf())
+        every { loginValidator.validateLogin(any()) } throws exception
+
+        assertThrows<ValidationException> {
+            useCase.invoke(loginPayload)
+        }
+
+        coVerify(exactly = 0) { userRepository.getUserByEmail(any()) }
+        verify(exactly = 0) { passwordHasher.verify(any(), any()) }
+        coVerify(exactly = 0) { tokenService.generateTokenPair(any()) }
     }
 }

@@ -34,6 +34,8 @@ import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.repository.VerificationRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
 import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.VerificationValidator
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertEquals
@@ -48,6 +50,9 @@ class VerifyCodeUseCaseTest {
 
     @MockK
     private lateinit var tokenService: TokenService
+
+    @MockK
+    private lateinit var verificationValidator: VerificationValidator
 
     private lateinit var useCase: VerifyCodeUseCase
 
@@ -73,12 +78,13 @@ class VerifyCodeUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = VerifyCodeUseCase(userRepository, verificationRepository, tokenService)
+        useCase = VerifyCodeUseCase(userRepository, verificationRepository, tokenService, verificationValidator)
     }
 
     @Test
     fun `when code is valid and not expired, it should verify user and delete code`() = runTest {
         val tokenPair = TokenPair("access", "refresh")
+        every { verificationValidator.validateVerification(any()) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns user
         coEvery { verificationRepository.getCode(userId) } returns verificationCode
         coEvery { userRepository.updateUserVerificationStatus(userId, true) } just Runs
@@ -94,6 +100,7 @@ class VerifyCodeUseCaseTest {
 
     @Test
     fun `when user is not found by email, a UserByEmailNotFoundException should be thrown`() = runTest {
+        every { verificationValidator.validateVerification(any()) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns null
 
         assertThrows<UserByEmailNotFoundException> {
@@ -108,6 +115,7 @@ class VerifyCodeUseCaseTest {
     @Test
     fun `when verification code is not found for the user, an InvalidVerificationException should be thrown`() =
         runTest {
+            every { verificationValidator.validateVerification(any()) } just Runs
             coEvery { userRepository.getUserByEmail(email) } returns user
             coEvery { verificationRepository.getCode(userId) } returns null
 
@@ -120,6 +128,7 @@ class VerifyCodeUseCaseTest {
     fun `when provided code does not match the stored code, an InvalidVerificationException should be thrown`() =
         runTest {
             val incorrectPayload = verificationPayload.copy(code = "654321")
+            every { verificationValidator.validateVerification(any()) } just Runs
             coEvery { userRepository.getUserByEmail(email) } returns user
             coEvery { verificationRepository.getCode(userId) } returns verificationCode
 
@@ -131,11 +140,26 @@ class VerifyCodeUseCaseTest {
     @Test
     fun `when verification code is expired, an InvalidVerificationException should be thrown`() = runTest {
         val expiredCode = verificationCode.copy(expiresAt = LocalDateTime.now().minusMinutes(1))
+        every { verificationValidator.validateVerification(any()) } just Runs
         coEvery { userRepository.getUserByEmail(email) } returns user
         coEvery { verificationRepository.getCode(userId) } returns expiredCode
 
         assertThrows<InvalidVerificationException> {
             useCase.invoke(verificationPayload)
         }
+    }
+
+    @Test
+    fun `when validation is failed, a ValidationException should be thrown`() = runTest {
+        val exception = ValidationException(mapOf())
+        every { verificationValidator.validateVerification(any()) } throws exception
+
+        assertThrows<ValidationException> {
+            useCase.invoke(verificationPayload)
+        }
+
+        coVerify(exactly = 0) { verificationRepository.getCode(any()) }
+        coVerify(exactly = 0) { userRepository.updateUserVerificationStatus(any(), any()) }
+        coVerify(exactly = 0) { verificationRepository.deleteCode(any()) }
     }
 }

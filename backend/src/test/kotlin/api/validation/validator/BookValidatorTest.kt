@@ -22,42 +22,50 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.jerael.booktracker.backend.api.dto.book.BookCreationDto
-import ru.jerael.booktracker.backend.api.dto.book.BookUpdateDto
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.validator.BookValidator
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.BookStatus
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.BookValidator
+import java.util.*
 import kotlin.test.assertTrue
 
 class BookValidatorTest {
 
     private val validator: BookValidator = BookValidator()
-    private val bookCreationDto = BookCreationDto(
+    private val bookCreationPayload = BookCreationPayload(
+        userId = UUID.randomUUID(),
+        language = "en",
         title = "Title",
         author = "Author",
-        status = BookStatus.READ.value,
+        coverBytes = null,
+        coverFileName = null,
+        status = BookStatus.READ,
         genreIds = emptyList()
     )
-    private val bookUpdateDto = BookUpdateDto(
+    private val bookDetailsUpdatePayload = BookDetailsUpdatePayload(
+        userId = UUID.randomUUID(),
+        bookId = UUID.randomUUID(),
+        language = "en",
         title = "Title",
         author = "Author",
-        status = BookStatus.READ.value,
+        status = BookStatus.READ,
         genreIds = emptyList()
     )
 
     @Test
     fun `when dto is valid, validateCreation shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateCreation(bookCreationDto)
+            validator.validateCreation(bookCreationPayload)
         }
     }
 
     @Test
     fun `when title is invalid, validateCreation should throw ValidationException`() {
-        val invalidDto = bookCreationDto.copy(title = "")
+        val invalidPayload = bookCreationPayload.copy(title = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateCreation(invalidDto)
+            validator.validateCreation(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("title"))
@@ -65,10 +73,10 @@ class BookValidatorTest {
 
     @Test
     fun `when multiple fields are invalid, validateCreation should throw ValidationException containing all errors`() {
-        val invalidDto = bookCreationDto.copy(title = "", author = "")
+        val invalidPayload = bookCreationPayload.copy(title = "", author = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateCreation(invalidDto)
+            validator.validateCreation(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("title"))
@@ -78,16 +86,16 @@ class BookValidatorTest {
     @Test
     fun `when dto is valid, validateUpdate shouldn't throw exception`() = runTest {
         assertDoesNotThrow {
-            validator.validateUpdate(bookUpdateDto)
+            validator.validateUpdate(bookDetailsUpdatePayload)
         }
     }
 
     @Test
     fun `when title is invalid, validateUpdate should throw ValidationException`() {
-        val invalidDto = bookUpdateDto.copy(title = "")
+        val invalidPayload = bookDetailsUpdatePayload.copy(title = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateUpdate(invalidDto)
+            validator.validateUpdate(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("title"))
@@ -95,10 +103,10 @@ class BookValidatorTest {
 
     @Test
     fun `when multiple fields are invalid, validateUpdate should throw ValidationException containing all errors`() {
-        val invalidDto = bookUpdateDto.copy(title = "", author = "")
+        val invalidPayload = bookDetailsUpdatePayload.copy(title = "", author = "")
 
         val exception = assertThrows<ValidationException> {
-            validator.validateUpdate(invalidDto)
+            validator.validateUpdate(invalidPayload)
         }
 
         assertTrue(exception.errors.containsKey("title"))

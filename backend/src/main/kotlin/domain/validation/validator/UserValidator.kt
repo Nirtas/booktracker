@@ -16,41 +16,41 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.validator
+package ru.jerael.booktracker.backend.domain.validation.validator
 
-import ru.jerael.booktracker.backend.api.dto.user.UserCreationDto
-import ru.jerael.booktracker.backend.api.dto.user.UserDeletionDto
-import ru.jerael.booktracker.backend.api.dto.user.UserUpdateEmailDto
-import ru.jerael.booktracker.backend.api.dto.user.UserUpdatePasswordDto
-import ru.jerael.booktracker.backend.api.util.putIfNotEmpty
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-import ru.jerael.booktracker.backend.api.validation.codes.PasswordValidationErrorCode
+import ru.jerael.booktracker.backend.domain.model.user.UserCreationPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserUpdateEmailPayload
+import ru.jerael.booktracker.backend.domain.model.user.UserUpdatePasswordPayload
+import ru.jerael.booktracker.backend.domain.util.putIfNotEmpty
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.codes.PasswordValidationErrorCode
 
 class UserValidator {
-    fun validateCreation(dto: UserCreationDto) {
+    fun validateCreation(payload: UserCreationPayload) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("email", validateEmail(dto.email))
-        errors.putIfNotEmpty("password", validatePassword(dto.password))
+        errors.putIfNotEmpty("email", validateEmail(payload.email))
+        errors.putIfNotEmpty("password", validatePassword(payload.password))
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
         }
     }
 
-    fun validateUpdateEmail(dto: UserUpdateEmailDto) {
+    fun validateUpdateEmail(payload: UserUpdateEmailPayload) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("newEmail", validateEmail(dto.newEmail))
-        errors.putIfNotEmpty("password", validatePassword(dto.password))
+        errors.putIfNotEmpty("newEmail", validateEmail(payload.newEmail))
+        errors.putIfNotEmpty("password", validatePassword(payload.password))
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
         }
     }
 
-    fun validateUpdatePassword(dto: UserUpdatePasswordDto) {
+    fun validateUpdatePassword(payload: UserUpdatePasswordPayload) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("currentPassword", validatePassword(dto.currentPassword))
-        errors.putIfNotEmpty("newPassword", validatePassword(dto.newPassword))
-        if (dto.currentPassword == dto.newPassword) {
+        errors.putIfNotEmpty("currentPassword", validatePassword(payload.currentPassword))
+        errors.putIfNotEmpty("newPassword", validatePassword(payload.newPassword))
+        if (payload.currentPassword == payload.newPassword) {
             errors.putIfNotEmpty(
                 "newPassword",
                 listOf(ValidationError(PasswordValidationErrorCode.CANNOT_BE_SAME_AS_OLD))
@@ -61,9 +61,9 @@ class UserValidator {
         }
     }
 
-    fun validateDeletion(dto: UserDeletionDto) {
+    fun validateDeletion(payload: UserDeletionPayload) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("password", validatePassword(dto.currentPassword))
+        errors.putIfNotEmpty("password", validatePassword(payload.password))
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
         }

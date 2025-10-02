@@ -67,30 +67,9 @@ class LoginRouteTest : TokensRouteTestBase() {
 
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(loginResponseDto, Json.decodeFromString<LoginResponseDto>(response.bodyAsText()))
-            verify(exactly = 1) { loginValidator.validateLogin(any()) }
             coVerify(exactly = 1) { loginUseCase.invoke(any()) }
             verify(exactly = 1) { tokenMapper.mapTokenToResponseDto(any()) }
         }
-
-    @Test
-    fun `when validateLogin is failed, an Exception should be thrown with 500 InternalServerError`() = testApplication {
-        every { loginValidator.validateLogin(any()) } throws Exception("Error")
-
-        application {
-            configureStatusPages()
-            configureSerialization()
-            configureTestAuthentication()
-            configureRouting()
-        }
-        val response = client.post(url) {
-            contentType(ContentType.Application.Json)
-            setBody(json)
-        }
-
-        assertEquals(HttpStatusCode.InternalServerError, response.status)
-        assertEquals(errorDto, Json.decodeFromString<ErrorDto>(response.bodyAsText()))
-        coVerify(exactly = 0) { loginUseCase.invoke(any()) }
-    }
 
     @Test
     fun `when loginUseCase is failed, an Exception should be thrown with 500 InternalServerError`() = testApplication {

@@ -24,18 +24,21 @@ import ru.jerael.booktracker.backend.domain.model.user.User
 import ru.jerael.booktracker.backend.domain.model.user.UserCreationPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.VerificationService
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 
 class RegisterUserUseCase(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,
-    private val verificationService: VerificationService
+    private val verificationService: VerificationService,
+    private val userValidator: UserValidator
 ) {
-    suspend operator fun invoke(userCreationPayload: UserCreationPayload): User {
-        userRepository.getUserByEmail(userCreationPayload.email)?.let {
+    suspend operator fun invoke(payload: UserCreationPayload): User {
+        userValidator.validateCreation(payload)
+        userRepository.getUserByEmail(payload.email)?.let {
             throw UserAlreadyExistsException(it.email)
         }
-        val passwordHash = passwordHasher.hash(userCreationPayload.password)
-        val newUser = userRepository.createUser(userCreationPayload.email, passwordHash)
+        val passwordHash = passwordHasher.hash(payload.password)
+        val newUser = userRepository.createUser(payload.email, passwordHash)
         verificationService.start(newUser)
         return newUser
     }

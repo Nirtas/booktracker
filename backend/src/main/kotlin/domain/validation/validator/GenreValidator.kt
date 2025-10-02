@@ -16,9 +16,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.codes
+package ru.jerael.booktracker.backend.domain.validation.validator
 
-enum class CodeValidationErrorCode : ValidationErrorCode {
-    LENGTH_INVALID,
-    MUST_BE_DIGITS
+import ru.jerael.booktracker.backend.domain.exceptions.GenresNotFoundException
+import ru.jerael.booktracker.backend.domain.repository.GenreRepository
+
+class GenreValidator(private val genreRepository: GenreRepository) {
+    suspend operator fun invoke(genreIds: List<Int>, language: String) {
+        val uniqueGenres = genreIds.distinct()
+        if (uniqueGenres.isEmpty()) {
+            return
+        }
+        val foundGenres = genreRepository.getGenresByIds(uniqueGenres, language)
+        if (foundGenres.size != uniqueGenres.size) {
+            val notFoundGenreIds = (uniqueGenres.toSet() - foundGenres.map { it.id }.toSet()).toList()
+            throw GenresNotFoundException(notFoundGenreIds)
+        }
+    }
 }

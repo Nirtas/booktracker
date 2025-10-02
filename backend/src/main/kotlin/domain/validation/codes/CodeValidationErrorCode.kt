@@ -16,20 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.validator
+package ru.jerael.booktracker.backend.domain.validation.codes
 
-import ru.jerael.booktracker.backend.api.dto.login.LoginRequestDto
-import ru.jerael.booktracker.backend.api.util.putIfNotEmpty
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
-
-class LoginValidator {
-    fun validateLogin(dto: LoginRequestDto) {
-        val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("email", validateEmail(dto.email))
-        errors.putIfNotEmpty("password", validatePassword(dto.password))
-        if (errors.isNotEmpty()) {
-            throw ValidationException(errors)
-        }
-    }
+enum class CodeValidationErrorCode : ValidationErrorCode {
+    LENGTH_INVALID,
+    MUST_BE_DIGITS
 }

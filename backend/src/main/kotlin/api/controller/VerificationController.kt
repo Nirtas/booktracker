@@ -25,7 +25,6 @@ import io.ktor.server.response.*
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
 import ru.jerael.booktracker.backend.api.dto.verification.VerificationResendCodeDto
 import ru.jerael.booktracker.backend.api.mappers.TokenMapper
-import ru.jerael.booktracker.backend.api.validation.validator.VerificationValidator
 import ru.jerael.booktracker.backend.domain.model.verification.VerificationPayload
 import ru.jerael.booktracker.backend.domain.usecases.verification.ResendVerificationCodeUseCase
 import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseCase
@@ -33,12 +32,10 @@ import ru.jerael.booktracker.backend.domain.usecases.verification.VerifyCodeUseC
 class VerificationController(
     private val verifyCodeUseCase: VerifyCodeUseCase,
     private val resendVerificationCodeUseCase: ResendVerificationCodeUseCase,
-    private val verificationValidator: VerificationValidator,
     private val tokenMapper: TokenMapper
 ) {
     suspend fun verify(call: ApplicationCall) {
         val verificationDto = call.receive<VerificationDto>()
-        verificationValidator.validateVerification(verificationDto)
         val verificationPayload = VerificationPayload(
             email = verificationDto.email,
             code = verificationDto.code
@@ -49,7 +46,6 @@ class VerificationController(
 
     suspend fun resendCode(call: ApplicationCall) {
         val verificationResendCodeDto = call.receive<VerificationResendCodeDto>()
-        verificationValidator.validateResending(verificationResendCodeDto)
         resendVerificationCodeUseCase(verificationResendCodeDto.email)
         call.respond(HttpStatusCode.OK)
     }

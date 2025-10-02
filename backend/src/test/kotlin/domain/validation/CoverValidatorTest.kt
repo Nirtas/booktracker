@@ -25,7 +25,7 @@ import org.junit.jupiter.api.assertThrows
 import ru.jerael.booktracker.backend.domain.exceptions.EmptyFileContentException
 import ru.jerael.booktracker.backend.domain.exceptions.EmptyFileNameException
 import ru.jerael.booktracker.backend.domain.exceptions.InvalidFileExtensionException
-import ru.jerael.booktracker.backend.domain.validation.CoverValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
 
 class CoverValidatorTest {
 

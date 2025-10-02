@@ -22,8 +22,8 @@ import org.koin.dsl.module
 import ru.jerael.booktracker.backend.api.controller.*
 import ru.jerael.booktracker.backend.api.mappers.*
 import ru.jerael.booktracker.backend.api.parsing.MultipartParser
-import ru.jerael.booktracker.backend.api.validation.validator.*
 import ru.jerael.booktracker.backend.domain.config.OtpConfig
+import ru.jerael.booktracker.backend.domain.validation.validator.*
 
 val apiModule = module {
     single<BookMapper> { BookMapperImpl(genreMapper = get()) }
@@ -46,7 +46,6 @@ val apiModule = module {
             updateBookDetailsUseCase = get(),
             updateBookCoverUseCase = get(),
             deleteBookUseCase = get(),
-            validator = get(),
             multipartParser = get(),
             bookMapper = get()
         )
@@ -64,7 +63,6 @@ val apiModule = module {
             updateUserEmailUseCase = get(),
             updateUserPasswordUseCase = get(),
             deleteUserUseCase = get(),
-            userValidator = get(),
             userMapper = get()
         )
     }
@@ -72,8 +70,6 @@ val apiModule = module {
         TokenController(
             loginUseCase = get(),
             refreshTokenUseCase = get(),
-            loginValidator = get(),
-            tokenValidator = get(),
             tokenMapper = get()
         )
     }
@@ -81,7 +77,6 @@ val apiModule = module {
         VerificationController(
             verifyCodeUseCase = get(),
             resendVerificationCodeUseCase = get(),
-            verificationValidator = get(),
             tokenMapper = get()
         )
     }

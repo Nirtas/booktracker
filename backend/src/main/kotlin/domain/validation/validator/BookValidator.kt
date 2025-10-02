@@ -16,27 +16,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.validator
+package ru.jerael.booktracker.backend.domain.validation.validator
 
-import ru.jerael.booktracker.backend.api.dto.verification.VerificationDto
-import ru.jerael.booktracker.backend.api.dto.verification.VerificationResendCodeDto
-import ru.jerael.booktracker.backend.api.util.putIfNotEmpty
-import ru.jerael.booktracker.backend.api.validation.ValidationError
-import ru.jerael.booktracker.backend.api.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.model.book.BookCreationPayload
+import ru.jerael.booktracker.backend.domain.model.book.BookDetailsUpdatePayload
+import ru.jerael.booktracker.backend.domain.util.putIfNotEmpty
+import ru.jerael.booktracker.backend.domain.validation.ValidationError
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
 
-class VerificationValidator(private val otpCodeLength: Int) {
-    fun validateVerification(dto: VerificationDto) {
+class BookValidator {
+    fun validateCreation(payload: BookCreationPayload) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("email", validateEmail(dto.email))
-        errors.putIfNotEmpty("code", validateCode(dto.code, otpCodeLength))
+        errors.putIfNotEmpty("title", validateTitle(payload.title))
+        errors.putIfNotEmpty("author", validateAuthor(payload.author))
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
         }
     }
 
-    fun validateResending(dto: VerificationResendCodeDto) {
+    fun validateUpdate(payload: BookDetailsUpdatePayload) {
         val errors = mutableMapOf<String, List<ValidationError>>()
-        errors.putIfNotEmpty("email", validateEmail(dto.email))
+        errors.putIfNotEmpty("title", validateTitle(payload.title))
+        errors.putIfNotEmpty("author", validateAuthor(payload.author))
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
         }

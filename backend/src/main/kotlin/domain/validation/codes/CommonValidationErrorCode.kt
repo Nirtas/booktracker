@@ -16,8 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.jerael.booktracker.backend.api.validation.codes
+package ru.jerael.booktracker.backend.domain.validation.codes
 
-enum class GenreValidationErrorCode : ValidationErrorCode {
-    NOT_FOUND
+enum class CommonValidationErrorCode : ValidationErrorCode {
+    FIELD_CANNOT_BE_EMPTY,
+    FIELD_TOO_LONG,
+    INVALID_UUID_FORMAT,
+    INVALID_FILE_PART,
+    INVALID_FORM_ITEM
 }

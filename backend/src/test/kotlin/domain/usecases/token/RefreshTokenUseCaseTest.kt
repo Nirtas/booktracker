@@ -35,6 +35,8 @@ import ru.jerael.booktracker.backend.domain.repository.RefreshTokenRepository
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
 import ru.jerael.booktracker.backend.domain.service.TokenService
 import ru.jerael.booktracker.backend.domain.usecases.token.RefreshTokenUseCase
+import ru.jerael.booktracker.backend.domain.validation.ValidationException
+import ru.jerael.booktracker.backend.domain.validation.validator.TokenValidator
 import java.time.LocalDateTime
 import java.util.*
 
@@ -48,6 +50,9 @@ class RefreshTokenUseCaseTest {
 
     @MockK
     private lateinit var tokenService: TokenService
+
+    @MockK
+    private lateinit var tokenValidator: TokenValidator
 
     private lateinit var useCase: RefreshTokenUseCase
 
@@ -68,12 +73,13 @@ class RefreshTokenUseCaseTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = RefreshTokenUseCase(userRepository, refreshTokenRepository, tokenService)
+        useCase = RefreshTokenUseCase(userRepository, refreshTokenRepository, tokenService, tokenValidator)
     }
 
     @Test
     fun `when token is valid, it should return a new token pair`() = runTest {
         val expectedTokenPair = TokenPair(accessToken = "access", refreshToken = "refresh")
+        every { tokenValidator.validateRefresh(refreshToken) } just Runs
         coEvery { refreshTokenRepository.getToken(refreshToken) } returns token
         coEvery { refreshTokenRepository.deleteToken(refreshToken) } just Runs
         coEvery { userRepository.getUserById(userId) } returns user
@@ -90,6 +96,7 @@ class RefreshTokenUseCaseTest {
 
     @Test
     fun `when refresh token is not found, an InvalidRefreshTokenException should be thrown`() = runTest {
+        every { tokenValidator.validateRefresh(refreshToken) } just Runs
         coEvery { refreshTokenRepository.getToken(refreshToken) } returns null
 
         assertThrows<InvalidRefreshTokenException> {
@@ -104,6 +111,7 @@ class RefreshTokenUseCaseTest {
     @Test
     fun `when refresh token is expired, an ExpiredRefreshTokenException should be thrown`() = runTest {
         val expiredToken = token.copy(expiresAt = LocalDateTime.now().minusSeconds(1))
+        every { tokenValidator.validateRefresh(refreshToken) } just Runs
         coEvery { refreshTokenRepository.getToken(refreshToken) } returns expiredToken
 
         assertThrows<ExpiredRefreshTokenException> {
@@ -117,6 +125,7 @@ class RefreshTokenUseCaseTest {
 
     @Test
     fun `when user associated with token is not found, a UserByIdNotFoundException should be thrown`() = runTest {
+        every { tokenValidator.validateRefresh(refreshToken) } just Runs
         coEvery { refreshTokenRepository.getToken(refreshToken) } returns token
         coEvery { refreshTokenRepository.deleteToken(refreshToken) } just Runs
         coEvery { userRepository.getUserById(userId) } returns null
@@ -131,6 +140,7 @@ class RefreshTokenUseCaseTest {
     @Test
     fun `when an unexpected error occurs in repository, it should propagate the exception`() = runTest {
         val exception = Exception("Error")
+        every { tokenValidator.validateRefresh(refreshToken) } just Runs
         coEvery { refreshTokenRepository.getToken(refreshToken) } throws exception
 
         val actualException = assertThrows<Exception> {
@@ -138,5 +148,19 @@ class RefreshTokenUseCaseTest {
         }
 
         assertEquals(exception, actualException)
+    }
+
+    @Test
+    fun `when refresh token validation is failed, a ValidationException should be thrown`() = runTest {
+        val exception = ValidationException(mapOf())
+        every { tokenValidator.validateRefresh(any()) } throws exception
+
+        assertThrows<ValidationException> {
+            useCase.invoke(refreshToken)
+        }
+
+        coVerify(exactly = 0) { refreshTokenRepository.deleteToken(any()) }
+        coVerify(exactly = 0) { userRepository.getUserById(any()) }
+        coVerify(exactly = 0) { tokenService.generateTokenPair(any()) }
     }
 }

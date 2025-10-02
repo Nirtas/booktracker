@@ -23,16 +23,19 @@ import ru.jerael.booktracker.backend.domain.exceptions.UserByIdNotFoundException
 import ru.jerael.booktracker.backend.domain.hasher.PasswordHasher
 import ru.jerael.booktracker.backend.domain.model.user.UserDeletionPayload
 import ru.jerael.booktracker.backend.domain.repository.UserRepository
+import ru.jerael.booktracker.backend.domain.validation.validator.UserValidator
 
 class DeleteUserUseCase(
     private val userRepository: UserRepository,
-    private val passwordHasher: PasswordHasher
+    private val passwordHasher: PasswordHasher,
+    private val userValidator: UserValidator
 ) {
-    suspend operator fun invoke(userDeletionPayload: UserDeletionPayload) {
-        val user = userRepository.getUserById(userDeletionPayload.userId) ?: throw UserByIdNotFoundException(
-            userDeletionPayload.userId.toString()
+    suspend operator fun invoke(payload: UserDeletionPayload) {
+        userValidator.validateDeletion(payload)
+        val user = userRepository.getUserById(payload.userId) ?: throw UserByIdNotFoundException(
+            payload.userId.toString()
         )
-        if (!passwordHasher.verify(userDeletionPayload.password, user.passwordHash)) {
+        if (!passwordHasher.verify(payload.password, user.passwordHash)) {
             throw PasswordVerificationException()
         }
         userRepository.deleteUser(user.id)

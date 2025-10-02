@@ -24,7 +24,7 @@ import ru.jerael.booktracker.backend.domain.model.book.BookCoverUpdatePayload
 import ru.jerael.booktracker.backend.domain.model.book.UpdateBookCoverData
 import ru.jerael.booktracker.backend.domain.repository.BookRepository
 import ru.jerael.booktracker.backend.domain.storage.CoverStorage
-import ru.jerael.booktracker.backend.domain.validation.CoverValidator
+import ru.jerael.booktracker.backend.domain.validation.validator.CoverValidator
 import java.util.*
 
 class UpdateBookCoverUseCase(
